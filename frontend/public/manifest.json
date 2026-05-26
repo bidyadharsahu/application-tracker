@@ -1,0 +1,25 @@
+{
+  "short_name": "Job Ledger",
+  "name": "The Job Ledger — Vintage Job Tracker",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#2C2A26",
+  "background_color": "#F4F1EA",
+  "description": "Simple vintage-paper themed job application tracker."
+}
