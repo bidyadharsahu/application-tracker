@@ -1,0 +1,106 @@
+{
+  "theme": "Paper Vintage Simple",
+  "archetype": "Organic & Earthy (Customized to Vintage Print/Letterpress)",
+  "colors": {
+    "background": "#F4F1EA",
+    "surface": "#FCFAF5",
+    "surface_alt": "#EBE5D9",
+    "ink_primary": "#2C2A26",
+    "ink_secondary": "#59554D",
+    "border_color": "#2C2A26",
+    "accent_red": "#8C3A3A",
+    "accent_green": "#3A5A40",
+    "accent_amber": "#B5651D",
+    "stamp_applied": "#3A5A40",
+    "stamp_unapplied": "#8C3A3A"
+  },
+  "typography": {
+    "fonts": [
+      {
+        "name": "Playfair Display",
+        "type": "Heading",
+        "url": "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap",
+        "usage": "Main app titles, prominent job names"
+      },
+      {
+        "name": "Lora",
+        "type": "Body",
+        "url": "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap",
+        "usage": "Body text, descriptions, general highly readable text for all ages"
+      },
+      {
+        "name": "Courier Prime",
+        "type": "Monospace / Meta",
+        "url": "https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap",
+        "usage": "Dates, timers, tags, smart-paste text areas, form inputs, stamps"
+      }
+    ],
+    "hierarchy": {
+      "h1": "font-serif text-4xl sm:text-5xl font-black tracking-tight text-[#2C2A26]",
+      "h2": "font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#2C2A26]",
+      "body": "font-sans text-lg text-[#2C2A26] leading-relaxed",
+      "meta": "font-mono text-sm uppercase tracking-widest text-[#59554D]"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous spacing and extremely clear layout. High contrast borders resembling physical printed newspaper blocks. High accessibility for all age groups.",
+    "grid_system": "Bento-style block grid, primarily 1-column on mobile, up to 3 columns on desktop. gap-6 or gap-8.",
+    "card_padding": "p-6 sm:p-8"
+  },
+  "component_rules": {
+    "job_card": {
+      "style": "bg-[#FCFAF5] border-2 border-[#2C2A26] shadow-[4px_4px_0px_0px_#2C2A26] rounded-sm transition-transform hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#2C2A26]",
+      "internal_layout": "Flex column, gap-4. Title at top, metadata (dates) in middle, status stamp absolute positioned or top right, actions at bottom."
+    },
+    "status_stamp": {
+      "applied": "inline-block border-2 border-[#3A5A40] text-[#3A5A40] font-mono font-bold px-3 py-1 uppercase tracking-widest -rotate-2 bg-transparent opacity-90 text-sm",
+      "unapplied": "inline-block border-2 border-[#8C3A3A] text-[#8C3A3A] font-mono font-bold px-3 py-1 uppercase tracking-widest rotate-2 bg-transparent opacity-90 text-sm"
+    },
+    "timer_badge": {
+      "green": "font-mono font-bold text-[#3A5A40]",
+      "amber": "font-mono font-bold text-[#B5651D]",
+      "red": "font-mono font-bold text-[#8C3A3A]",
+      "layout": "Flex row, items-center gap-2. Use vintage_timer_icon if appropriate, or a Lucide clock icon."
+    },
+    "buttons": {
+      "primary": "bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-lg px-6 py-3 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors shadow-[2px_2px_0px_0px_#59554D]",
+      "secondary": "bg-transparent text-[#2C2A26] font-serif font-bold text-lg px-6 py-3 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors",
+      "danger": "bg-transparent text-[#8C3A3A] font-serif font-bold text-lg px-6 py-3 border-2 border-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-[#FCFAF5] transition-colors"
+    },
+    "smart_paste_modal": {
+      "style": "bg-[#F4F1EA] border-4 border-[#2C2A26] p-8 max-w-2xl w-full relative outline-none shadow-[8px_8px_0px_0px_#2C2A26]",
+      "textarea": "font-mono text-base bg-transparent border-b-2 border-dashed border-[#59554D] w-full p-2 focus:outline-none focus:border-[#2C2A26] min-h-[150px]"
+    },
+    "pwa_banner": {
+      "style": "fixed bottom-0 left-0 w-full bg-[#EBE5D9] border-t-4 border-[#2C2A26] p-4 flex justify-between items-center z-50 shadow-2xl",
+      "text": "font-serif text-lg font-bold text-[#2C2A26]"
+    },
+    "inputs": {
+      "style": "bg-transparent border-b-2 border-[#59554D] focus:border-[#2C2A26] font-mono text-lg py-2 px-1 outline-none w-full placeholder:text-[#59554D]/50 rounded-none"
+    }
+  },
+  "animation_and_interaction": {
+    "hover_effects": "Translates cards slightly up (-translate-y-1), increases brutalist shadow distance. Keep it snappy and mechanical, like physical objects.",
+    "page_load": "Subtle fade-in with a very slight scale-up to mimic a notice being placed on a board.",
+    "stamp_animation": "When a user or admin marks a job as applied/unapplied, animate the stamp to scale down from 1.5 to 1.0 rapidly to mimic physical stamping."
+  },
+  "media_urls": {
+    "applied_stamp": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/e41b43fb-d11e-449c-8219-b8536cebc2c8/images/5c88ef544a4c7cf16450197f223d0042d78d6ab88416dde4f4c0ca5a76a24589.png",
+      "description": "Red transparent vintage stamp that says APPLIED. Use if a graphic is preferred over CSS."
+    },
+    "timer_icon": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/e41b43fb-d11e-449c-8219-b8536cebc2c8/images/43f217ba52225f946e30ff6b7c90b1e57e23d9da73d1ce9c3f62fbcba495ea9d.png",
+      "description": "Sepia vintage pocket watch line art. Use alongside the countdown timer text."
+    }
+  },
+  "general_instructions_for_main_agent": [
+    "Use a CSS grain/noise overlay on the main background to achieve the vintage paper feel (e.g., repeating SVG noise pattern). This is lighter and scales better than a massive image.",
+    "Ensure ALL interactive and informational elements include `data-testid` attributes (e.g., `data-testid='apply-link'`, `data-testid='smart-paste-btn'`).",
+    "Mobile PWA setup is mandatory: configure `manifest.json` properly and implement the install prompt banner.",
+    "Countdown Timer Logic: color-code days left: Green for >15 days, Amber for 3-15 days, Red for <=3 days or overdue.",
+    "Admin access: Single hardcoded user (bidyadhar / Bidyadhar1!).",
+    "Use `lucide-react` for icons with a sepia/charcoal stroke color and stroke-width of 1.5 to fit the letterpress/vintage aesthetic.",
+    "All components should be extremely readable and accessible (large text, high contrast borders). No low-contrast text."
+  ]
+}
