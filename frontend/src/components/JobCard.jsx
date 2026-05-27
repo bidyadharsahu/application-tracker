@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2, Copy } from "lucide-react";
 import Countdown from "./Countdown";
 import { formatDate } from "../lib/utils-date";
 
@@ -80,6 +80,45 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         >
           “{job.notes}”
         </p>
+      )}
+
+      {/* Credentials */}
+      {(job.app_username || job.app_password) && (
+        <div className="bg-[#EBE5D9]/50 border-2 border-dashed border-[#2C2A26] p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center">
+          <div className="font-mono text-xs uppercase tracking-widest text-[#59554D] font-bold shrink-0">
+            Login
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {job.app_username && (
+              <div className="flex items-center gap-2 bg-[#FCFAF5] border-2 border-[#2C2A26] px-2 py-1">
+                <span className="font-mono text-[10px] sm:text-xs text-[#59554D] uppercase">ID:</span>
+                <span className="font-mono text-xs sm:text-sm font-bold">{job.app_username}</span>
+                <button
+                  type="button"
+                  className="text-[#59554D] hover:text-[#2C2A26] transition-colors"
+                  onClick={() => navigator.clipboard.writeText(job.app_username)}
+                  title="Copy Username"
+                >
+                  <Copy size={14} />
+                </button>
+              </div>
+            )}
+            {job.app_password && (
+              <div className="flex items-center gap-2 bg-[#FCFAF5] border-2 border-[#2C2A26] px-2 py-1">
+                <span className="font-mono text-[10px] sm:text-xs text-[#59554D] uppercase">PW:</span>
+                <span className="font-mono text-xs sm:text-sm font-bold">{job.app_password}</span>
+                <button
+                  type="button"
+                  className="text-[#59554D] hover:text-[#2C2A26] transition-colors"
+                  onClick={() => navigator.clipboard.writeText(job.app_password)}
+                  title="Copy Password"
+                >
+                  <Copy size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Actions */}

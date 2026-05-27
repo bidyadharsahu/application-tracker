@@ -61,38 +61,27 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen pb-24" data-testid="landing-page">
-      {/* Masthead */}
       <header className="border-b-4 border-[#2C2A26] bg-[#FCFAF5]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
-            <div className="flex items-center gap-3">
-              <Newspaper size={36} strokeWidth={1.25} className="text-[#2C2A26] shrink-0" />
-              <div>
-                <div className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#59554D]">
-                  Estd. 2026 · Edition I
-                </div>
-                <h1
-                  className="font-serif font-black text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
-                  data-testid="site-title"
-                >
-                  The Job Ledger
-                </h1>
-              </div>
+            <div>
+              <h1
+                className="font-serif font-black text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
+                data-testid="site-title"
+              >
+                JOB APPLICATION
+              </h1>
             </div>
-            <Link
-              to="/admin/login"
-              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
-              data-testid="admin-login-link"
-            >
-              <KeyRound size={16} /> Admin
-            </Link>
-          </div>
-
-          <div
-            className="text-center mt-4 font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-[#59554D] ornament"
-            aria-hidden="true"
-          >
-            Track every notice · Apply on time · Never miss a deadline
+            <div className="flex items-center gap-4">
+              <LiveClock />
+              <Link
+                to="/admin/login"
+                className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
+                data-testid="admin-login-link"
+              >
+                <KeyRound size={16} /> Add
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -174,11 +163,39 @@ export default function Landing() {
 
       <footer className="border-t-2 border-dashed border-[#59554D] mt-12 py-6 px-4 text-center">
         <p className="font-mono text-xs uppercase tracking-widest text-[#59554D]">
-          Printed in good faith · Updated by the Editor · {new Date().getFullYear()}
+          DESIGNED IN GOOD FAITH · ACCIDENTALLY UPDATED BY ME IN 2026 😅
         </p>
       </footer>
 
       <PWAInstallBanner />
+    </div>
+  );
+}
+
+function LiveClock() {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const dateStr = now.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const timeStr = now.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
+  return (
+    <div className="font-mono text-xs sm:text-sm text-[#59554D] flex flex-col sm:items-end hidden sm:flex">
+      <span>{timeStr}</span>
+      <span>{dateStr}</span>
     </div>
   );
 }

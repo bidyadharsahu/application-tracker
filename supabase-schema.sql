@@ -11,6 +11,8 @@ create table if not exists public.jobs (
   exam_date date,
   apply_link text not null,
   notes text,
+  app_username text,
+  app_password text,
   applied boolean not null default false,
   applied_at timestamptz,
   created_at timestamptz not null default now(),

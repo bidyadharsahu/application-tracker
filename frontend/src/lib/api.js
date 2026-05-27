@@ -45,6 +45,8 @@ function normalizeJob(row) {
     last_date: row.last_date,
     exam_date: row.exam_date,
     apply_link: row.apply_link,
+    app_username: row.app_username,
+    app_password: row.app_password,
     notes: row.notes,
     applied: !!row.applied,
     applied_at: row.applied_at,
@@ -91,6 +93,8 @@ async function createJob(payload) {
     last_date: payload.last_date,
     exam_date: payload.exam_date || null,
     apply_link: payload.apply_link,
+    app_username: payload.app_username || null,
+    app_password: payload.app_password || null,
     notes: payload.notes || null,
     applied: false,
   };

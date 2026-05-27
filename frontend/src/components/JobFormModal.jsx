@@ -8,12 +8,32 @@ const inputClass =
 const labelClass =
   "block font-mono text-xs uppercase tracking-widest text-[#59554D] mb-1.5 font-bold";
 
+const formatDateToDDMMYYYY = (dStr) => {
+  if (!dStr) return "";
+  if (dStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [y, m, d] = dStr.split("-");
+    return `${d} ${m} ${y}`;
+  }
+  return dStr;
+};
+
+const parseDateToYYYYMMDD = (dStr) => {
+  if (!dStr) return "";
+  const match = dStr.trim().match(/^(\d{2})[- \/.](\d{2})[- \/.](\d{4})$/);
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+  return dStr.trim();
+};
+
 export default function JobFormModal({ open, onClose, onSave, initial, prefill }) {
   const [form, setForm] = useState({
     job_name: "",
     last_date: "",
     exam_date: "",
     apply_link: "",
+    app_username: "",
+    app_password: "",
     notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -24,9 +44,11 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
       const pre = prefill || {};
       setForm({
         job_name: pre.job_name || base.job_name || "",
-        last_date: pre.last_date || base.last_date || "",
-        exam_date: pre.exam_date || base.exam_date || "",
+        last_date: formatDateToDDMMYYYY(pre.last_date || base.last_date || ""),
+        exam_date: formatDateToDDMMYYYY(pre.exam_date || base.exam_date || ""),
         apply_link: pre.apply_link || base.apply_link || "",
+        app_username: pre.app_username || base.app_username || "",
+        app_password: pre.app_password || base.app_password || "",
         notes: pre.notes || base.notes || "",
       });
     }
@@ -41,8 +63,14 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
       toast.error("Job name is required");
       return;
     }
-    if (!form.last_date) {
-      toast.error("Last date is required");
+    const finalLastDate = parseDateToYYYYMMDD(form.last_date);
+    if (!finalLastDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      toast.error("Please enter last date in DD MM YYYY format");
+      return;
+    }
+    const finalExamDate = parseDateToYYYYMMDD(form.exam_date);
+    if (form.exam_date && !finalExamDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      toast.error("Please enter exam date in DD MM YYYY format");
       return;
     }
     if (!form.apply_link.trim()) {
@@ -53,9 +81,11 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
     try {
       await onSave({
         job_name: form.job_name.trim(),
-        last_date: form.last_date,
-        exam_date: form.exam_date || null,
+        last_date: finalLastDate,
+        exam_date: finalExamDate || null,
         apply_link: form.apply_link.trim(),
+        app_username: form.app_username.trim() || null,
+        app_password: form.app_password.trim() || null,
         notes: form.notes.trim() || null,
       });
     } finally {
@@ -106,20 +136,22 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
             <div>
               <label className={labelClass}>Last date to apply *</label>
               <input
-                type="date"
+                type="text"
                 className={inputClass}
                 value={form.last_date}
                 onChange={(e) => update("last_date", e.target.value)}
+                placeholder="DD MM YYYY"
                 data-testid="job-form-last-date"
               />
             </div>
             <div>
               <label className={labelClass}>Exam date</label>
               <input
-                type="date"
+                type="text"
                 className={inputClass}
                 value={form.exam_date}
                 onChange={(e) => update("exam_date", e.target.value)}
+                placeholder="DD MM YYYY"
                 data-testid="job-form-exam-date"
               />
             </div>
@@ -134,6 +166,31 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
               placeholder="https://..."
               data-testid="job-form-apply-link"
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Username (Optional)</label>
+              <input
+                type="text"
+                className={inputClass}
+                value={form.app_username}
+                onChange={(e) => update("app_username", e.target.value)}
+                placeholder="e.g. user123"
+                data-testid="job-form-app-username"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Password (Optional)</label>
+              <input
+                type="text"
+                className={inputClass}
+                value={form.app_password}
+                onChange={(e) => update("app_password", e.target.value)}
+                placeholder="e.g. mypass"
+                data-testid="job-form-app-password"
+              />
+            </div>
           </div>
 
           <div>
