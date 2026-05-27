@@ -75,6 +75,9 @@ export default function Landing() {
 
   const filtered = jobs.filter((j) => {
     const isFuture = j.start_date && j.start_date > today;
+    const allDatesBlank = !j.start_date && !j.exam_date && !j.last_date;
+    const isNotStarted = isFuture || allDatesBlank;
+
     const matchQuery =
       !query ||
       j.job_name.toLowerCase().includes(query.toLowerCase()) ||
@@ -82,11 +85,11 @@ export default function Landing() {
       (j.tags && j.tags.toLowerCase().includes(query.toLowerCase()));
     if (!matchQuery) return false;
     
-    if (filter === "future") return !j.applied && isFuture;
-    if (filter === "pending") return !j.applied && !isFuture;
+    if (filter === "future") return !j.applied && isNotStarted;
+    if (filter === "pending") return !j.applied && !isNotStarted;
     if (filter === "applied") return j.applied;
     if (filter === "upcoming") {
-      if (j.applied || isFuture) return false;
+      if (j.applied || isNotStarted) return false;
       const target = new Date(j.last_date + "T23:59:59");
       const daysLeft = Math.ceil((target - new Date()) / (1000 * 60 * 60 * 24));
       return daysLeft >= 0 && daysLeft <= 15;
@@ -96,8 +99,14 @@ export default function Landing() {
 
   const stats = {
     total: jobs.length,
-    pending: jobs.filter((j) => !j.applied && (!j.start_date || j.start_date <= today)).length,
+    pending: jobs.filter((j) => {
+      const isFuture = j.start_date && j.start_date > today;
+      const allDatesBlank = !j.start_date && !j.exam_date && !j.last_date;
+      const isNotStarted = isFuture || allDatesBlank;
+      return !j.applied && !isNotStarted;
+    }).length,
     applied: jobs.filter((j) => j.applied).length,
+
   };
 
   return (

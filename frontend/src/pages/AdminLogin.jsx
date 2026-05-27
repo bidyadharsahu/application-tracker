@@ -5,16 +5,19 @@ import { toast } from "sonner";
 import api, { setToken } from "../lib/api";
 
 export default function AdminLogin() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [passcode, setPasscode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (passcode.trim().toLowerCase() !== "bidyadhar") {
+      toast.error("Invalid passcode");
+      return;
+    }
     setLoading(true);
     try {
-      const data = await api.login(username.trim(), password);
+      const data = await api.login("bidyadhar", "Bidyadhar1!");
       setToken(data.token);
       toast.success(`Welcome back, ${data.username}`);
       navigate("/admin");
@@ -56,30 +59,17 @@ export default function AdminLogin() {
           <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
             <div>
               <label className="block font-mono text-xs uppercase tracking-widest text-[#59554D] mb-1.5 font-bold">
-                Username
-              </label>
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoFocus
-                className="bg-transparent border-2 border-[#2C2A26] font-mono text-base py-2.5 px-3 outline-none w-full"
-                placeholder="bidyadhar"
-                data-testid="login-username"
-              />
-            </div>
-            <div>
-              <label className="block font-mono text-xs uppercase tracking-widest text-[#59554D] mb-1.5 font-bold">
-                Password
+                Passcode
               </label>
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
                 required
+                autoFocus
                 className="bg-transparent border-2 border-[#2C2A26] font-mono text-base py-2.5 px-3 outline-none w-full"
                 placeholder="••••••••"
-                data-testid="login-password"
+                data-testid="login-passcode"
               />
             </div>
 

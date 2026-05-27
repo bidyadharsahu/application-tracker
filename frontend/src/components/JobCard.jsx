@@ -7,6 +7,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const isApplied = !!job.applied;
   const today = new Date().toISOString().split("T")[0];
   const isFuture = job.start_date && job.start_date > today;
+  const allDatesBlank = !job.start_date && !job.exam_date && !job.last_date;
+  const isNotStarted = isFuture || allDatesBlank;
 
   const stampBase =
     "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-widest text-base sm:text-lg bg-transparent select-none";
@@ -17,7 +19,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   if (isApplied) {
     stampText = "Applied";
     stampColorClass = "border-[#3A5A40] text-[#3A5A40] -rotate-2";
-  } else if (isFuture) {
+  } else if (isNotStarted) {
     stampText = "Not Started Yet";
     stampColorClass = "border-[#D97706] text-[#D97706] rotate-2"; // Orange-ish for future
   }
