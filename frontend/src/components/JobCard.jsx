@@ -10,9 +10,19 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
   const stampBase =
     "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-widest text-base sm:text-lg bg-transparent select-none";
-  const stampClass = isApplied
-    ? `${stampBase} border-[#3A5A40] text-[#3A5A40] -rotate-2`
-    : `${stampBase} border-[#8C3A3A] text-[#8C3A3A] rotate-2`;
+
+  let stampText = "Pending";
+  let stampColorClass = "border-[#8C3A3A] text-[#8C3A3A] rotate-2";
+
+  if (isApplied) {
+    stampText = "Applied";
+    stampColorClass = "border-[#3A5A40] text-[#3A5A40] -rotate-2";
+  } else if (isFuture) {
+    stampText = "Not Started Yet";
+    stampColorClass = "border-[#D97706] text-[#D97706] rotate-2"; // Orange-ish for future
+  }
+
+  const stampClass = `${stampBase} ${stampColorClass}`;
 
   return (
     <article
@@ -22,7 +32,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       {/* Stamp top-right */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
         <span className={stampClass} data-testid={`status-stamp-${job.id}`}>
-          {isApplied ? "Applied" : "Pending"}
+          {stampText}
         </span>
       </div>
 
