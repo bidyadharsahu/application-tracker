@@ -73,7 +73,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
       return;
     }
     const finalLastDate = parseDateToYYYYMMDD(form.last_date);
-    if (!finalLastDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    if (form.last_date && !finalLastDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
       toast.error("Please enter last date in DD MM YYYY format");
       return;
     }
@@ -91,7 +91,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
       await onSave({
         job_name: form.job_name.trim(),
         start_date: finalStartDate || null,
-        last_date: finalLastDate,
+        last_date: finalLastDate || null,
         exam_date: finalExamDate || null,
         tags: form.tags.trim() || null,
         apply_link: form.apply_link.trim(),
@@ -156,7 +156,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
               />
             </div>
             <div>
-              <label className={labelClass}>Last date to apply *</label>
+              <label className={labelClass}>Last date to apply</label>
               <input
                 type="text"
                 className={inputClass}

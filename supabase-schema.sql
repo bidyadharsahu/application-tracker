@@ -7,7 +7,7 @@
 create table if not exists public.jobs (
   id uuid primary key default gen_random_uuid(),
   job_name text not null,
-  last_date date not null,
+  last_date date,
   exam_date date,
   apply_link text not null,
   notes text,
