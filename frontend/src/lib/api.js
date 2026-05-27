@@ -44,10 +44,13 @@ function normalizeJob(row) {
     job_name: row.job_name,
     last_date: row.last_date,
     exam_date: row.exam_date,
+    start_date: row.start_date,
+    tags: row.tags,
     apply_link: row.apply_link,
     app_username: row.app_username,
     app_password: row.app_password,
     notes: row.notes,
+    notified: !!row.notified,
     applied: !!row.applied,
     applied_at: row.applied_at,
     created_at: row.created_at,
@@ -91,7 +94,9 @@ async function createJob(payload) {
   const insert = {
     job_name: payload.job_name,
     last_date: payload.last_date,
+    start_date: payload.start_date || null,
     exam_date: payload.exam_date || null,
+    tags: payload.tags || null,
     apply_link: payload.apply_link,
     app_username: payload.app_username || null,
     app_password: payload.app_password || null,
@@ -134,6 +139,17 @@ async function toggleApplied(id) {
       applied_at: newApplied ? nowIso() : null,
       updated_at: nowIso(),
     })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throwApi(error);
+  return normalizeJob(data);
+}
+
+async function markNotified(id) {
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({ notified: true })
     .eq("id", id)
     .select()
     .single();
@@ -207,6 +223,7 @@ export const api = {
   listJobs,
   createJob,
   updateJob,
+  markNotified,
   toggleApplied,
   deleteJob,
   stats,

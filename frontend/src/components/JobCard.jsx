@@ -5,6 +5,8 @@ import { formatDate } from "../lib/utils-date";
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const isApplied = !!job.applied;
+  const today = new Date().toISOString().split("T")[0];
+  const isFuture = job.start_date && job.start_date > today;
 
   const stampBase =
     "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-widest text-xs sm:text-sm bg-transparent select-none";
@@ -31,6 +33,17 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       >
         {job.job_name}
       </h3>
+
+      {/* Tags */}
+      {job.tags && (
+        <div className="flex flex-wrap gap-2 mt-2 pr-24 sm:pr-28">
+          {job.tags.split(',').map((tag, i) => tag.trim() && (
+            <span key={i} className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-[10px] sm:text-xs uppercase tracking-widest text-[#59554D] border border-[#2C2A26]">
+              {tag.trim()}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Dotted vintage divider */}
       <div className="divider-vintage my-4" aria-hidden="true" />
@@ -123,15 +136,21 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2 sm:gap-3 pt-2">
-        <a
-          href={job.apply_link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
-          data-testid={`apply-link-${job.id}`}
-        >
-          Apply Now <ExternalLink size={16} strokeWidth={2} />
-        </a>
+        {isFuture ? (
+          <div className="inline-flex items-center gap-2 bg-[#EBE5D9] text-[#59554D] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#59554D] cursor-not-allowed">
+            Starts {formatDate(job.start_date)}
+          </div>
+        ) : (
+          <a
+            href={job.apply_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
+            data-testid={`apply-link-${job.id}`}
+          >
+            Apply Now <ExternalLink size={16} strokeWidth={2} />
+          </a>
+        )}
 
         {admin && (
           <>

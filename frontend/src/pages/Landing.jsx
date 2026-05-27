@@ -6,10 +6,12 @@ import { sortJobs } from "../lib/utils-date";
 import JobCard from "../components/JobCard";
 import DeadlineAlert from "../components/DeadlineAlert";
 import PWAInstallBanner from "../components/PWAInstallBanner";
+import { toast } from "sonner";
 
 const filters = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
+  { key: "future", label: "Future" },
   { key: "applied", label: "Applied" },
   { key: "upcoming", label: "Closing soon" },
 ];
@@ -36,16 +38,41 @@ export default function Landing() {
     fetchJobs();
   }, []);
 
+  const today = new Date().toISOString().split("T")[0];
+
+  useEffect(() => {
+    // Check for newly active jobs and notify
+    if (jobs.length > 0) {
+      jobs.forEach(async (j) => {
+        if (j.start_date && j.start_date <= today && !j.notified && !j.applied) {
+          toast.success(`🚀 Applications for "${j.job_name}" have officially started!`, {
+            duration: 8000,
+          });
+          try {
+            await api.markNotified(j.id);
+            setJobs(prev => prev.map(job => job.id === j.id ? { ...job, notified: true } : job));
+          } catch (e) {
+            console.error("Failed to mark notified", e);
+          }
+        }
+      });
+    }
+  }, [jobs]);
+
   const filtered = jobs.filter((j) => {
+    const isFuture = j.start_date && j.start_date > today;
     const matchQuery =
       !query ||
       j.job_name.toLowerCase().includes(query.toLowerCase()) ||
-      (j.notes && j.notes.toLowerCase().includes(query.toLowerCase()));
+      (j.notes && j.notes.toLowerCase().includes(query.toLowerCase())) ||
+      (j.tags && j.tags.toLowerCase().includes(query.toLowerCase()));
     if (!matchQuery) return false;
-    if (filter === "pending") return !j.applied;
+    
+    if (filter === "future") return !j.applied && isFuture;
+    if (filter === "pending") return !j.applied && !isFuture;
     if (filter === "applied") return j.applied;
     if (filter === "upcoming") {
-      if (j.applied) return false;
+      if (j.applied || isFuture) return false;
       const target = new Date(j.last_date + "T23:59:59");
       const daysLeft = Math.ceil((target - new Date()) / (1000 * 60 * 60 * 24));
       return daysLeft >= 0 && daysLeft <= 15;
@@ -55,7 +82,7 @@ export default function Landing() {
 
   const stats = {
     total: jobs.length,
-    pending: jobs.filter((j) => !j.applied).length,
+    pending: jobs.filter((j) => !j.applied && (!j.start_date || j.start_date <= today)).length,
     applied: jobs.filter((j) => j.applied).length,
   };
 

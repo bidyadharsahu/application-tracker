@@ -29,8 +29,10 @@ const parseDateToYYYYMMDD = (dStr) => {
 export default function JobFormModal({ open, onClose, onSave, initial, prefill }) {
   const [form, setForm] = useState({
     job_name: "",
+    start_date: "",
     last_date: "",
     exam_date: "",
+    tags: "",
     apply_link: "",
     app_username: "",
     app_password: "",
@@ -44,8 +46,10 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
       const pre = prefill || {};
       setForm({
         job_name: pre.job_name || base.job_name || "",
+        start_date: formatDateToDDMMYYYY(pre.start_date || base.start_date || ""),
         last_date: formatDateToDDMMYYYY(pre.last_date || base.last_date || ""),
         exam_date: formatDateToDDMMYYYY(pre.exam_date || base.exam_date || ""),
+        tags: pre.tags || base.tags || "",
         apply_link: pre.apply_link || base.apply_link || "",
         app_username: pre.app_username || base.app_username || "",
         app_password: pre.app_password || base.app_password || "",
@@ -61,6 +65,11 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
   const handleSave = async () => {
     if (!form.job_name.trim()) {
       toast.error("Job name is required");
+      return;
+    }
+    const finalStartDate = parseDateToYYYYMMDD(form.start_date);
+    if (form.start_date && !finalStartDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      toast.error("Please enter start date in DD MM YYYY format");
       return;
     }
     const finalLastDate = parseDateToYYYYMMDD(form.last_date);
@@ -81,8 +90,10 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
     try {
       await onSave({
         job_name: form.job_name.trim(),
+        start_date: finalStartDate || null,
         last_date: finalLastDate,
         exam_date: finalExamDate || null,
+        tags: form.tags.trim() || null,
         apply_link: form.apply_link.trim(),
         app_username: form.app_username.trim() || null,
         app_password: form.app_password.trim() || null,
@@ -134,6 +145,17 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
+              <label className={labelClass}>Start date</label>
+              <input
+                type="text"
+                className={inputClass}
+                value={form.start_date}
+                onChange={(e) => update("start_date", e.target.value)}
+                placeholder="DD MM YYYY"
+                data-testid="job-form-start-date"
+              />
+            </div>
+            <div>
               <label className={labelClass}>Last date to apply *</label>
               <input
                 type="text"
@@ -153,6 +175,16 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
                 onChange={(e) => update("exam_date", e.target.value)}
                 placeholder="DD MM YYYY"
                 data-testid="job-form-exam-date"
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Tags</label>
+              <input
+                className={inputClass}
+                value={form.tags}
+                onChange={(e) => update("tags", e.target.value)}
+                placeholder="e.g. Banking, Clerk"
+                data-testid="job-form-tags"
               />
             </div>
           </div>

@@ -13,6 +13,9 @@ create table if not exists public.jobs (
   notes text,
   app_username text,
   app_password text,
+  start_date date,
+  tags text,
+  notified boolean not null default false,
   applied boolean not null default false,
   applied_at timestamptz,
   created_at timestamptz not null default now(),
@@ -65,3 +68,7 @@ for delete using (auth.jwt() ->> 'email' = 'bidyadhar.sahu.cse.2022@nist.edu');
 --      Password: Bidyadhar1!
 --      Auto Confirm User: ✅ ON
 -- ============================================================================
+
+ALTER TABLE public.jobs ADD COLUMN start_date date;
+ALTER TABLE public.jobs ADD COLUMN tags text;
+ALTER TABLE public.jobs ADD COLUMN notified boolean not null default false;
