@@ -9,7 +9,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const isFuture = job.start_date && job.start_date > today;
 
   const stampBase =
-    "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-widest text-xs sm:text-sm bg-transparent select-none";
+    "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-widest text-base sm:text-lg bg-transparent select-none";
   const stampClass = isApplied
     ? `${stampBase} border-[#3A5A40] text-[#3A5A40] -rotate-2`
     : `${stampBase} border-[#8C3A3A] text-[#8C3A3A] rotate-2`;
@@ -28,7 +28,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
       {/* Job Title */}
       <h3
-        className="font-serif font-black text-xl sm:text-2xl text-[#2C2A26] pr-24 sm:pr-28 leading-tight tracking-tight"
+        className="font-serif font-black text-3xl sm:text-4xl text-[#2C2A26] pr-24 sm:pr-28 leading-tight tracking-tight"
         data-testid={`job-title-${job.id}`}
       >
         {job.job_name}
@@ -38,7 +38,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       {job.tags && (
         <div className="flex flex-wrap gap-2 mt-2 pr-24 sm:pr-28">
           {job.tags.split(',').map((tag, i) => tag.trim() && (
-            <span key={i} className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-[10px] sm:text-xs uppercase tracking-widest text-[#59554D] border border-[#2C2A26]">
+            <span key={i} className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-lg sm:text-xl uppercase tracking-widest text-[#59554D] border border-[#2C2A26]">
               {tag.trim()}
             </span>
           ))}
@@ -53,11 +53,11 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         <div className="flex items-start gap-2">
           <CalendarDays size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
           <div className="min-w-0">
-            <div className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-[#59554D]">
+            <div className="font-mono text-lg sm:text-xl uppercase tracking-widest text-[#59554D]">
               Last date
             </div>
             <div
-              className="font-mono font-bold text-sm sm:text-base text-[#2C2A26]"
+              className="font-mono font-bold text-lg sm:text-xl text-[#2C2A26]"
               data-testid={`job-last-date-${job.id}`}
             >
               {formatDate(job.last_date)}
@@ -68,11 +68,11 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         <div className="flex items-start gap-2">
           <FileText size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
           <div className="min-w-0">
-            <div className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-[#59554D]">
+            <div className="font-mono text-lg sm:text-xl uppercase tracking-widest text-[#59554D]">
               Exam date
             </div>
             <div
-              className="font-mono font-bold text-sm sm:text-base text-[#2C2A26]"
+              className="font-mono font-bold text-lg sm:text-xl text-[#2C2A26]"
               data-testid={`job-exam-date-${job.id}`}
             >
               {job.exam_date ? formatDate(job.exam_date) : "— TBA —"}
@@ -88,7 +88,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
       {job.notes && (
         <p
-          className="font-sans text-sm sm:text-base text-[#59554D] italic mb-4 line-clamp-2"
+          className="font-sans text-lg sm:text-xl text-[#59554D] italic mb-4 line-clamp-2"
           data-testid={`job-notes-${job.id}`}
         >
           “{job.notes}”
@@ -98,14 +98,14 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       {/* Credentials */}
       {(job.app_username || job.app_password) && (
         <div className="bg-[#EBE5D9]/50 border-2 border-dashed border-[#2C2A26] p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="font-mono text-xs uppercase tracking-widest text-[#59554D] font-bold shrink-0">
+          <div className="font-mono text-xl uppercase tracking-widest text-[#59554D] font-bold shrink-0">
             Login
           </div>
           <div className="flex flex-wrap gap-2">
             {job.app_username && (
               <div className="flex items-center gap-2 bg-[#FCFAF5] border-2 border-[#2C2A26] px-2 py-1">
-                <span className="font-mono text-[10px] sm:text-xs text-[#59554D] uppercase">ID:</span>
-                <span className="font-mono text-xs sm:text-sm font-bold">{job.app_username}</span>
+                <span className="font-mono text-lg sm:text-xl text-[#59554D] uppercase">ID:</span>
+                <span className="font-mono text-base sm:text-lg font-bold">{job.app_username}</span>
                 <button
                   type="button"
                   className="text-[#59554D] hover:text-[#2C2A26] transition-colors"
@@ -118,8 +118,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             )}
             {job.app_password && (
               <div className="flex items-center gap-2 bg-[#FCFAF5] border-2 border-[#2C2A26] px-2 py-1">
-                <span className="font-mono text-[10px] sm:text-xs text-[#59554D] uppercase">PW:</span>
-                <span className="font-mono text-xs sm:text-sm font-bold">{job.app_password}</span>
+                <span className="font-mono text-lg sm:text-xl text-[#59554D] uppercase">PW:</span>
+                <span className="font-mono text-base sm:text-lg font-bold">{job.app_password}</span>
                 <button
                   type="button"
                   className="text-[#59554D] hover:text-[#2C2A26] transition-colors"
@@ -137,7 +137,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       {/* Actions */}
       <div className="flex flex-wrap gap-2 sm:gap-3 pt-2">
         {isFuture ? (
-          <div className="inline-flex items-center gap-2 bg-[#EBE5D9] text-[#59554D] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#59554D] cursor-not-allowed">
+          <div className="inline-flex items-center gap-2 bg-[#EBE5D9] text-[#59554D] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#59554D] cursor-not-allowed">
             Starts {formatDate(job.start_date)}
           </div>
         ) : (
@@ -145,7 +145,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             href={job.apply_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
+            className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
             data-testid={`apply-link-${job.id}`}
           >
             Apply Now <ExternalLink size={16} strokeWidth={2} />
@@ -154,7 +154,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
         <button
           onClick={() => onToggle && onToggle(job)}
-          className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
+          className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
           data-testid={`toggle-applied-${job.id}`}
           type="button"
         >
@@ -166,7 +166,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           <>
             <button
               onClick={() => onEdit && onEdit(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
+              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
               data-testid={`edit-job-${job.id}`}
               type="button"
             >
@@ -174,7 +174,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             </button>
             <button
               onClick={() => onDelete && onDelete(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#8C3A3A] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-[#FCFAF5] transition-colors"
+              className="inline-flex items-center gap-2 bg-transparent text-[#8C3A3A] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-[#FCFAF5] transition-colors"
               data-testid={`delete-job-${job.id}`}
               type="button"
             >

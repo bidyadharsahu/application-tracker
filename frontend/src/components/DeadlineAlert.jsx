@@ -24,11 +24,11 @@ export default function DeadlineAlert({ jobs }) {
           <div className="font-serif font-black text-lg sm:text-xl text-[#8C3A3A]">
             Hey — you haven't applied yet!
           </div>
-          <div className="font-sans text-sm sm:text-base text-[#2C2A26] mt-1">
+          <div className="font-sans text-lg sm:text-xl text-[#2C2A26] mt-1">
             <strong>{urgent.length}</strong> {urgent.length === 1 ? "job is" : "jobs are"}{" "}
             closing within 3 days. Don't miss the deadline.
           </div>
-          <ul className="mt-2 font-mono text-xs sm:text-sm text-[#59554D] list-disc list-inside">
+          <ul className="mt-2 font-mono text-base sm:text-lg text-[#59554D] list-disc list-inside">
             {urgent.slice(0, 3).map((j) => (
               <li key={j.id} className="truncate" data-testid={`urgent-job-${j.id}`}>
                 {j.job_name}

@@ -107,7 +107,7 @@ export default function Landing() {
           <div className="flex justify-between items-start sm:items-center">
             <div>
               <h1
-                className="font-serif font-black text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
+                className="font-serif font-black text-5xl sm:text-7xl text-[#2C2A26] leading-none tracking-tight"
                 data-testid="site-title"
               >
                 JOB APPLICATION
@@ -117,7 +117,7 @@ export default function Landing() {
             <div>
               <Link
                 to="/admin/login"
-                className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
+                className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
                 data-testid="admin-login-link"
               >
                 <KeyRound size={16} /> Add
@@ -160,7 +160,7 @@ export default function Landing() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search notices..."
-              className="font-mono text-base bg-[#FCFAF5] border-2 border-[#2C2A26] w-full pl-10 pr-3 py-2.5 outline-none focus:shadow-stamp transition-shadow"
+              className="font-mono text-xl bg-[#FCFAF5] border-2 border-[#2C2A26] w-full pl-10 pr-3 py-2.5 outline-none focus:shadow-stamp transition-shadow"
               data-testid="search-input"
             />
           </div>
@@ -173,7 +173,7 @@ export default function Landing() {
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`font-mono uppercase tracking-widest text-xs px-3 py-2 border-2 transition-colors shrink-0 ${
+                className={`font-mono uppercase tracking-widest text-xl px-3 py-2 border-2 transition-colors shrink-0 ${
                   filter === f.key
                     ? "bg-[#2C2A26] text-[#FCFAF5] border-[#2C2A26]"
                     : "bg-transparent text-[#2C2A26] border-[#2C2A26] hover:bg-[#EBE5D9]"
@@ -203,7 +203,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t-2 border-dashed border-[#59554D] mt-12 py-6 px-4 text-center">
-        <p className="font-mono text-xs uppercase tracking-widest text-[#59554D]">
+        <p className="font-mono text-xl uppercase tracking-widest text-[#59554D]">
           DESIGNED IN GOOD FAITH · ACCIDENTALLY UPDATED BY ME IN 2026 😅
         </p>
       </footer>
@@ -234,7 +234,7 @@ function LiveClock() {
   });
 
   return (
-    <div className="font-mono text-xs sm:text-sm text-[#59554D] mt-1 sm:mt-2">
+    <div className="font-mono text-base sm:text-lg text-[#59554D] mt-1 sm:mt-2">
       {timeStr} · {dateStr}
     </div>
   );
@@ -254,11 +254,11 @@ function StatBox({ label, value, icon, accent }) {
     >
       <div className="flex items-center gap-2 text-[#59554D]">
         {icon}
-        <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest">
+        <span className="font-mono text-lg sm:text-xl uppercase tracking-widest">
           {label}
         </span>
       </div>
-      <div className={`font-serif font-black text-3xl sm:text-5xl mt-1 ${color}`}>
+      <div className={`font-serif font-black text-5xl sm:text-7xl mt-1 ${color}`}>
         {value}
       </div>
     </div>
@@ -292,7 +292,7 @@ function EmptyState({ query }) {
       <h3 className="font-serif font-bold text-xl text-[#2C2A26]">
         {query ? "No matching notices" : "No notices yet"}
       </h3>
-      <p className="font-sans text-sm text-[#59554D] mt-1">
+      <p className="font-sans text-lg text-[#59554D] mt-1">
         {query
           ? "Try a different search keyword."
           : "The Editor will post new jobs here soon."}
