@@ -34,6 +34,20 @@ export default function Landing() {
     }
   };
 
+  const handleToggleApplied = async (job) => {
+    try {
+      const updatedJob = await api.toggleApplied(job.id);
+      setJobs((prev) => {
+        const nextJobs = prev.map((j) => (j.id === job.id ? updatedJob : j));
+        return sortJobs(nextJobs);
+      });
+      toast.success(`Marked as ${updatedJob.applied ? "Applied" : "Pending"}!`);
+    } catch (e) {
+      toast.error("Failed to update status");
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -183,7 +197,7 @@ export default function Landing() {
           ) : filtered.length === 0 ? (
             <EmptyState query={query} />
           ) : (
-            filtered.map((job) => <JobCard key={job.id} job={job} />)
+            filtered.map((job) => <JobCard key={job.id} job={job} onToggle={handleToggleApplied} />)
           )}
         </section>
       </main>

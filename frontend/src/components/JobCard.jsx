@@ -152,17 +152,18 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           </a>
         )}
 
+        <button
+          onClick={() => onToggle && onToggle(job)}
+          className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
+          data-testid={`toggle-applied-${job.id}`}
+          type="button"
+        >
+          {isApplied ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+          {isApplied ? "Mark unapplied" : "Mark applied"}
+        </button>
+
         {admin && (
           <>
-            <button
-              onClick={() => onToggle && onToggle(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
-              data-testid={`toggle-applied-${job.id}`}
-              type="button"
-            >
-              {isApplied ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-              {isApplied ? "Mark unapplied" : "Mark applied"}
-            </button>
             <button
               onClick={() => onEdit && onEdit(job)}
               className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"

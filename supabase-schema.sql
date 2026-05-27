@@ -47,21 +47,18 @@ drop policy if exists "jobs_select_public" on public.jobs;
 create policy "jobs_select_public" on public.jobs
 for select using (true);
 
--- Only the admin user (matched by email) can WRITE.
+-- Only the admin user (matched by email) can WRITE (except update which is public).
 drop policy if exists "jobs_insert_admin" on public.jobs;
 create policy "jobs_insert_admin" on public.jobs
 for insert with check (auth.jwt() ->> 'email' = 'bidyadhar.sahu.cse.2022@nist.edu');
 
-drop policy if exists "jobs_update_admin" on public.jobs;
-create policy "jobs_update_admin" on public.jobs
-for update using (auth.jwt() ->> 'email' = 'bidyadhar.sahu.cse.2022@nist.edu')
-           with check (auth.jwt() ->> 'email' = 'bidyadhar.sahu.cse.2022@nist.edu');
+drop policy if exists "jobs_update_public" on public.jobs;
+create policy "jobs_update_public" on public.jobs
+for update using (true);
 
 drop policy if exists "jobs_delete_admin" on public.jobs;
 create policy "jobs_delete_admin" on public.jobs
 for delete using (auth.jwt() ->> 'email' = 'bidyadhar.sahu.cse.2022@nist.edu');
-
--- ============================================================================
 --  AFTER running this SQL, create your admin user in Supabase Dashboard:
 --    Authentication → Users → Add user → Create new user
 --      Email   : bidyadhar.sahu.cse.2022@nist.edu
