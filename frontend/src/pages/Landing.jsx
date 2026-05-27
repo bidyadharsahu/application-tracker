@@ -63,7 +63,7 @@ export default function Landing() {
     <div className="min-h-screen pb-24" data-testid="landing-page">
       <header className="border-b-4 border-[#2C2A26] bg-[#FCFAF5]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+          <div className="flex justify-between items-start sm:items-center">
             <div>
               <h1
                 className="font-serif font-black text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
@@ -71,9 +71,9 @@ export default function Landing() {
               >
                 JOB APPLICATION
               </h1>
-            </div>
-            <div className="flex items-center gap-4">
               <LiveClock />
+            </div>
+            <div>
               <Link
                 to="/admin/login"
                 className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
@@ -193,9 +193,8 @@ function LiveClock() {
   });
 
   return (
-    <div className="font-mono text-xs sm:text-sm text-[#59554D] flex flex-col sm:items-end hidden sm:flex">
-      <span>{timeStr}</span>
-      <span>{dateStr}</span>
+    <div className="font-mono text-xs sm:text-sm text-[#59554D] mt-1 sm:mt-2">
+      {timeStr} · {dateStr}
     </div>
   );
 }

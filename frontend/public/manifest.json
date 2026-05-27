@@ -1,7 +1,13 @@
 {
   "short_name": "Job Ledger",
-  "name": "The Job Ledger — Vintage Job Tracker",
+  "name": "The Job Ledger",
   "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512 any",
+      "purpose": "any maskable"
+    },
     {
       "src": "icon-192.png",
       "type": "image/png",
@@ -15,7 +21,7 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": ".",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
