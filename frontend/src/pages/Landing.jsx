@@ -107,7 +107,7 @@ export default function Landing() {
           <div className="flex justify-between items-start sm:items-center">
             <div>
               <h1
-                className="font-serif font-black text-5xl sm:text-7xl text-[#2C2A26] leading-none tracking-tight"
+                className="font-serif font-black text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
                 data-testid="site-title"
               >
                 JOB APPLICATION
@@ -117,7 +117,7 @@ export default function Landing() {
             <div>
               <Link
                 to="/admin/login"
-                className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
+                className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm sm:text-base px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#2C2A26] hover:text-[#FCFAF5] transition-colors"
                 data-testid="admin-login-link"
               >
                 <KeyRound size={16} /> Add
@@ -203,7 +203,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t-2 border-dashed border-[#59554D] mt-12 py-6 px-4 text-center">
-        <p className="font-mono text-xl uppercase tracking-widest text-[#59554D]">
+        <p className="font-mono text-xs uppercase tracking-widest text-[#59554D]">
           DESIGNED IN GOOD FAITH · ACCIDENTALLY UPDATED BY ME IN 2026 😅
         </p>
       </footer>
@@ -234,7 +234,7 @@ function LiveClock() {
   });
 
   return (
-    <div className="font-mono text-base sm:text-lg text-[#59554D] mt-1 sm:mt-2">
+    <div className="font-mono text-xs sm:text-sm text-[#59554D] mt-1 sm:mt-2">
       {timeStr} · {dateStr}
     </div>
   );
