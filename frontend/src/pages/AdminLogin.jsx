@@ -36,7 +36,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-md">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-[#59554D] hover:text-[#2C2A26] mb-4"
+          className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-[#59554D] hover:text-[#2C2A26] mb-4"
           data-testid="back-to-home"
         >
           <ArrowLeft size={14} /> Back to The Ledger
@@ -49,7 +49,7 @@ export default function AdminLogin() {
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#59554D]">
                 Editor's Desk
               </div>
-              <h1 className="font-serif font-black text-2xl sm:text-3xl text-[#2C2A26]">
+              <h1 className="font-serif font-bold text-2xl sm:text-3xl text-[#2C2A26]">
                 Sign In
               </h1>
             </div>
@@ -58,7 +58,7 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
             <div>
-              <label className="block font-mono text-xs uppercase tracking-widest text-[#59554D] mb-1.5 font-bold">
+              <label className="block font-mono text-xs uppercase tracking-wider text-[#59554D] mb-1.5 font-bold">
                 Passcode
               </label>
               <input

@@ -113,7 +113,7 @@ export default function AdminDashboard() {
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#59554D]">
                 Editor's Desk
               </div>
-              <h1 className="font-serif font-black text-xl sm:text-2xl text-[#2C2A26] truncate">
+              <h1 className="font-serif font-bold text-xl sm:text-2xl text-[#2C2A26] truncate">
                 The Job Ledger · Admin
               </h1>
             </div>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
         </section>
 
         {/* Counts */}
-        <section className="font-mono text-xs uppercase tracking-widest text-[#59554D]">
+        <section className="font-mono text-xs uppercase tracking-wider text-[#59554D]">
           Showing {jobs.length} notices · {jobs.filter((j) => !j.applied).length} pending ·{" "}
           {jobs.filter((j) => j.applied).length} applied
         </section>

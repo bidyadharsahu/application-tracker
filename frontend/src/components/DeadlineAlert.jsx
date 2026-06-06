@@ -21,7 +21,7 @@ export default function DeadlineAlert({ jobs }) {
       <div className="flex items-start gap-3">
         <AlertTriangle size={22} strokeWidth={1.75} className="text-[#8C3A3A] shrink-0 mt-0.5" />
         <div className="min-w-0">
-          <div className="font-serif font-black text-lg sm:text-xl text-[#8C3A3A]">
+          <div className="font-serif font-bold text-lg sm:text-xl text-[#8C3A3A]">
             Hey — you haven't applied yet!
           </div>
           <div className="font-sans text-lg sm:text-xl text-[#2C2A26] mt-1">

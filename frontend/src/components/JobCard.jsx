@@ -11,7 +11,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const isNotStarted = isFuture || allDatesBlank;
 
   const stampBase =
-    "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-widest text-base sm:text-lg bg-transparent select-none";
+    "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-wider text-base sm:text-lg bg-transparent select-none";
 
   let stampText = "Pending";
   let stampColorClass = "border-[#8C3A3A] text-[#8C3A3A] rotate-2";
@@ -40,7 +40,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
       {/* Job Title */}
       <h3
-        className="font-serif font-black text-3xl sm:text-4xl text-[#2C2A26] pr-24 sm:pr-28 leading-tight tracking-tight"
+        className="font-sans font-bold text-3xl sm:text-4xl text-[#2C2A26] pr-24 sm:pr-28 leading-tight tracking-tight"
         data-testid={`job-title-${job.id}`}
       >
         {job.job_name}
@@ -50,7 +50,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       {job.tags && (
         <div className="flex flex-wrap gap-2 mt-2 pr-24 sm:pr-28">
           {job.tags.split(',').map((tag, i) => tag.trim() && (
-            <span key={i} className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-lg sm:text-xl uppercase tracking-widest text-[#59554D] border border-[#2C2A26]">
+            <span key={i} className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-lg sm:text-xl uppercase tracking-wider text-[#59554D] border border-[#2C2A26]">
               {tag.trim()}
             </span>
           ))}
@@ -62,25 +62,27 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
       {/* Meta data */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-        <div className="flex items-start gap-2">
-          <CalendarDays size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
-          <div className="min-w-0">
-            <div className="font-mono text-lg sm:text-xl uppercase tracking-widest text-[#59554D]">
-              Last date
-            </div>
-            <div
-              className="font-mono font-bold text-lg sm:text-xl text-[#2C2A26]"
-              data-testid={`job-last-date-${job.id}`}
-            >
-              {job.last_date ? formatDate(job.last_date) : "— TBA —"}
+        {!isApplied && (
+          <div className="flex items-start gap-2">
+            <CalendarDays size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
+            <div className="min-w-0">
+              <div className="font-mono text-lg sm:text-xl uppercase tracking-wider text-[#59554D]">
+                Last date
+              </div>
+              <div
+                className="font-mono font-bold text-lg sm:text-xl text-[#2C2A26]"
+                data-testid={`job-last-date-${job.id}`}
+              >
+                {job.last_date ? formatDate(job.last_date) : "— TBA —"}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-start gap-2">
           <FileText size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
           <div className="min-w-0">
-            <div className="font-mono text-lg sm:text-xl uppercase tracking-widest text-[#59554D]">
+            <div className="font-mono text-lg sm:text-xl uppercase tracking-wider text-[#59554D]">
               Exam date
             </div>
             <div
@@ -94,9 +96,11 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       </div>
 
       {/* Countdown */}
-      <div className="mb-4">
-        <Countdown targetDate={job.last_date} />
-      </div>
+      {!isApplied && (
+        <div className="mb-4">
+          <Countdown targetDate={job.last_date} />
+        </div>
+      )}
 
       {job.notes && (
         <p
@@ -110,7 +114,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       {/* Credentials */}
       {(job.app_username || job.app_password) && (
         <div className="bg-[#EBE5D9]/50 border-2 border-dashed border-[#2C2A26] p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="font-mono text-xl uppercase tracking-widest text-[#59554D] font-bold shrink-0">
+          <div className="font-mono text-xl uppercase tracking-wider text-[#59554D] font-bold shrink-0">
             Login
           </div>
           <div className="flex flex-wrap gap-2">

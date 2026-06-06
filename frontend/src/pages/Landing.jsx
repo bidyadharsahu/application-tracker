@@ -116,7 +116,7 @@ export default function Landing() {
           <div className="flex justify-between items-start sm:items-center">
             <div>
               <h1
-                className="font-serif font-black text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
+                className="font-sans font-bold text-3xl sm:text-5xl text-[#2C2A26] leading-none tracking-tight"
                 data-testid="site-title"
               >
                 JOB APPLICATION
@@ -139,18 +139,28 @@ export default function Landing() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
         {/* Stats Bar */}
         <section className="grid grid-cols-3 gap-3 sm:gap-4" data-testid="stats-bar">
-          <StatBox label="Notices" value={stats.total} icon={<BookOpenCheck size={18} />} />
+          <StatBox 
+            label="Notices" 
+            value={stats.total} 
+            icon={<BookOpenCheck size={18} />} 
+            onClick={() => setFilter("all")}
+            isActive={filter === "all"}
+          />
           <StatBox
             label="Pending"
             value={stats.pending}
             icon={<Calendar size={18} />}
             accent="red"
+            onClick={() => setFilter("pending")}
+            isActive={filter === "pending"}
           />
           <StatBox
             label="Applied"
             value={stats.applied}
             icon={<BookOpenCheck size={18} />}
             accent="green"
+            onClick={() => setFilter("applied")}
+            isActive={filter === "applied"}
           />
         </section>
 
@@ -182,7 +192,7 @@ export default function Landing() {
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`font-mono uppercase tracking-widest text-xl px-3 py-2 border-2 transition-colors shrink-0 ${
+                className={`font-mono uppercase tracking-wider text-xl px-3 py-2 border-2 transition-colors shrink-0 ${
                   filter === f.key
                     ? "bg-[#2C2A26] text-[#FCFAF5] border-[#2C2A26]"
                     : "bg-transparent text-[#2C2A26] border-[#2C2A26] hover:bg-[#EBE5D9]"
@@ -212,7 +222,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t-2 border-dashed border-[#59554D] mt-12 py-6 px-4 text-center">
-        <p className="font-mono text-xs uppercase tracking-widest text-[#59554D]">
+        <p className="font-mono text-xs uppercase tracking-wider text-[#59554D]">
           DESIGNED IN GOOD FAITH · ACCIDENTALLY UPDATED BY ME IN 2026 😅
         </p>
       </footer>
@@ -249,25 +259,32 @@ function LiveClock() {
   );
 }
 
-function StatBox({ label, value, icon, accent }) {
+function StatBox({ label, value, icon, accent, onClick, isActive }) {
   const color =
     accent === "red"
       ? "text-[#8C3A3A]"
       : accent === "green"
       ? "text-[#3A5A40]"
       : "text-[#2C2A26]";
+  
+  const bgClass = isActive ? "bg-[#EBE5D9]" : "bg-[#FCFAF5]";
+
   return (
     <div
-      className="bg-[#FCFAF5] border-2 border-[#2C2A26] shadow-stamp p-3 sm:p-5"
+      className={`${bgClass} border-2 border-[#2C2A26] shadow-stamp p-3 sm:p-5 cursor-pointer hover:bg-[#EBE5D9] transition-colors`}
       data-testid={`stat-${label.toLowerCase()}`}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') onClick(); }}
     >
       <div className="flex items-center gap-2 text-[#59554D]">
         {icon}
-        <span className="font-mono text-lg sm:text-xl uppercase tracking-widest">
+        <span className="font-mono text-lg sm:text-xl uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <div className={`font-serif font-black text-5xl sm:text-7xl mt-1 ${color}`}>
+      <div className={`font-serif font-bold text-5xl sm:text-7xl mt-1 ${color}`}>
         {value}
       </div>
     </div>

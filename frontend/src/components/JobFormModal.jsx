@@ -6,7 +6,7 @@ const inputClass =
   "bg-[#FCFAF5] border-2 border-[#2C2A26] font-mono text-base py-2.5 px-3 outline-none w-full placeholder:text-[#59554D]/50 focus:shadow-stamp transition-shadow";
 
 const labelClass =
-  "block font-mono text-xs uppercase tracking-widest text-[#59554D] mb-1.5 font-bold";
+  "block font-mono text-xs uppercase tracking-wider text-[#59554D] mb-1.5 font-bold";
 
 const formatDateToDDMMYYYY = (dStr) => {
   if (!dStr) return "";
@@ -124,7 +124,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
           <X size={24} />
         </button>
 
-        <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#2C2A26] mb-1">
+        <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#2C2A26] mb-1">
           {initial ? "Edit Job" : "New Job Notice"}
         </h2>
         <p className="font-sans text-sm text-[#59554D] mb-5">

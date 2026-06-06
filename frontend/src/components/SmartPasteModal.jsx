@@ -53,7 +53,7 @@ export default function SmartPasteModal({ open, onClose, onParsed }) {
 
         <div className="flex items-center gap-3 mb-2">
           <Sparkles size={26} strokeWidth={1.5} className="text-[#2C2A26]" />
-          <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#2C2A26]">
+          <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#2C2A26]">
             Smart Paste
           </h2>
         </div>
