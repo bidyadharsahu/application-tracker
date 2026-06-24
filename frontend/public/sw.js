@@ -33,3 +33,22 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(req))
   );
 });
+
+// Listen for push events
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() || {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Job Reminder', {
+      body: data.body || 'Check your application tracker',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: data.tag || 'reminder',
+      data: { url: data.url || '/' }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url));
+});

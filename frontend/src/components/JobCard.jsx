@@ -1,7 +1,9 @@
 import React from "react";
 import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2, Copy } from "lucide-react";
+import { differenceInCalendarDays } from "date-fns";
 import Countdown from "./Countdown";
 import { formatDate } from "../lib/utils-date";
+import supabase from "../lib/supabase";
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const isApplied = !!job.applied;
@@ -9,6 +11,33 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const isFuture = job.start_date && job.start_date > today;
   const allDatesBlank = !job.start_date && !job.exam_date && !job.last_date;
   const isNotStarted = isFuture || allDatesBlank;
+
+  const uploadDocument = async (jobId, file, docType) => {
+    const filePath = `${jobId}/${docType}-${Date.now()}-${file.name}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('job-documents')
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      await supabase.from('job_documents').insert({
+        job_id: jobId,
+        file_name: file.name,
+        file_path: filePath,
+        document_type: docType
+      });
+    }
+  };
+
+  const getExamCountdown = (examDate) => {
+    if (!examDate) return null;
+    const days = differenceInCalendarDays(new Date(examDate), new Date());
+    if (days < 0) return { text: 'Exam passed', color: 'text-[#8C3A3A]' };
+    if (days === 0) return { text: '🚨 Exam TODAY!', color: 'text-[#8C3A3A] font-bold' };
+    if (days === 1) return { text: '⚠️ Exam TOMORROW', color: 'text-[#D97706] font-bold' };
+    if (days <= 7) return { text: `⏰ Exam in ${days} days`, color: 'text-[#D97706]' };
+    return { text: `📅 Exam in ${days} days`, color: 'text-[#3A5A40]' };
+  };
 
   const stampBase =
     "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-wider text-base sm:text-lg bg-transparent select-none";
@@ -57,6 +86,18 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         </div>
       )}
 
+      {/* Auto-discovered badge */}
+      {job.source && job.source !== 'manual' && (
+        <div className="mt-2 pr-24 sm:pr-28">
+          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-[#3A5A40] px-2 py-0.5 rounded-full border border-[#3A5A40]">
+            🤖 Auto-found · Match {job.match_score}%
+          </span>
+          {job.match_reason && (
+            <p className="text-xs text-[#59554D] mt-1">{job.match_reason}</p>
+          )}
+        </div>
+      )}
+
       {/* Dotted vintage divider */}
       <div className="divider-vintage my-4" aria-hidden="true" />
 
@@ -91,6 +132,14 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             >
               {job.exam_date ? formatDate(job.exam_date) : "— TBA —"}
             </div>
+            {job.exam_date && (() => {
+              const countdown = getExamCountdown(job.exam_date);
+              return (
+                <div className={`text-sm sm:text-base mt-1 font-mono uppercase ${countdown.color}`}>
+                  {countdown.text}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -149,6 +198,22 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           </div>
         </div>
       )}
+
+      {/* Documents Upload */}
+      <div className="mb-4">
+        <div className="font-mono text-sm uppercase tracking-wider text-[#59554D] mb-2">Documents</div>
+        <div className="flex flex-wrap gap-2">
+          {['admit_card', 'hall_ticket', 'result'].map(type => (
+            <label key={type} className="text-xs cursor-pointer font-mono uppercase bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1 hover:bg-[#EBE5D9] transition-colors">
+              📎 {type.replace('_', ' ')}
+              <input
+                type="file" className="hidden" accept=".pdf,.jpg,.png"
+                onChange={e => e.target.files[0] && uploadDocument(job.id, e.target.files[0], type)}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2 sm:gap-3 pt-2">

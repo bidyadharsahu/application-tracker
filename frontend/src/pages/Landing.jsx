@@ -85,29 +85,36 @@ export default function Landing() {
       (j.tags && j.tags.toLowerCase().includes(query.toLowerCase()));
     if (!matchQuery) return false;
     
-    if (filter === "future") return !j.applied && isNotStarted;
+    if (filter === "notices") return !j.applied && isNotStarted;
     if (filter === "pending") return !j.applied && !isNotStarted;
     if (filter === "applied") return j.applied;
-    if (filter === "upcoming") {
-      if (j.applied || isNotStarted) return false;
-      const target = new Date(j.last_date + "T23:59:59");
-      const daysLeft = Math.ceil((target - new Date()) / (1000 * 60 * 60 * 24));
-      return daysLeft >= 0 && daysLeft <= 15;
-    }
-    return true;
+    return true; // when filter is 'all' or activeFilter is null
   });
 
-  const stats = {
-    total: jobs.length,
-    pending: jobs.filter((j) => {
-      const isFuture = j.start_date && j.start_date > today;
-      const allDatesBlank = !j.start_date && !j.exam_date && !j.last_date;
-      const isNotStarted = isFuture || allDatesBlank;
-      return !j.applied && !isNotStarted;
-    }).length,
-    applied: jobs.filter((j) => j.applied).length,
-
+  const getJobStatus = (j) => {
+    if (j.applied) return 'applied';
+    const isFuture = j.start_date && j.start_date > today;
+    const allDatesBlank = !j.start_date && !j.exam_date && !j.last_date;
+    if (isFuture || allDatesBlank) return 'notices';
+    return 'pending';
   };
+
+  const counts = {
+    pending: jobs.filter(j => getJobStatus(j) === 'pending').length,
+    applied: jobs.filter(j => getJobStatus(j) === 'applied').length,
+    notices: jobs.filter(j => getJobStatus(j) === 'notices').length,
+  };
+
+  const filteredJobs = filter ? filtered : [];
+  
+  // Sort applied jobs by exam date if 'applied' is active
+  if (filter === 'applied') {
+    filteredJobs.sort((a, b) => {
+      if (!a.exam_date) return 1;
+      if (!b.exam_date) return -1;
+      return new Date(a.exam_date) - new Date(b.exam_date);
+    });
+  }
 
   return (
     <div className="min-h-screen pb-24" data-testid="landing-page">
@@ -137,88 +144,66 @@ export default function Landing() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
-        {/* Stats Bar */}
-        <section className="grid grid-cols-3 gap-3 sm:gap-4" data-testid="stats-bar">
-          <StatBox 
-            label="Notices" 
-            value={stats.total} 
-            icon={<BookOpenCheck size={18} />} 
-            onClick={() => setFilter("all")}
-            isActive={filter === "all"}
-          />
-          <StatBox
-            label="Pending"
-            value={stats.pending}
-            icon={<Calendar size={18} />}
-            accent="red"
-            onClick={() => setFilter("pending")}
-            isActive={filter === "pending"}
-          />
-          <StatBox
-            label="Applied"
-            value={stats.applied}
-            icon={<BookOpenCheck size={18} />}
-            accent="green"
-            onClick={() => setFilter("applied")}
-            isActive={filter === "applied"}
-          />
-        </section>
-
         {/* Deadline alert */}
         <DeadlineAlert jobs={jobs} />
 
-        {/* Filters & Search */}
-        <section className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="relative flex-1">
-            <Search
-              size={18}
-              strokeWidth={1.5}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#59554D]"
-            />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search notices..."
-              className="font-mono text-xl bg-[#FCFAF5] border-2 border-[#2C2A26] w-full pl-10 pr-3 py-2.5 outline-none focus:shadow-stamp transition-shadow"
-              data-testid="search-input"
-            />
-          </div>
-          <div
-            className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-1"
-            data-testid="filter-tabs"
-          >
-            <Filter size={16} className="text-[#59554D] shrink-0" />
-            {filters.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`font-mono uppercase tracking-wider text-xl px-3 py-2 border-2 transition-colors shrink-0 ${
-                  filter === f.key
-                    ? "bg-[#2C2A26] text-[#FCFAF5] border-[#2C2A26]"
-                    : "bg-transparent text-[#2C2A26] border-[#2C2A26] hover:bg-[#EBE5D9]"
-                }`}
-                data-testid={`filter-${f.key}`}
-                type="button"
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* Status Cards */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          {[
+            { key: 'pending', label: 'Pending', emoji: '🟡' },
+            { key: 'applied', label: 'Applied', emoji: '🟢' },
+            { key: 'notices', label: 'Notices', emoji: '🔵' },
+          ].map(({ key, label, emoji }) => (
+            <div
+              key={key}
+              onClick={() => setFilter(filter === key ? null : key)}
+              className={`cursor-pointer p-4 sm:p-5 rounded-xl border-2 shadow-stamp transition-colors text-center ${
+                filter === key 
+                  ? 'border-amber-600 bg-amber-50' 
+                  : 'border-[#2C2A26] bg-[#FCFAF5] hover:bg-[#EBE5D9]'
+              }`}
+            >
+              <div className="text-3xl sm:text-5xl font-bold font-serif text-[#2C2A26]">{counts[key]}</div>
+              <div className="text-sm sm:text-base font-mono uppercase tracking-wider text-[#59554D] mt-2">{emoji} {label}</div>
+            </div>
+          ))}
+        </div>
 
-        {/* Jobs Grid */}
-        <section
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-7"
-          data-testid="jobs-grid"
-        >
-          {loading ? (
-            <SkeletonCards />
-          ) : filtered.length === 0 ? (
-            <EmptyState query={query} />
-          ) : (
-            filtered.map((job) => <JobCard key={job.id} job={job} onToggle={handleToggleApplied} />)
-          )}
-        </section>
+        {filter && (
+          <>
+            {/* Filters & Search */}
+            <section className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="relative flex-1">
+                <Search
+                  size={18}
+                  strokeWidth={1.5}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#59554D]"
+                />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search jobs..."
+                  className="font-mono text-xl bg-[#FCFAF5] border-2 border-[#2C2A26] w-full pl-10 pr-3 py-2.5 outline-none focus:shadow-stamp transition-shadow"
+                  data-testid="search-input"
+                />
+              </div>
+            </section>
+
+            {/* Jobs Grid */}
+            <section
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-7"
+              data-testid="jobs-grid"
+            >
+              {loading ? (
+                <SkeletonCards />
+              ) : filteredJobs.length === 0 ? (
+                <EmptyState query={query} />
+              ) : (
+                filteredJobs.map((job) => <JobCard key={job.id} job={job} onToggle={handleToggleApplied} />)
+              )}
+            </section>
+          </>
+        )}
       </main>
 
       <footer className="border-t-2 border-dashed border-[#59554D] mt-12 py-6 px-4 text-center">
