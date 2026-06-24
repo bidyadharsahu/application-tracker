@@ -31,12 +31,11 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
   const getExamCountdown = (examDate) => {
     if (!examDate) return null;
-    const days = differenceInCalendarDays(new Date(examDate), new Date());
-    if (days < 0) return { text: 'Exam passed', color: 'text-[#8C3A3A]' };
-    if (days === 0) return { text: '🚨 Exam TODAY!', color: 'text-[#8C3A3A] font-bold' };
-    if (days === 1) return { text: '⚠️ Exam TOMORROW', color: 'text-[#D97706] font-bold' };
-    if (days <= 7) return { text: `⏰ Exam in ${days} days`, color: 'text-[#D97706]' };
-    return { text: `📅 Exam in ${days} days`, color: 'text-[#3A5A40]' };
+    const days = Math.ceil((new Date(examDate) - new Date()) / (1000*60*60*24));
+    if (days < 0) return { text: 'Exam passed', color: 'text-gray-400' };
+    if (days <= 7) return { text: `⚠ Exam in ${days} days (${examDate})`, color: 'text-red-600 font-bold' };
+    if (days <= 30) return { text: `📅 Exam in ${days} days (${examDate})`, color: 'text-orange-500' };
+    return { text: `📅 Exam: ${examDate}`, color: 'text-green-700' };
   };
 
   const stampBase =

@@ -217,6 +217,17 @@ function throwApi(error) {
   throw e;
 }
 
+async function deleteExpiredUnappliedJobs() {
+  const today = new Date().toISOString().split('T')[0];
+  const { error } = await supabase
+    .from('jobs')
+    .delete()
+    .eq('applied', false)
+    .lt('last_date', today)
+    .not('last_date', 'is', null);
+  if (error) console.error('Cleanup error:', error);
+}
+
 export const api = {
   login,
   me,
@@ -228,6 +239,7 @@ export const api = {
   deleteJob,
   stats,
   smartParse,
+  deleteExpiredUnappliedJobs,
 };
 
 export default api;

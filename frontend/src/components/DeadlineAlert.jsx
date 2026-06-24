@@ -24,11 +24,25 @@ export default function DeadlineAlert({ jobs }) {
 
   if (urgent.length === 0 || !showPopup) return null;
 
+  let startX = 0;
+
+  const handleTouchStart = (e) => {
+    startX = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (Math.abs(e.changedTouches[0].clientX - startX) > 60) {
+      handleDismiss();
+    }
+  };
+
   return (
     <div
       className="bg-[#FCFAF5] border-2 border-[#8C3A3A] shadow-stamp p-4 sm:p-5 animate-notice relative"
       data-testid="deadline-alert"
       role="alert"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       <button 
         onClick={handleDismiss}

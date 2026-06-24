@@ -20,7 +20,7 @@ export default function Landing() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(null);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -49,6 +49,7 @@ export default function Landing() {
   };
 
   useEffect(() => {
+    api.deleteExpiredUnappliedJobs();
     fetchJobs();
   }, []);
 
@@ -147,6 +148,9 @@ export default function Landing() {
         {/* Deadline alert */}
         <DeadlineAlert jobs={jobs} />
 
+        {/* Next Exam Banner */}
+        <NextExamBanner jobs={jobs} />
+
         {/* Status Cards */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           {[
@@ -213,6 +217,25 @@ export default function Landing() {
       </footer>
 
       <PWAInstallBanner />
+    </div>
+  );
+}
+
+function NextExamBanner({ jobs }) {
+  const upcoming = jobs
+    .filter(j => j.exam_date && new Date(j.exam_date) >= new Date() && j.applied)
+    .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date));
+  
+  if (!upcoming.length) return null;
+  
+  const next = upcoming[0];
+  const days = Math.ceil((new Date(next.exam_date) - new Date()) / (1000*60*60*24));
+  
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-center">
+      <p className="text-amber-800 font-semibold text-sm">
+        📝 Next Exam: <strong>{next.job_name}</strong> — in <strong>{days} days</strong> ({next.exam_date})
+      </p>
     </div>
   );
 }

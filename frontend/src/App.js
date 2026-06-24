@@ -18,34 +18,28 @@ export default function App() {
       Notification.requestPermission();
     }
 
-    const checkUpcomingExams = async () => {
-      const { data: jobs } = await supabase
-        .from('jobs')
-        .select('job_name, exam_date')
-        .eq('applied', true)
-        .not('exam_date', 'is', null);
-
+    const checkUpcomingDeadlines = async () => {
+      if (Notification.permission !== 'granted') return;
+      const { data: jobs } = await supabase.from('jobs').select('*');
       if (!jobs) return;
+      
       const today = new Date();
-      jobs.forEach(job => {
-        const examDate = new Date(job.exam_date);
-        const daysLeft = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
-        if (daysLeft === 7 || daysLeft === 1 || daysLeft === 0) {
-          if (Notification.permission === 'granted') {
-            new Notification(`📅 Exam Reminder: ${job.job_name}`, {
-              body: daysLeft === 0
-                ? '🚨 Your exam is TODAY!'
-                : daysLeft === 1
-                ? '⚠️ Your exam is TOMORROW!'
-                : `📅 Exam in ${daysLeft} days`,
-              icon: '/icon-192.png'
-            });
-          }
-        }
+      const soon = jobs.filter(j => {
+        if (!j.last_date || j.applied) return false;
+        const d = new Date(j.last_date);
+        const diff = Math.ceil((d - today) / (1000*60*60*24));
+        return diff >= 0 && diff <= 3;
       });
+
+      if (soon.length > 0) {
+        new Notification('⚠️ Upcoming Deadlines!', {
+          body: soon.map(j => `${j.job_name} — Last date: ${j.last_date}`).join('\n'),
+          icon: '/logo192.png'
+        });
+      }
     };
 
-    checkUpcomingExams();
+    checkUpcomingDeadlines();
   }, []);
 
   return (
