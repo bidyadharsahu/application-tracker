@@ -1,94 +1,93 @@
 import React, { useState, useEffect } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { X, AlertTriangle } from "lucide-react";
 import { daysUntil } from "../lib/utils-date";
 
 export default function DeadlineAlert({ jobs }) {
-  const [showPopup, setShowPopup] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Only show once per session — never show again after dismissed
-    const dismissed = sessionStorage.getItem("popup_dismissed");
-    if (dismissed) return;
-    setShowPopup(true);
+    if (sessionStorage.getItem("popup_dismissed")) return;
+    setVisible(true);
   }, []);
 
-  const handleDismiss = () => {
+  const dismiss = () => {
     sessionStorage.setItem("popup_dismissed", "1");
-    setShowPopup(false);
+    setVisible(false);
   };
 
-  // Jobs with deadline ≤ 3 days away (unapplied)
-  const urgent = jobs.filter((j) => {
+  const urgent = jobs.filter(j => {
     if (j.applied) return false;
     const d = daysUntil(j.last_date);
     return d !== null && d <= 3 && d >= 0;
   });
 
-  // Also show overdue (not applied, last_date passed)
-  const overdue = jobs.filter((j) => {
-    if (j.applied) return false;
-    const d = daysUntil(j.last_date);
-    return d !== null && d < 0;
-  });
-
-  const allUrgent = [...urgent, ...overdue];
-
-  if (allUrgent.length === 0 || !showPopup) return null;
+  if (!visible || urgent.length === 0) return null;
 
   let startX = 0;
-  const handleTouchStart = (e) => { startX = e.touches[0].clientX; };
-  const handleTouchEnd = (e) => {
-    if (Math.abs(e.changedTouches[0].clientX - startX) > 60) handleDismiss();
-  };
 
   return (
     <div
-      className="bg-[#FCFAF5] border-2 border-[#8C3A3A] shadow-stamp p-4 sm:p-5 animate-notice relative"
+      className="anim-slide-down"
       data-testid="deadline-alert"
       role="alert"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onTouchStart={e => { startX = e.touches[0].clientX; }}
+      onTouchEnd={e => { if (Math.abs(e.changedTouches[0].clientX - startX) > 60) dismiss(); }}
+      style={{
+        margin: "16px 20px 0",
+        background: "rgba(255,101,132,0.12)",
+        border: "1px solid rgba(255,101,132,0.35)",
+        borderRadius: "var(--radius-lg)",
+        padding: "16px 18px",
+        position: "relative",
+      }}
     >
       <button
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 text-[#8C3A3A] hover:bg-[#EBE5D9] p-1 rounded transition-colors"
-        aria-label="Dismiss alert"
+        onClick={dismiss}
+        aria-label="Dismiss"
         type="button"
+        style={{
+          position: "absolute", top: "12px", right: "12px",
+          background: "rgba(255,255,255,0.08)", border: "none",
+          borderRadius: "50%", width: "32px", height: "32px",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--ink-soft)", cursor: "pointer",
+        }}
       >
-        <X size={20} />
+        <X size={15} />
       </button>
 
-      <div className="flex items-start gap-3">
-        <AlertTriangle size={22} strokeWidth={1.75} className="text-[#8C3A3A] shrink-0 mt-0.5" />
-        <div className="min-w-0 pr-6">
-          <div className="font-serif font-bold text-lg sm:text-xl text-[#8C3A3A]">
-            ⚠️ Deadline Alert!
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", paddingRight: "36px" }}>
+        <AlertTriangle size={20} color="var(--accent-2)" style={{ flexShrink: 0, marginTop: "2px" }} />
+        <div>
+          <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--accent-2)", marginBottom: "4px" }}>
+            {urgent.length} deadline{urgent.length > 1 ? "s" : ""} closing soon!
           </div>
-          <div className="font-sans text-base sm:text-lg text-[#2C2A26] mt-1">
-            <strong>{urgent.length}</strong> job{urgent.length !== 1 ? "s" : ""} closing within 3 days.
-            {overdue.length > 0 && (
-              <span className="ml-1 text-[#8C3A3A]">
-                + <strong>{overdue.length}</strong> already overdue!
-              </span>
-            )}
-          </div>
-          <ul className="mt-2 font-mono text-sm sm:text-base text-[#59554D] space-y-1">
-            {allUrgent.slice(0, 4).map((j) => {
+          <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+            {urgent.slice(0, 3).map(j => {
               const d = daysUntil(j.last_date);
               return (
-                <li key={j.id} className="flex items-center gap-2 truncate" data-testid={`urgent-job-${j.id}`}>
-                  <span className={d < 0 ? "text-[#8C3A3A]" : d === 0 ? "text-[#8C3A3A] font-bold" : "text-[#B5651D]"}>
-                    {d < 0 ? "OVERDUE" : d === 0 ? "TODAY" : `${d}d left`}
+                <li key={j.id} data-testid={`urgent-job-${j.id}`} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{
+                    fontSize: "0.75rem", fontWeight: 700, padding: "2px 8px",
+                    background: d === 0 ? "var(--accent-2)" : "rgba(255,101,132,0.2)",
+                    color: d === 0 ? "white" : "var(--accent-2)",
+                    borderRadius: "99px", flexShrink: 0
+                  }}>
+                    {d === 0 ? "TODAY" : d === 1 ? "Tomorrow" : `${d} days`}
                   </span>
-                  <span className="truncate">— {j.job_name}</span>
+                  <span style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {j.job_name}
+                  </span>
                 </li>
               );
             })}
-            {allUrgent.length > 4 && (
-              <li className="text-[#59554D]">and {allUrgent.length - 4} more...</li>
+            {urgent.length > 3 && (
+              <li style={{ fontSize: "0.8125rem", color: "var(--ink-muted)" }}>+{urgent.length - 3} more</li>
             )}
           </ul>
-          <p className="mt-2 font-mono text-xs text-[#59554D] italic">Swipe or click ✕ to dismiss</p>
+          <div style={{ fontSize: "0.75rem", color: "rgba(255,101,132,0.6)", marginTop: "8px" }}>
+            Swipe left/right or tap ✕ to dismiss
+          </div>
         </div>
       </div>
     </div>
