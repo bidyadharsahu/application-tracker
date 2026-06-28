@@ -10,83 +10,71 @@ export default function SmartPasteModal({ open, onClose, onParsed }) {
   if (!open) return null;
 
   const handleParse = async () => {
-    if (text.trim().length < 5) {
-      toast.error("Please paste some content to parse.");
-      return;
-    }
+    if (text.trim().length < 5) { toast.error("Paste some content first"); return; }
     setLoading(true);
     try {
       const data = await api.smartParse(text);
       if (!data.job_name && !data.last_date && !data.apply_link) {
-        toast.error("Could not extract data. Try cleaner text.");
+        toast.error("Couldn't extract data. Try cleaner text.");
       } else {
-        toast.success("Extracted successfully — review & save.");
+        toast.success("Extracted! Review and save ✅");
         onParsed && onParsed(data);
       }
     } catch (e) {
-      console.error(e);
-      toast.error(e?.response?.data?.detail || "Smart parse failed.");
-    } finally {
-      setLoading(false);
-    }
+      toast.error(e?.response?.data?.detail || "AI parse failed");
+    } finally { setLoading(false); }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#2C2A26]/40 backdrop-blur-sm animate-notice"
-      data-testid="smart-paste-modal"
-      onClick={onClose}
-    >
-      <div
-        className="bg-[#F4F1EA] border-4 border-[#2C2A26] shadow-stamp-xl p-6 sm:p-8 w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-[#2C2A26] hover:text-[#8C3A3A] transition-colors"
-          aria-label="Close"
-          data-testid="smart-paste-close"
-          type="button"
-        >
-          <X size={24} />
-        </button>
+    <div onClick={onClose} data-testid="smart-paste-modal" style={{
+      position: "fixed", inset: 0, zIndex: 100,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
+      display: "flex", alignItems: "flex-end"
+    }}>
+      <div className="bottom-sheet" onClick={e => e.stopPropagation()} style={{ width: "100%", padding: "0 20px" }}>
+        <div className="sheet-handle" />
 
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles size={26} strokeWidth={1.5} className="text-[#2C2A26]" />
-          <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#2C2A26]">
-            Smart Paste
-          </h2>
-        </div>
-        <p className="font-sans text-sm sm:text-base text-[#59554D] mb-5">
-          Paste a job notification, advertisement, or any text — we'll extract the job name,
-          dates, and apply link for you.
-        </p>
-
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Paste notification text, paragraph, or webpage content here..."
-          className="font-mono text-sm sm:text-base bg-[#FCFAF5] border-2 border-dashed border-[#59554D] focus:border-[#2C2A26] w-full p-3 outline-none min-h-[180px] resize-y"
-          data-testid="smart-paste-textarea"
-          rows={8}
-        />
-
-        <div className="flex flex-col sm:flex-row gap-3 mt-5">
-          <button
-            onClick={handleParse}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-base sm:text-lg px-5 py-3 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            data-testid="smart-paste-extract-btn"
-            type="button"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-            {loading ? "Reading..." : "Extract with AI"}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+          <div style={{
+            width: "44px", height: "44px", borderRadius: "12px",
+            background: "linear-gradient(135deg,var(--accent),#9C63FF)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+          }}>
+            <Sparkles size={20} color="white" />
+          </div>
+          <div>
+            <div style={{ fontSize: "1.375rem", fontWeight: 900, color: "var(--ink)" }}>Smart Paste</div>
+            <div style={{ fontSize: "0.8125rem", color: "var(--ink-muted)" }}>AI extracts job details automatically</div>
+          </div>
+          <button type="button" onClick={onClose} data-testid="smart-paste-close" style={{
+            marginLeft: "auto", width: "40px", height: "40px", borderRadius: "50%",
+            background: "rgba(255,255,255,0.08)", border: "none",
+            color: "var(--ink)", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <X size={18} />
           </button>
-          <button
-            onClick={onClose}
-            className="inline-flex items-center justify-center bg-transparent text-[#2C2A26] font-serif font-bold text-base sm:text-lg px-5 py-3 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
-            type="button"
-          >
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Paste job notification, PDF text, or webpage content here..."
+            data-testid="smart-paste-textarea"
+            className="input-field"
+            rows={7}
+            style={{ resize: "vertical", minHeight: "160px" }}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: "12px", paddingBottom: "8px" }}>
+          <button type="button" onClick={handleParse} disabled={loading} className="btn-primary"
+            data-testid="smart-paste-extract-btn" style={{ flex: 1 }}>
+            {loading ? <Loader2 size={18} style={{ animation: "spin-slow 0.8s linear infinite" }} /> : <Sparkles size={18} />}
+            {loading ? "Reading with AI..." : "Extract with AI"}
+          </button>
+          <button type="button" onClick={onClose} className="btn-secondary" style={{ minWidth: "80px" }}>
             Cancel
           </button>
         </div>
