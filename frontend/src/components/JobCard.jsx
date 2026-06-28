@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
   ExternalLink, CalendarDays, FileText, CheckCircle2, Circle,
-  Pencil, Trash2, Copy, Clock, AlertTriangle, ChevronDown, ChevronUp, Paperclip
+  Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip,
+  X, Clock, Tag, User, Lock, AlertTriangle
 } from "lucide-react";
 import { formatDate, daysUntil } from "../lib/utils-date";
 import Countdown from "./Countdown";
@@ -12,317 +13,357 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const isApplied = !!job.applied;
   const today = new Date().toISOString().split("T")[0];
   const isFuture = job.start_date && job.start_date > today;
-  const allDatesBlank = !job.start_date && !job.exam_date && !job.last_date;
-  const isNotStarted = isFuture || allDatesBlank;
-  const [docsExpanded, setDocsExpanded] = useState(false);
-  const [uploadedDocs, setUploadedDocs] = useState([]);
+  const allBlank = !job.start_date && !job.exam_date && !job.last_date;
+  const isNotStarted = isFuture || allBlank;
 
-  // Load existing docs for this job
+  const [docsOpen, setDocsOpen] = useState(false);
+  const [docs, setDocs] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  // Exam countdown
+  const examDays = job.exam_date ? Math.ceil((new Date(job.exam_date) - new Date()) / 86400000) : null;
+  const isExamUrgent = examDays !== null && examDays >= 0 && examDays <= 7;
+  const deadlineDays = job.last_date ? daysUntil(job.last_date) : null;
+  const isDeadlineUrgent = deadlineDays !== null && deadlineDays <= 3 && deadlineDays >= 0;
+
+  // Load docs when vault opens
   useEffect(() => {
-    if (!docsExpanded) return;
-    supabase
-      .from("job_documents")
-      .select("*")
-      .eq("job_id", job.id)
-      .then(({ data }) => setUploadedDocs(data || []));
-  }, [docsExpanded, job.id]);
+    if (!docsOpen) return;
+    supabase.from("job_documents").select("*").eq("job_id", job.id)
+      .then(({ data }) => setDocs(data || []));
+  }, [docsOpen, job.id]);
 
-  // Upload document to Supabase Storage
-  const uploadDocument = async (jobId, file, docType) => {
-    const filePath = `${jobId}/${docType}-${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from("job-documents")
-      .upload(filePath, file);
-    if (uploadError) {
-      toast.error("Upload failed: " + uploadError.message);
-      return;
-    }
-    const { error: dbErr } = await supabase.from("job_documents").insert({
-      job_id: jobId,
-      file_name: file.name,
-      file_path: filePath,
-      document_type: docType,
-    });
-    if (!dbErr) {
-      toast.success(`${docType.replace("_", " ")} uploaded!`);
-      setUploadedDocs((prev) => [...prev, { file_name: file.name, file_path: filePath, document_type: docType }]);
-    }
+  const uploadDoc = async (file, type) => {
+    setUploading(true);
+    try {
+      const path = `${job.id}/${type}-${Date.now()}-${file.name}`;
+      const { error: upErr } = await supabase.storage.from("job-documents").upload(path, file);
+      if (upErr) { toast.error("Upload failed"); return; }
+      await supabase.from("job_documents").insert({ job_id: job.id, file_name: file.name, file_path: path, document_type: type });
+      toast.success(`${type.replace("_", " ")} saved! 📎`);
+      const { data } = await supabase.from("job_documents").select("*").eq("job_id", job.id);
+      setDocs(data || []);
+    } finally { setUploading(false); }
   };
 
-  // Open stored document
+  const deleteDoc = async (doc) => {
+    if (!window.confirm(`Delete "${doc.file_name}"?`)) return;
+    await supabase.storage.from("job-documents").remove([doc.file_path]);
+    await supabase.from("job_documents").delete().eq("id", doc.id);
+    setDocs(prev => prev.filter(d => d.id !== doc.id));
+    toast.success("Document deleted");
+  };
+
   const openDoc = async (filePath) => {
     const { data } = await supabase.storage.from("job-documents").createSignedUrl(filePath, 60);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
-  // Exam countdown
-  const getExamCountdown = (examDate) => {
-    if (!examDate) return null;
-    const days = Math.ceil((new Date(examDate) - new Date()) / (1000 * 60 * 60 * 24));
-    if (days < 0) return { text: `Exam was ${Math.abs(days)}d ago`, color: "text-[#59554D]", urgent: false };
-    if (days === 0) return { text: "🚨 EXAM TODAY!", color: "text-[#8C3A3A] font-bold animate-pulse", urgent: true };
-    if (days === 1) return { text: "⚠️ Exam TOMORROW!", color: "text-[#8C3A3A] font-bold", urgent: true };
-    if (days <= 7) return { text: `⚠️ Exam in ${days} days`, color: "text-[#8C3A3A] font-bold", urgent: true };
-    if (days <= 30) return { text: `📅 Exam in ${days} days`, color: "text-[#B5651D]", urgent: false };
-    return { text: `📅 Exam in ${days} days`, color: "text-[#3A5A40]", urgent: false };
+  const copy = (text, label) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied!`);
   };
 
-  // Status stamp
-  const stampBase = "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-wider text-base sm:text-lg bg-transparent select-none";
-  let stampText = "Pending";
-  let stampColorClass = "border-[#8C3A3A] text-[#8C3A3A] rotate-2";
-  if (isApplied) {
-    stampText = "Applied";
-    stampColorClass = "border-[#3A5A40] text-[#3A5A40] -rotate-2";
-  } else if (isNotStarted) {
-    stampText = "Not Started";
-    stampColorClass = "border-[#D97706] text-[#D97706] rotate-2";
-  }
-
-  const examCountdown = job.exam_date ? getExamCountdown(job.exam_date) : null;
+  // Card accent color based on status
+  const accentColor = isApplied ? "var(--accent-3)" : isDeadlineUrgent || isExamUrgent ? "var(--accent-2)" : isNotStarted ? "var(--accent-5)" : "var(--accent-4)";
 
   return (
     <article
-      className={`relative bg-[#FCFAF5] border-2 border-[#2C2A26] shadow-stamp hover:shadow-stamp-lg hover:-translate-y-1 transition-all duration-200 p-5 sm:p-6 animate-notice ${
-        examCountdown?.urgent ? "ring-2 ring-[#8C3A3A] ring-offset-1" : ""
-      }`}
       data-testid={`job-card-${job.id}`}
+      style={{
+        background: "var(--bg-card)",
+        border: `1px solid ${(isDeadlineUrgent || isExamUrgent) && !isApplied ? "rgba(255,101,132,0.4)" : "var(--border)"}`,
+        borderRadius: "var(--radius-lg)",
+        overflow: "hidden",
+        position: "relative",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease",
+      }}
     >
-      {/* Stamp */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-        <span className={`${stampBase} ${stampColorClass}`} data-testid={`status-stamp-${job.id}`}>
-          {stampText}
-        </span>
-      </div>
+      {/* Color accent bar on left */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, bottom: 0, width: "4px",
+        background: accentColor, borderRadius: "4px 0 0 4px",
+      }} />
 
-      {/* Title */}
-      <h3
-        className="font-sans font-bold text-2xl sm:text-3xl text-[#2C2A26] pr-28 leading-tight tracking-tight"
-        data-testid={`job-title-${job.id}`}
-      >
-        {job.job_name}
-      </h3>
+      <div style={{ padding: "20px 18px 18px 22px" }}>
 
-      {/* Tags */}
-      {job.tags && (
-        <div className="flex flex-wrap gap-1.5 mt-2 pr-28">
-          {job.tags.split(",").map((tag, i) =>
-            tag.trim() ? (
-              <span
-                key={i}
-                className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-xs uppercase tracking-wider text-[#59554D] border border-[#2C2A26]"
-              >
-                {tag.trim()}
-              </span>
-            ) : null
-          )}
-        </div>
-      )}
-
-      {/* Auto-discovered badge */}
-      {job.source && job.source !== "manual" && (
-        <div className="mt-2">
-          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-[#3A5A40] px-2 py-0.5 rounded-full border border-[#3A5A40]">
-            🤖 Auto-found · {job.match_score}% match
+        {/* Top row: title + status pill */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "10px", marginBottom: "12px" }}>
+          <h3
+            data-testid={`job-title-${job.id}`}
+            style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--ink)", margin: 0, lineHeight: 1.3, flex: 1 }}
+          >
+            {job.job_name}
+          </h3>
+          <span className={`pill ${isApplied ? "pill-applied" : isNotStarted ? "pill-notices" : isDeadlineUrgent ? "pill-urgent" : "pill-pending"}`} style={{ flexShrink: 0 }}
+            data-testid={`status-stamp-${job.id}`}>
+            {isApplied ? "✓ Applied" : isNotStarted ? "Soon" : isDeadlineUrgent ? "🔥 Urgent" : "Pending"}
           </span>
-          {job.match_reason && (
-            <p className="text-xs text-[#59554D] mt-0.5">{job.match_reason}</p>
-          )}
         </div>
-      )}
 
-      <div className="divider-vintage my-3" aria-hidden="true" />
+        {/* Tags */}
+        {job.tags && (
+          <div className="chips-scroll" style={{ marginBottom: "14px" }}>
+            {job.tags.split(",").map((t, i) => t.trim() && (
+              <span key={i} style={{
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                background: "rgba(108,99,255,0.12)", border: "1px solid rgba(108,99,255,0.25)",
+                color: "var(--accent)", padding: "4px 10px",
+                borderRadius: "var(--radius-full)", fontSize: "0.75rem", fontWeight: 600,
+                flexShrink: 0
+              }}>
+                <Tag size={10} /> {t.trim()}
+              </span>
+            ))}
+          </div>
+        )}
 
-      {/* Dates */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-        {!isApplied && (
-          <div className="flex items-start gap-2">
-            <CalendarDays size={16} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
-            <div>
-              <div className="font-mono text-xs uppercase tracking-wider text-[#59554D]">Last date</div>
-              <div className="font-mono font-bold text-base text-[#2C2A26]" data-testid={`job-last-date-${job.id}`}>
-                {job.last_date ? formatDate(job.last_date) : "— TBA —"}
-              </div>
+        {/* Auto-discovered */}
+        {job.source && job.source !== "manual" && (
+          <div style={{
+            background: "rgba(67,233,123,0.08)", border: "1px solid rgba(67,233,123,0.2)",
+            borderRadius: "var(--radius-sm)", padding: "10px 12px", marginBottom: "14px"
+          }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--accent-3)" }}>
+              🤖 Auto-discovered · {job.match_score}% match
+            </div>
+            {job.match_reason && (
+              <div style={{ fontSize: "0.8125rem", color: "var(--ink-muted)", marginTop: "3px" }}>{job.match_reason}</div>
+            )}
+          </div>
+        )}
+
+        {/* Dates row */}
+        <div style={{ display: "grid", gridTemplateColumns: isApplied ? "1fr" : "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+          {!isApplied && (
+            <DateCell icon={<CalendarDays size={14} />} label="Last date" value={job.last_date ? formatDate(job.last_date) : "TBA"}
+              sub={deadlineDays !== null && deadlineDays >= 0 ? (deadlineDays === 0 ? "TODAY!" : deadlineDays === 1 ? "Tomorrow!" : `${deadlineDays}d left`) : deadlineDays !== null && deadlineDays < 0 ? "Overdue" : null}
+              subColor={deadlineDays !== null && deadlineDays <= 1 ? "var(--accent-2)" : "var(--accent-4)"}
+              testId={`job-last-date-${job.id}`}
+            />
+          )}
+          <DateCell icon={<FileText size={14} />} label="Exam date" value={job.exam_date ? formatDate(job.exam_date) : "TBA"}
+            sub={examDays !== null ? (examDays < 0 ? "Passed" : examDays === 0 ? "🚨 TODAY!" : examDays === 1 ? "⚠️ Tomorrow!" : examDays <= 7 ? `⚠️ ${examDays}d` : `${examDays}d away`) : null}
+            subColor={examDays !== null && examDays <= 1 ? "var(--accent-2)" : examDays !== null && examDays <= 7 ? "var(--accent-4)" : "var(--ink-muted)"}
+            testId={`job-exam-date-${job.id}`}
+          />
+        </div>
+
+        {/* Countdown bar (unapplied only) */}
+        {!isApplied && job.last_date && (
+          <div style={{ marginBottom: "14px" }}>
+            <Countdown targetDate={job.last_date} />
+          </div>
+        )}
+
+        {/* Notes */}
+        {job.notes && (
+          <div style={{
+            background: "rgba(255,255,255,0.04)", borderRadius: "var(--radius-sm)",
+            padding: "10px 12px", marginBottom: "14px",
+            fontSize: "0.875rem", color: "var(--ink-soft)", fontStyle: "italic", lineHeight: 1.5
+          }} data-testid={`job-notes-${job.id}`}>
+            {job.notes}
+          </div>
+        )}
+
+        {/* Credentials */}
+        {(job.app_username || job.app_password) && (
+          <div style={{
+            background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)", padding: "12px 14px", marginBottom: "14px"
+          }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Login Details</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {job.app_username && (
+                <button type="button" onClick={() => copy(job.app_username, "Username")} style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  background: "rgba(108,99,255,0.1)", border: "1px solid rgba(108,99,255,0.2)",
+                  borderRadius: "var(--radius-sm)", padding: "8px 12px",
+                  fontSize: "0.875rem", fontWeight: 600, color: "var(--ink)",
+                  cursor: "pointer", WebkitTapHighlightColor: "transparent"
+                }}>
+                  <User size={13} color="var(--accent)" /> {job.app_username} <Copy size={11} color="var(--ink-muted)" />
+                </button>
+              )}
+              {job.app_password && (
+                <button type="button" onClick={() => copy(job.app_password, "Password")} style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  background: "rgba(108,99,255,0.1)", border: "1px solid rgba(108,99,255,0.2)",
+                  borderRadius: "var(--radius-sm)", padding: "8px 12px",
+                  fontSize: "0.875rem", fontWeight: 600, color: "var(--ink)",
+                  cursor: "pointer", WebkitTapHighlightColor: "transparent"
+                }}>
+                  <Lock size={13} color="var(--accent)" /> {job.app_password} <Copy size={11} color="var(--ink-muted)" />
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        <div className="flex items-start gap-2">
-          <FileText size={16} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
-          <div>
-            <div className="font-mono text-xs uppercase tracking-wider text-[#59554D]">Exam date</div>
-            <div className="font-mono font-bold text-base text-[#2C2A26]" data-testid={`job-exam-date-${job.id}`}>
-              {job.exam_date ? formatDate(job.exam_date) : "— TBA —"}
-            </div>
-            {examCountdown && (
-              <div className={`text-xs sm:text-sm mt-0.5 font-mono uppercase ${examCountdown.color}`}>
-                {examCountdown.text}
-              </div>
+        {/* Document vault */}
+        <div style={{ marginBottom: "16px" }}>
+          <button type="button" onClick={() => setDocsOpen(p => !p)} style={{
+            display: "flex", alignItems: "center", gap: "8px", width: "100%",
+            background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm)", padding: "12px 14px",
+            fontSize: "0.875rem", fontWeight: 600, color: "var(--ink-soft)",
+            cursor: "pointer", WebkitTapHighlightColor: "transparent",
+            transition: "background 0.15s ease",
+          }}>
+            <Paperclip size={15} />
+            <span>Documents</span>
+            {docs.length > 0 && (
+              <span style={{ background: "var(--accent)", color: "white", borderRadius: "99px", padding: "1px 8px", fontSize: "0.75rem", fontWeight: 700 }}>
+                {docs.length}
+              </span>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Countdown to last date (only for unapplied) */}
-      {!isApplied && (
-        <div className="mb-3">
-          <Countdown targetDate={job.last_date} />
-        </div>
-      )}
-
-      {/* Notes */}
-      {job.notes && (
-        <p className="font-sans text-sm text-[#59554D] italic mb-3 line-clamp-2" data-testid={`job-notes-${job.id}`}>
-          "{job.notes}"
-        </p>
-      )}
-
-      {/* Credentials */}
-      {(job.app_username || job.app_password) && (
-        <div className="bg-[#EBE5D9]/50 border-2 border-dashed border-[#2C2A26] p-2.5 mb-3 flex flex-col gap-2">
-          <div className="font-mono text-xs uppercase tracking-wider text-[#59554D] font-bold">Login</div>
-          <div className="flex flex-wrap gap-2">
-            {job.app_username && (
-              <div className="flex items-center gap-1.5 bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1">
-                <span className="font-mono text-xs text-[#59554D] uppercase">ID:</span>
-                <span className="font-mono text-sm font-bold">{job.app_username}</span>
-                <button
-                  type="button"
-                  onClick={() => { navigator.clipboard.writeText(job.app_username); toast.success("Username copied!"); }}
-                  className="text-[#59554D] hover:text-[#2C2A26]"
-                  title="Copy Username"
-                >
-                  <Copy size={12} />
-                </button>
-              </div>
-            )}
-            {job.app_password && (
-              <div className="flex items-center gap-1.5 bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1">
-                <span className="font-mono text-xs text-[#59554D] uppercase">PW:</span>
-                <span className="font-mono text-sm font-bold">{job.app_password}</span>
-                <button
-                  type="button"
-                  onClick={() => { navigator.clipboard.writeText(job.app_password); toast.success("Password copied!"); }}
-                  className="text-[#59554D] hover:text-[#2C2A26]"
-                  title="Copy Password"
-                >
-                  <Copy size={12} />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Documents vault (collapsible) */}
-      <div className="mb-3">
-        <button
-          type="button"
-          onClick={() => setDocsExpanded((p) => !p)}
-          className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[#59554D] hover:text-[#2C2A26] transition-colors"
-        >
-          <Paperclip size={13} />
-          Documents
-          {docsExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          {uploadedDocs.length > 0 && (
-            <span className="bg-[#3A5A40] text-[#FCFAF5] px-1.5 py-0.5 rounded-full text-[10px] ml-1">
-              {uploadedDocs.length}
+            <span style={{ marginLeft: "auto" }}>
+              {docsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </span>
-          )}
-        </button>
+          </button>
 
-        {docsExpanded && (
-          <div className="mt-2 p-3 bg-[#EBE5D9]/40 border border-dashed border-[#59554D] rounded space-y-2">
-            {/* Upload buttons */}
-            <div className="flex flex-wrap gap-2">
-              {["admit_card", "hall_ticket", "result", "other"].map((type) => (
-                <label
-                  key={type}
-                  className="text-xs cursor-pointer font-mono uppercase bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1 hover:bg-[#EBE5D9] transition-colors"
-                >
-                  📎 {type.replace("_", " ")}
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) =>
-                      e.target.files[0] && uploadDocument(job.id, e.target.files[0], type)
-                    }
-                  />
-                </label>
+          {docsOpen && (
+            <div className="anim-slide-down" style={{
+              background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)",
+              borderTop: "none", borderRadius: "0 0 var(--radius-sm) var(--radius-sm)",
+              padding: "14px"
+            }}>
+              {/* Upload buttons */}
+              <div className="chips-scroll" style={{ gap: "8px", marginBottom: docs.length > 0 ? "12px" : "0" }}>
+                {["admit_card", "hall_ticket", "result", "other"].map(type => (
+                  <label key={type} style={{
+                    display: "inline-flex", alignItems: "center", gap: "6px",
+                    background: uploading ? "rgba(255,255,255,0.04)" : "rgba(108,99,255,0.12)",
+                    border: "1px solid rgba(108,99,255,0.25)", borderRadius: "var(--radius-full)",
+                    padding: "8px 14px", fontSize: "0.8125rem", fontWeight: 600, color: "var(--accent)",
+                    cursor: "pointer", flexShrink: 0, WebkitTapHighlightColor: "transparent",
+                    opacity: uploading ? 0.5 : 1
+                  }}>
+                    📎 {type.replace("_", " ")}
+                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], type)}
+                      disabled={uploading}
+                    />
+                  </label>
+                ))}
+              </div>
+
+              {/* Uploaded docs list */}
+              {docs.map(doc => (
+                <div key={doc.id} style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  padding: "10px 0", borderTop: "1px solid var(--border)"
+                }}>
+                  <div style={{ fontSize: "1.25rem" }}>
+                    {doc.document_type === "admit_card" ? "🎫" : doc.document_type === "hall_ticket" ? "🎟️" : doc.document_type === "result" ? "📊" : "📄"}
+                  </div>
+                  <button type="button" onClick={() => openDoc(doc.file_path)} style={{
+                    flex: 1, textAlign: "left", background: "none", border: "none",
+                    fontSize: "0.875rem", fontWeight: 600, color: "var(--accent)",
+                    cursor: "pointer", padding: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                  }}>
+                    {doc.document_type?.replace("_", " ")} — {doc.file_name}
+                  </button>
+                  <button type="button" onClick={() => deleteDoc(doc)} style={{
+                    background: "none", border: "none", color: "var(--accent-2)",
+                    cursor: "pointer", padding: "4px", flexShrink: 0,
+                    display: "flex", alignItems: "center"
+                  }}>
+                    <Trash2 size={15} />
+                  </button>
+                </div>
               ))}
             </div>
-            {/* List uploaded */}
-            {uploadedDocs.length > 0 && (
-              <ul className="space-y-1">
-                {uploadedDocs.map((doc, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openDoc(doc.file_path)}
-                      className="text-xs font-mono text-[#3A5A40] underline hover:no-underline truncate max-w-[200px]"
-                    >
-                      {doc.document_type?.replace("_", " ")} — {doc.file_name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 border-t border-dashed border-[#59554D]">
-        {isFuture ? (
-          <div className="inline-flex items-center gap-2 bg-[#EBE5D9] text-[#59554D] font-serif font-bold text-sm px-4 py-2 border-2 border-[#59554D] cursor-not-allowed">
-            Starts {formatDate(job.start_date)}
-          </div>
-        ) : (
-          <a
-            href={job.apply_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-sm px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
-            data-testid={`apply-link-${job.id}`}
-          >
-            Apply Now <ExternalLink size={14} strokeWidth={2} />
-          </a>
-        )}
-
-        {(!isApplied || admin) && (
-          <button
-            onClick={() => onToggle && onToggle(job)}
-            className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
-            data-testid={`toggle-applied-${job.id}`}
-            type="button"
-          >
-            {isApplied ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-            {isApplied ? "Mark unapplied" : "Mark applied"}
-          </button>
-        )}
-
-        {admin && (
-          <>
-            <button
-              onClick={() => onEdit && onEdit(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
-              data-testid={`edit-job-${job.id}`}
-              type="button"
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          {isFuture ? (
+            <div style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)",
+              borderRadius: "var(--radius-full)", padding: "14px 16px",
+              fontSize: "0.9375rem", fontWeight: 700, color: "var(--ink-muted)"
+            }}>
+              ⏳ Opens {formatDate(job.start_date)}
+            </div>
+          ) : (
+            <a
+              href={job.apply_link} target="_blank" rel="noopener noreferrer"
+              data-testid={`apply-link-${job.id}`}
+              className="btn-primary"
+              style={{ flex: 1, textDecoration: "none", minHeight: "52px" }}
             >
-              <Pencil size={14} /> Edit
-            </button>
-            <button
-              onClick={() => onDelete && onDelete(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#8C3A3A] font-serif font-bold text-sm px-4 py-2 border-2 border-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-[#FCFAF5] transition-colors"
-              data-testid={`delete-job-${job.id}`}
-              type="button"
+              Apply Now <ExternalLink size={15} />
+            </a>
+          )}
+
+          {(!isApplied || admin) && (
+            <button type="button"
+              onClick={() => onToggle && onToggle(job)}
+              data-testid={`toggle-applied-${job.id}`}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                gap: "6px", padding: "14px 18px", minHeight: "52px",
+                background: isApplied ? "rgba(67,233,123,0.1)" : "rgba(255,255,255,0.06)",
+                border: `1.5px solid ${isApplied ? "rgba(67,233,123,0.3)" : "var(--border)"}`,
+                borderRadius: "var(--radius-full)",
+                fontSize: "0.9375rem", fontWeight: 700,
+                color: isApplied ? "var(--accent-3)" : "var(--ink)",
+                cursor: "pointer", WebkitTapHighlightColor: "transparent",
+                transition: "all 0.2s ease", flexShrink: 0
+              }}
             >
-              <Trash2 size={14} /> Delete
+              {isApplied ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+              {isApplied ? "Applied" : "Mark"}
             </button>
-          </>
-        )}
+          )}
+
+          {admin && (
+            <>
+              <button type="button" onClick={() => onEdit && onEdit(job)}
+                data-testid={`edit-job-${job.id}`}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: "52px", height: "52px", borderRadius: "50%",
+                  background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
+                  color: "var(--ink)", cursor: "pointer", flexShrink: 0,
+                  WebkitTapHighlightColor: "transparent",
+                }}>
+                <Pencil size={16} />
+              </button>
+              <button type="button" onClick={() => onDelete && onDelete(job)}
+                data-testid={`delete-job-${job.id}`}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: "52px", height: "52px", borderRadius: "50%",
+                  background: "rgba(255,101,132,0.1)", border: "1px solid rgba(255,101,132,0.25)",
+                  color: "var(--accent-2)", cursor: "pointer", flexShrink: 0,
+                  WebkitTapHighlightColor: "transparent",
+                }}>
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </article>
+  );
+}
+
+// ─── Date cell helper ─────────────────────────────────────────────────────────
+function DateCell({ icon, label, value, sub, subColor, testId }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "var(--radius-sm)", padding: "12px 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "var(--ink-muted)", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+        {icon} {label}
+      </div>
+      <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--ink)" }} data-testid={testId}>{value}</div>
+      {sub && (
+        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: subColor || "var(--ink-muted)", marginTop: "3px" }}>{sub}</div>
+      )}
+    </div>
   );
 }
