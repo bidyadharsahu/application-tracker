@@ -2,72 +2,55 @@ import React, { useState, useEffect } from "react";
 import { Download, X } from "lucide-react";
 
 export default function PWAInstallBanner() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [prompt, setPrompt] = useState(null);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem("pwa_install_dismissed");
-    if (dismissed) return;
-    const handler = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShow(true);
-    };
+    if (localStorage.getItem("pwa_dismissed")) return;
+    const handler = (e) => { e.preventDefault(); setPrompt(e); setShow(true); };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  if (!show || !deferredPrompt) return null;
+  if (!show || !prompt) return null;
 
-  const handleInstall = async () => {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted" || outcome === "dismissed") {
-      setShow(false);
-      setDeferredPrompt(null);
-    }
+  const install = async () => {
+    prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    if (outcome === "accepted" || outcome === "dismissed") { setShow(false); setPrompt(null); }
   };
-
-  const handleDismiss = () => {
-    localStorage.setItem("pwa_install_dismissed", "1");
-    setShow(false);
-  };
+  const dismiss = () => { localStorage.setItem("pwa_dismissed", "1"); setShow(false); };
 
   return (
-    <div
-      className="fixed bottom-0 inset-x-0 z-40 bg-[#EBE5D9] border-t-4 border-[#2C2A26] p-3 sm:p-4 flex items-center gap-3 justify-between shadow-2xl animate-notice"
-      data-testid="pwa-install-banner"
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        <Download size={22} strokeWidth={1.5} className="text-[#2C2A26] shrink-0" />
-        <div className="min-w-0">
-          <div className="font-serif font-bold text-base sm:text-lg text-[#2C2A26] truncate">
-            Install The Job Ledger
-          </div>
-          <div className="font-sans text-xs sm:text-sm text-[#59554D] truncate">
-            Add to home screen for quick access.
-          </div>
-        </div>
+    <div data-testid="pwa-install-banner" style={{
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60,
+      background: "var(--bg-card)",
+      backdropFilter: "blur(20px)",
+      borderTop: "1px solid var(--border)",
+      padding: "16px 20px calc(16px + var(--safe-bottom))",
+      display: "flex", alignItems: "center", gap: "14px",
+      animation: "slideUpSheet 0.4s cubic-bezier(0.34,1.1,0.64,1) both",
+    }}>
+      <div style={{
+        width: "48px", height: "48px", flexShrink: 0,
+        background: "linear-gradient(135deg, var(--accent), #9C63FF)",
+        borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center"
+      }}>
+        <Download size={22} color="white" />
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleInstall}
-          className="bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-sm px-3 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
-          data-testid="pwa-install-btn"
-          type="button"
-        >
-          Install
-        </button>
-        <button
-          onClick={handleDismiss}
-          className="text-[#59554D] hover:text-[#2C2A26] p-2"
-          aria-label="Dismiss"
-          data-testid="pwa-dismiss-btn"
-          type="button"
-        >
-          <X size={20} />
-        </button>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--ink)" }}>Install Job Ledger</div>
+        <div style={{ fontSize: "0.8125rem", color: "var(--ink-muted)" }}>Add to home screen for instant access</div>
       </div>
+      <button type="button" onClick={install} className="btn-primary" style={{ padding: "12px 20px", minHeight: "44px", flexShrink: 0, fontSize: "0.9375rem" }}>
+        Install
+      </button>
+      <button type="button" onClick={dismiss} style={{
+        background: "none", border: "none", color: "var(--ink-muted)",
+        cursor: "pointer", padding: "8px", flexShrink: 0
+      }}>
+        <X size={20} />
+      </button>
     </div>
   );
 }
