@@ -1,261 +1,181 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, Loader2 } from "lucide-react";
+import { X, Save, Loader2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
-const inputClass =
-  "bg-[#FCFAF5] border-2 border-[#2C2A26] font-mono text-base py-2.5 px-3 outline-none w-full placeholder:text-[#59554D]/50 focus:shadow-stamp transition-shadow";
-
-const labelClass =
-  "block font-mono text-xs uppercase tracking-wider text-[#59554D] mb-1.5 font-bold";
-
-const formatDateToDDMMYYYY = (dStr) => {
-  if (!dStr) return "";
-  if (dStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [y, m, d] = dStr.split("-");
-    return `${d} ${m} ${y}`;
+const fmtDisplay = (s) => {
+  if (!s) return "";
+  if (s.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [y,m,d] = s.split("-"); return `${d} ${m} ${y}`;
   }
-  return dStr;
+  return s;
+};
+const parseDate = (s) => {
+  if (!s) return "";
+  const m = s.trim().match(/^(\d{2})[- /.](\d{2})[- /.](\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return s.trim();
 };
 
-const parseDateToYYYYMMDD = (dStr) => {
-  if (!dStr) return "";
-  const match = dStr.trim().match(/^(\d{2})[- \/.](\d{2})[- \/.](\d{4})$/);
-  if (match) {
-    return `${match[3]}-${match[2]}-${match[1]}`;
-  }
-  return dStr.trim();
-};
+const Label = ({ children }) => (
+  <div style={{ fontSize: "0.8125rem", fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+    {children}
+  </div>
+);
 
 export default function JobFormModal({ open, onClose, onSave, initial, prefill }) {
-  const [form, setForm] = useState({
-    job_name: "",
-    start_date: "",
-    last_date: "",
-    exam_date: "",
-    tags: "",
-    apply_link: "",
-    app_username: "",
-    app_password: "",
-    notes: "",
-  });
+  const [form, setForm] = useState({ job_name:"", start_date:"", last_date:"", exam_date:"", tags:"", apply_link:"", app_username:"", app_password:"", notes:"" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      const base = initial || {};
-      const pre = prefill || {};
-      setForm({
-        job_name: pre.job_name || base.job_name || "",
-        start_date: formatDateToDDMMYYYY(pre.start_date || base.start_date || ""),
-        last_date: formatDateToDDMMYYYY(pre.last_date || base.last_date || ""),
-        exam_date: formatDateToDDMMYYYY(pre.exam_date || base.exam_date || ""),
-        tags: pre.tags || base.tags || "",
-        apply_link: pre.apply_link || base.apply_link || "",
-        app_username: pre.app_username || base.app_username || "",
-        app_password: pre.app_password || base.app_password || "",
-        notes: pre.notes || base.notes || "",
-      });
-    }
+    if (!open) return;
+    const b = initial || {}, p = prefill || {};
+    setForm({
+      job_name: p.job_name || b.job_name || "",
+      start_date: fmtDisplay(p.start_date || b.start_date || ""),
+      last_date: fmtDisplay(p.last_date || b.last_date || ""),
+      exam_date: fmtDisplay(p.exam_date || b.exam_date || ""),
+      tags: p.tags || b.tags || "",
+      apply_link: p.apply_link || b.apply_link || "",
+      app_username: p.app_username || b.app_username || "",
+      app_password: p.app_password || b.app_password || "",
+      notes: p.notes || b.notes || "",
+    });
   }, [open, initial, prefill]);
 
   if (!open) return null;
-
-  const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSave = async () => {
-    if (!form.job_name.trim()) {
-      toast.error("Job name is required");
-      return;
-    }
-    const finalStartDate = parseDateToYYYYMMDD(form.start_date);
-    if (form.start_date && !finalStartDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      toast.error("Please enter start date in DD MM YYYY format");
-      return;
-    }
-    const finalLastDate = parseDateToYYYYMMDD(form.last_date);
-    if (form.last_date && !finalLastDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      toast.error("Please enter last date in DD MM YYYY format");
-      return;
-    }
-    const finalExamDate = parseDateToYYYYMMDD(form.exam_date);
-    if (form.exam_date && !finalExamDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      toast.error("Please enter exam date in DD MM YYYY format");
-      return;
-    }
-    if (!form.apply_link.trim()) {
-      toast.error("Apply link is required");
-      return;
+    if (!form.job_name.trim()) { toast.error("Job name required"); return; }
+    if (!form.apply_link.trim()) { toast.error("Apply link required"); return; }
+    for (const k of ["start_date","last_date","exam_date"]) {
+      const parsed = parseDate(form[k]);
+      if (form[k] && !parsed.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        toast.error(`Enter ${k.replace("_"," ")} as DD MM YYYY`); return;
+      }
     }
     setSaving(true);
     try {
       await onSave({
         job_name: form.job_name.trim(),
-        start_date: finalStartDate || null,
-        last_date: finalLastDate || null,
-        exam_date: finalExamDate || null,
+        start_date: parseDate(form.start_date) || null,
+        last_date: parseDate(form.last_date) || null,
+        exam_date: parseDate(form.exam_date) || null,
         tags: form.tags.trim() || null,
         apply_link: form.apply_link.trim(),
         app_username: form.app_username.trim() || null,
         app_password: form.app_password.trim() || null,
         notes: form.notes.trim() || null,
       });
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#2C2A26]/40 backdrop-blur-sm animate-notice"
-      data-testid="job-form-modal"
       onClick={onClose}
+      data-testid="job-form-modal"
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.7)",
+        backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "flex-end"
+      }}
     >
       <div
-        className="bg-[#F4F1EA] border-4 border-[#2C2A26] shadow-stamp-xl p-6 sm:p-8 w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto relative"
-        onClick={(e) => e.stopPropagation()}
+        className="bottom-sheet"
+        onClick={e => e.stopPropagation()}
+        style={{ width: "100%", padding: "0 20px" }}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-[#2C2A26] hover:text-[#8C3A3A] transition-colors"
-          aria-label="Close"
-          data-testid="job-form-close"
-          type="button"
-        >
-          <X size={24} />
-        </button>
+        <div className="sheet-handle" />
 
-        <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#2C2A26] mb-1">
-          {initial ? "Edit Job" : "New Job Notice"}
-        </h2>
-        <p className="font-sans text-sm text-[#59554D] mb-5">
-          Fill in details — these go live on the public ledger.
-        </p>
-
-        <div className="space-y-4">
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
           <div>
-            <label className={labelClass}>Job name *</label>
-            <input
-              className={inputClass}
-              value={form.job_name}
-              onChange={(e) => update("job_name", e.target.value)}
-              placeholder="e.g. SBI PO Recruitment 2026"
-              data-testid="job-form-name"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Start date</label>
-              <input
-                type="text"
-                className={inputClass}
-                value={form.start_date}
-                onChange={(e) => update("start_date", e.target.value)}
-                placeholder="DD MM YYYY"
-                data-testid="job-form-start-date"
-              />
+            <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--ink)" }}>
+              {initial ? "Edit Job" : "New Job"}
             </div>
-            <div>
-              <label className={labelClass}>Last date to apply</label>
-              <input
-                type="text"
-                className={inputClass}
-                value={form.last_date}
-                onChange={(e) => update("last_date", e.target.value)}
-                placeholder="DD MM YYYY"
-                data-testid="job-form-last-date"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Exam date</label>
-              <input
-                type="text"
-                className={inputClass}
-                value={form.exam_date}
-                onChange={(e) => update("exam_date", e.target.value)}
-                placeholder="DD MM YYYY"
-                data-testid="job-form-exam-date"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Tags</label>
-              <input
-                className={inputClass}
-                value={form.tags}
-                onChange={(e) => update("tags", e.target.value)}
-                placeholder="e.g. Banking, Clerk"
-                data-testid="job-form-tags"
-              />
+            <div style={{ fontSize: "0.875rem", color: "var(--ink-muted)", marginTop: "2px" }}>
+              Fill in the details below
             </div>
           </div>
-
-          <div>
-            <label className={labelClass}>Apply link *</label>
-            <input
-              className={inputClass}
-              value={form.apply_link}
-              onChange={(e) => update("apply_link", e.target.value)}
-              placeholder="https://..."
-              data-testid="job-form-apply-link"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Username (Optional)</label>
-              <input
-                type="text"
-                className={inputClass}
-                value={form.app_username}
-                onChange={(e) => update("app_username", e.target.value)}
-                placeholder="e.g. user123"
-                data-testid="job-form-app-username"
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Password (Optional)</label>
-              <input
-                type="text"
-                className={inputClass}
-                value={form.app_password}
-                onChange={(e) => update("app_password", e.target.value)}
-                placeholder="e.g. mypass"
-                data-testid="job-form-app-password"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>Notes (optional)</label>
-            <textarea
-              className={inputClass + " min-h-[80px]"}
-              value={form.notes}
-              onChange={(e) => update("notes", e.target.value)}
-              placeholder="Short note about the job"
-              rows={3}
-              data-testid="job-form-notes"
-            />
-          </div>
+          <button type="button" onClick={onClose} data-testid="job-form-close" style={{
+            width: "40px", height: "40px", borderRadius: "50%",
+            background: "rgba(255,255,255,0.08)", border: "none",
+            color: "var(--ink)", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 mt-6">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="inline-flex items-center justify-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-base sm:text-lg px-5 py-3 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors disabled:opacity-60"
-            data-testid="job-form-save"
-            type="button"
-          >
-            {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            {saving ? "Saving..." : initial ? "Save changes" : "Publish job"}
-          </button>
-          <button
-            onClick={onClose}
-            className="inline-flex items-center justify-center bg-transparent text-[#2C2A26] font-serif font-bold text-base sm:text-lg px-5 py-3 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
-            type="button"
-          >
-            Cancel
-          </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          <div>
+            <Label>Job Name *</Label>
+            <input className="input-field" value={form.job_name} onChange={e => set("job_name", e.target.value)}
+              placeholder="e.g. SBI PO 2026" data-testid="job-form-name" />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <Label>Start Date</Label>
+              <input className="input-field" value={form.start_date} onChange={e => set("start_date", e.target.value)}
+                placeholder="DD MM YYYY" data-testid="job-form-start-date" />
+            </div>
+            <div>
+              <Label>Last Date *</Label>
+              <input className="input-field" value={form.last_date} onChange={e => set("last_date", e.target.value)}
+                placeholder="DD MM YYYY" data-testid="job-form-last-date" />
+            </div>
+            <div>
+              <Label>Exam Date</Label>
+              <input className="input-field" value={form.exam_date} onChange={e => set("exam_date", e.target.value)}
+                placeholder="DD MM YYYY" data-testid="job-form-exam-date" />
+            </div>
+            <div>
+              <Label>Tags</Label>
+              <input className="input-field" value={form.tags} onChange={e => set("tags", e.target.value)}
+                placeholder="SSC, Banking" data-testid="job-form-tags" />
+            </div>
+          </div>
+
+          <div>
+            <Label>Apply Link *</Label>
+            <input className="input-field" value={form.apply_link} onChange={e => set("apply_link", e.target.value)}
+              placeholder="https://..." data-testid="job-form-apply-link" type="url" />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <Label>Username</Label>
+              <input className="input-field" value={form.app_username} onChange={e => set("app_username", e.target.value)}
+                placeholder="Optional" data-testid="job-form-app-username" />
+            </div>
+            <div>
+              <Label>Password</Label>
+              <input className="input-field" value={form.app_password} onChange={e => set("app_password", e.target.value)}
+                placeholder="Optional" data-testid="job-form-app-password" />
+            </div>
+          </div>
+
+          <div>
+            <Label>Notes</Label>
+            <textarea className="input-field" value={form.notes} onChange={e => set("notes", e.target.value)}
+              placeholder="Any notes about this job..." rows={3}
+              data-testid="job-form-notes"
+              style={{ resize: "vertical", minHeight: "80px" }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", paddingBottom: "8px" }}>
+            <button type="button" onClick={handleSave} disabled={saving} className="btn-primary"
+              data-testid="job-form-save" style={{ flex: 1 }}>
+              {saving ? <Loader2 size={18} style={{ animation: "spin-slow 0.8s linear infinite" }} /> : <Save size={18} />}
+              {saving ? "Saving..." : initial ? "Save Changes" : "Publish Job"}
+            </button>
+            <button type="button" onClick={onClose} className="btn-secondary" style={{ minWidth: "80px" }}>
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>
