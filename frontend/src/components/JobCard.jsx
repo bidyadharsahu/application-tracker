@@ -1,9 +1,12 @@
-import React from "react";
-import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2, Copy } from "lucide-react";
-import { differenceInCalendarDays } from "date-fns";
+import React, { useState, useEffect } from "react";
+import {
+  ExternalLink, CalendarDays, FileText, CheckCircle2, Circle,
+  Pencil, Trash2, Copy, Clock, AlertTriangle, ChevronDown, ChevronUp, Paperclip
+} from "lucide-react";
+import { formatDate, daysUntil } from "../lib/utils-date";
 import Countdown from "./Countdown";
-import { formatDate } from "../lib/utils-date";
 import supabase from "../lib/supabase";
+import { toast } from "sonner";
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const isApplied = !!job.applied;
@@ -11,64 +14,90 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const isFuture = job.start_date && job.start_date > today;
   const allDatesBlank = !job.start_date && !job.exam_date && !job.last_date;
   const isNotStarted = isFuture || allDatesBlank;
+  const [docsExpanded, setDocsExpanded] = useState(false);
+  const [uploadedDocs, setUploadedDocs] = useState([]);
 
+  // Load existing docs for this job
+  useEffect(() => {
+    if (!docsExpanded) return;
+    supabase
+      .from("job_documents")
+      .select("*")
+      .eq("job_id", job.id)
+      .then(({ data }) => setUploadedDocs(data || []));
+  }, [docsExpanded, job.id]);
+
+  // Upload document to Supabase Storage
   const uploadDocument = async (jobId, file, docType) => {
     const filePath = `${jobId}/${docType}-${Date.now()}-${file.name}`;
-    
     const { error: uploadError } = await supabase.storage
-      .from('job-documents')
+      .from("job-documents")
       .upload(filePath, file);
-
-    if (!uploadError) {
-      await supabase.from('job_documents').insert({
-        job_id: jobId,
-        file_name: file.name,
-        file_path: filePath,
-        document_type: docType
-      });
+    if (uploadError) {
+      toast.error("Upload failed: " + uploadError.message);
+      return;
+    }
+    const { error: dbErr } = await supabase.from("job_documents").insert({
+      job_id: jobId,
+      file_name: file.name,
+      file_path: filePath,
+      document_type: docType,
+    });
+    if (!dbErr) {
+      toast.success(`${docType.replace("_", " ")} uploaded!`);
+      setUploadedDocs((prev) => [...prev, { file_name: file.name, file_path: filePath, document_type: docType }]);
     }
   };
 
-  const getExamCountdown = (examDate) => {
-    if (!examDate) return null;
-    const days = Math.ceil((new Date(examDate) - new Date()) / (1000*60*60*24));
-    if (days < 0) return { text: 'Exam passed', color: 'text-gray-400' };
-    if (days <= 7) return { text: `⚠ Exam in ${days} days (${examDate})`, color: 'text-red-600 font-bold' };
-    if (days <= 30) return { text: `📅 Exam in ${days} days (${examDate})`, color: 'text-orange-500' };
-    return { text: `📅 Exam: ${examDate}`, color: 'text-green-700' };
+  // Open stored document
+  const openDoc = async (filePath) => {
+    const { data } = await supabase.storage.from("job-documents").createSignedUrl(filePath, 60);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
-  const stampBase =
-    "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-wider text-base sm:text-lg bg-transparent select-none";
+  // Exam countdown
+  const getExamCountdown = (examDate) => {
+    if (!examDate) return null;
+    const days = Math.ceil((new Date(examDate) - new Date()) / (1000 * 60 * 60 * 24));
+    if (days < 0) return { text: `Exam was ${Math.abs(days)}d ago`, color: "text-[#59554D]", urgent: false };
+    if (days === 0) return { text: "🚨 EXAM TODAY!", color: "text-[#8C3A3A] font-bold animate-pulse", urgent: true };
+    if (days === 1) return { text: "⚠️ Exam TOMORROW!", color: "text-[#8C3A3A] font-bold", urgent: true };
+    if (days <= 7) return { text: `⚠️ Exam in ${days} days`, color: "text-[#8C3A3A] font-bold", urgent: true };
+    if (days <= 30) return { text: `📅 Exam in ${days} days`, color: "text-[#B5651D]", urgent: false };
+    return { text: `📅 Exam in ${days} days`, color: "text-[#3A5A40]", urgent: false };
+  };
 
+  // Status stamp
+  const stampBase = "inline-block border-2 font-mono font-bold px-3 py-1 uppercase tracking-wider text-base sm:text-lg bg-transparent select-none";
   let stampText = "Pending";
   let stampColorClass = "border-[#8C3A3A] text-[#8C3A3A] rotate-2";
-
   if (isApplied) {
     stampText = "Applied";
     stampColorClass = "border-[#3A5A40] text-[#3A5A40] -rotate-2";
   } else if (isNotStarted) {
-    stampText = "Not Started Yet";
-    stampColorClass = "border-[#D97706] text-[#D97706] rotate-2"; // Orange-ish for future
+    stampText = "Not Started";
+    stampColorClass = "border-[#D97706] text-[#D97706] rotate-2";
   }
 
-  const stampClass = `${stampBase} ${stampColorClass}`;
+  const examCountdown = job.exam_date ? getExamCountdown(job.exam_date) : null;
 
   return (
     <article
-      className="relative bg-[#FCFAF5] border-2 border-[#2C2A26] shadow-stamp hover:shadow-stamp-lg hover:-translate-y-1 transition-all duration-200 p-5 sm:p-6 animate-notice"
+      className={`relative bg-[#FCFAF5] border-2 border-[#2C2A26] shadow-stamp hover:shadow-stamp-lg hover:-translate-y-1 transition-all duration-200 p-5 sm:p-6 animate-notice ${
+        examCountdown?.urgent ? "ring-2 ring-[#8C3A3A] ring-offset-1" : ""
+      }`}
       data-testid={`job-card-${job.id}`}
     >
-      {/* Stamp top-right */}
+      {/* Stamp */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-        <span className={stampClass} data-testid={`status-stamp-${job.id}`}>
+        <span className={`${stampBase} ${stampColorClass}`} data-testid={`status-stamp-${job.id}`}>
           {stampText}
         </span>
       </div>
 
-      {/* Job Title */}
+      {/* Title */}
       <h3
-        className="font-sans font-bold text-3xl sm:text-4xl text-[#2C2A26] pr-24 sm:pr-28 leading-tight tracking-tight"
+        className="font-sans font-bold text-2xl sm:text-3xl text-[#2C2A26] pr-28 leading-tight tracking-tight"
         data-testid={`job-title-${job.id}`}
       >
         {job.job_name}
@@ -76,43 +105,42 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
       {/* Tags */}
       {job.tags && (
-        <div className="flex flex-wrap gap-2 mt-2 pr-24 sm:pr-28">
-          {job.tags.split(',').map((tag, i) => tag.trim() && (
-            <span key={i} className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-lg sm:text-xl uppercase tracking-wider text-[#59554D] border border-[#2C2A26]">
-              {tag.trim()}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Auto-discovered badge */}
-      {job.source && job.source !== 'manual' && (
-        <div className="mt-2 pr-24 sm:pr-28">
-          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-[#3A5A40] px-2 py-0.5 rounded-full border border-[#3A5A40]">
-            🤖 Auto-found · Match {job.match_score}%
-          </span>
-          {job.match_reason && (
-            <p className="text-xs text-[#59554D] mt-1">{job.match_reason}</p>
+        <div className="flex flex-wrap gap-1.5 mt-2 pr-28">
+          {job.tags.split(",").map((tag, i) =>
+            tag.trim() ? (
+              <span
+                key={i}
+                className="bg-[#EBE5D9] px-2 py-0.5 font-mono text-xs uppercase tracking-wider text-[#59554D] border border-[#2C2A26]"
+              >
+                {tag.trim()}
+              </span>
+            ) : null
           )}
         </div>
       )}
 
-      {/* Dotted vintage divider */}
-      <div className="divider-vintage my-4" aria-hidden="true" />
+      {/* Auto-discovered badge */}
+      {job.source && job.source !== "manual" && (
+        <div className="mt-2">
+          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-[#3A5A40] px-2 py-0.5 rounded-full border border-[#3A5A40]">
+            🤖 Auto-found · {job.match_score}% match
+          </span>
+          {job.match_reason && (
+            <p className="text-xs text-[#59554D] mt-0.5">{job.match_reason}</p>
+          )}
+        </div>
+      )}
 
-      {/* Meta data */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      <div className="divider-vintage my-3" aria-hidden="true" />
+
+      {/* Dates */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         {!isApplied && (
           <div className="flex items-start gap-2">
-            <CalendarDays size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
-            <div className="min-w-0">
-              <div className="font-mono text-lg sm:text-xl uppercase tracking-wider text-[#59554D]">
-                Last date
-              </div>
-              <div
-                className="font-mono font-bold text-lg sm:text-xl text-[#2C2A26]"
-                data-testid={`job-last-date-${job.id}`}
-              >
+            <CalendarDays size={16} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
+            <div>
+              <div className="font-mono text-xs uppercase tracking-wider text-[#59554D]">Last date</div>
+              <div className="font-mono font-bold text-base text-[#2C2A26]" data-testid={`job-last-date-${job.id}`}>
                 {job.last_date ? formatDate(job.last_date) : "— TBA —"}
               </div>
             </div>
@@ -120,77 +148,65 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         )}
 
         <div className="flex items-start gap-2">
-          <FileText size={18} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
-          <div className="min-w-0">
-            <div className="font-mono text-lg sm:text-xl uppercase tracking-wider text-[#59554D]">
-              Exam date
-            </div>
-            <div
-              className="font-mono font-bold text-lg sm:text-xl text-[#2C2A26]"
-              data-testid={`job-exam-date-${job.id}`}
-            >
+          <FileText size={16} strokeWidth={1.5} className="mt-0.5 text-[#59554D] shrink-0" />
+          <div>
+            <div className="font-mono text-xs uppercase tracking-wider text-[#59554D]">Exam date</div>
+            <div className="font-mono font-bold text-base text-[#2C2A26]" data-testid={`job-exam-date-${job.id}`}>
               {job.exam_date ? formatDate(job.exam_date) : "— TBA —"}
             </div>
-            {job.exam_date && (() => {
-              const countdown = getExamCountdown(job.exam_date);
-              return (
-                <div className={`text-sm sm:text-base mt-1 font-mono uppercase ${countdown.color}`}>
-                  {countdown.text}
-                </div>
-              );
-            })()}
+            {examCountdown && (
+              <div className={`text-xs sm:text-sm mt-0.5 font-mono uppercase ${examCountdown.color}`}>
+                {examCountdown.text}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Countdown */}
+      {/* Countdown to last date (only for unapplied) */}
       {!isApplied && (
-        <div className="mb-4">
+        <div className="mb-3">
           <Countdown targetDate={job.last_date} />
         </div>
       )}
 
+      {/* Notes */}
       {job.notes && (
-        <p
-          className="font-sans text-lg sm:text-xl text-[#59554D] italic mb-4 line-clamp-2"
-          data-testid={`job-notes-${job.id}`}
-        >
-          “{job.notes}”
+        <p className="font-sans text-sm text-[#59554D] italic mb-3 line-clamp-2" data-testid={`job-notes-${job.id}`}>
+          "{job.notes}"
         </p>
       )}
 
       {/* Credentials */}
       {(job.app_username || job.app_password) && (
-        <div className="bg-[#EBE5D9]/50 border-2 border-dashed border-[#2C2A26] p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="font-mono text-xl uppercase tracking-wider text-[#59554D] font-bold shrink-0">
-            Login
-          </div>
+        <div className="bg-[#EBE5D9]/50 border-2 border-dashed border-[#2C2A26] p-2.5 mb-3 flex flex-col gap-2">
+          <div className="font-mono text-xs uppercase tracking-wider text-[#59554D] font-bold">Login</div>
           <div className="flex flex-wrap gap-2">
             {job.app_username && (
-              <div className="flex items-center gap-2 bg-[#FCFAF5] border-2 border-[#2C2A26] px-2 py-1">
-                <span className="font-mono text-lg sm:text-xl text-[#59554D] uppercase">ID:</span>
-                <span className="font-mono text-base sm:text-lg font-bold">{job.app_username}</span>
+              <div className="flex items-center gap-1.5 bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1">
+                <span className="font-mono text-xs text-[#59554D] uppercase">ID:</span>
+                <span className="font-mono text-sm font-bold">{job.app_username}</span>
                 <button
                   type="button"
-                  className="text-[#59554D] hover:text-[#2C2A26] transition-colors"
-                  onClick={() => navigator.clipboard.writeText(job.app_username)}
+                  onClick={() => { navigator.clipboard.writeText(job.app_username); toast.success("Username copied!"); }}
+                  className="text-[#59554D] hover:text-[#2C2A26]"
                   title="Copy Username"
                 >
-                  <Copy size={14} />
+                  <Copy size={12} />
                 </button>
               </div>
             )}
             {job.app_password && (
-              <div className="flex items-center gap-2 bg-[#FCFAF5] border-2 border-[#2C2A26] px-2 py-1">
-                <span className="font-mono text-lg sm:text-xl text-[#59554D] uppercase">PW:</span>
-                <span className="font-mono text-base sm:text-lg font-bold">{job.app_password}</span>
+              <div className="flex items-center gap-1.5 bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1">
+                <span className="font-mono text-xs text-[#59554D] uppercase">PW:</span>
+                <span className="font-mono text-sm font-bold">{job.app_password}</span>
                 <button
                   type="button"
-                  className="text-[#59554D] hover:text-[#2C2A26] transition-colors"
-                  onClick={() => navigator.clipboard.writeText(job.app_password)}
+                  onClick={() => { navigator.clipboard.writeText(job.app_password); toast.success("Password copied!"); }}
+                  className="text-[#59554D] hover:text-[#2C2A26]"
                   title="Copy Password"
                 >
-                  <Copy size={14} />
+                  <Copy size={12} />
                 </button>
               </div>
             )}
@@ -198,26 +214,68 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         </div>
       )}
 
-      {/* Documents Upload */}
-      <div className="mb-4">
-        <div className="font-mono text-sm uppercase tracking-wider text-[#59554D] mb-2">Documents</div>
-        <div className="flex flex-wrap gap-2">
-          {['admit_card', 'hall_ticket', 'result'].map(type => (
-            <label key={type} className="text-xs cursor-pointer font-mono uppercase bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1 hover:bg-[#EBE5D9] transition-colors">
-              📎 {type.replace('_', ' ')}
-              <input
-                type="file" className="hidden" accept=".pdf,.jpg,.png"
-                onChange={e => e.target.files[0] && uploadDocument(job.id, e.target.files[0], type)}
-              />
-            </label>
-          ))}
-        </div>
+      {/* Documents vault (collapsible) */}
+      <div className="mb-3">
+        <button
+          type="button"
+          onClick={() => setDocsExpanded((p) => !p)}
+          className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[#59554D] hover:text-[#2C2A26] transition-colors"
+        >
+          <Paperclip size={13} />
+          Documents
+          {docsExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          {uploadedDocs.length > 0 && (
+            <span className="bg-[#3A5A40] text-[#FCFAF5] px-1.5 py-0.5 rounded-full text-[10px] ml-1">
+              {uploadedDocs.length}
+            </span>
+          )}
+        </button>
+
+        {docsExpanded && (
+          <div className="mt-2 p-3 bg-[#EBE5D9]/40 border border-dashed border-[#59554D] rounded space-y-2">
+            {/* Upload buttons */}
+            <div className="flex flex-wrap gap-2">
+              {["admit_card", "hall_ticket", "result", "other"].map((type) => (
+                <label
+                  key={type}
+                  className="text-xs cursor-pointer font-mono uppercase bg-[#FCFAF5] border border-[#2C2A26] px-2 py-1 hover:bg-[#EBE5D9] transition-colors"
+                >
+                  📎 {type.replace("_", " ")}
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) =>
+                      e.target.files[0] && uploadDocument(job.id, e.target.files[0], type)
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+            {/* List uploaded */}
+            {uploadedDocs.length > 0 && (
+              <ul className="space-y-1">
+                {uploadedDocs.map((doc, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openDoc(doc.file_path)}
+                      className="text-xs font-mono text-[#3A5A40] underline hover:no-underline truncate max-w-[200px]"
+                    >
+                      {doc.document_type?.replace("_", " ")} — {doc.file_name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2 sm:gap-3 pt-2">
+      <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 border-t border-dashed border-[#59554D]">
         {isFuture ? (
-          <div className="inline-flex items-center gap-2 bg-[#EBE5D9] text-[#59554D] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#59554D] cursor-not-allowed">
+          <div className="inline-flex items-center gap-2 bg-[#EBE5D9] text-[#59554D] font-serif font-bold text-sm px-4 py-2 border-2 border-[#59554D] cursor-not-allowed">
             Starts {formatDate(job.start_date)}
           </div>
         ) : (
@@ -225,21 +283,21 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             href={job.apply_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
+            className="inline-flex items-center gap-2 bg-[#2C2A26] text-[#FCFAF5] font-serif font-bold text-sm px-4 py-2 border-2 border-[#2C2A26] hover:bg-transparent hover:text-[#2C2A26] transition-colors"
             data-testid={`apply-link-${job.id}`}
           >
-            Apply Now <ExternalLink size={16} strokeWidth={2} />
+            Apply Now <ExternalLink size={14} strokeWidth={2} />
           </a>
         )}
 
         {(!isApplied || admin) && (
           <button
             onClick={() => onToggle && onToggle(job)}
-            className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
+            className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
             data-testid={`toggle-applied-${job.id}`}
             type="button"
           >
-            {isApplied ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+            {isApplied ? <CheckCircle2 size={14} /> : <Circle size={14} />}
             {isApplied ? "Mark unapplied" : "Mark applied"}
           </button>
         )}
@@ -248,19 +306,19 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           <>
             <button
               onClick={() => onEdit && onEdit(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
+              className="inline-flex items-center gap-2 bg-transparent text-[#2C2A26] font-serif font-bold text-sm px-4 py-2 border-2 border-[#2C2A26] hover:bg-[#EBE5D9] transition-colors"
               data-testid={`edit-job-${job.id}`}
               type="button"
             >
-              <Pencil size={16} /> Edit
+              <Pencil size={14} /> Edit
             </button>
             <button
               onClick={() => onDelete && onDelete(job)}
-              className="inline-flex items-center gap-2 bg-transparent text-[#8C3A3A] font-serif font-bold text-lg sm:text-xl px-4 py-2 border-2 border-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-[#FCFAF5] transition-colors"
+              className="inline-flex items-center gap-2 bg-transparent text-[#8C3A3A] font-serif font-bold text-sm px-4 py-2 border-2 border-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-[#FCFAF5] transition-colors"
               data-testid={`delete-job-${job.id}`}
               type="button"
             >
-              <Trash2 size={16} /> Delete
+              <Trash2 size={14} /> Delete
             </button>
           </>
         )}
