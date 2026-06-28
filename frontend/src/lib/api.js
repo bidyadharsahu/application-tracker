@@ -1,10 +1,8 @@
 // Supabase-backed API layer.
-// Preserves the same surface area the rest of the UI consumes.
 import { supabase, ADMIN_EMAIL, ADMIN_USERNAME } from "./supabase";
 
-// ---------- Session helpers (kept for backward compat with components) ----------
+// ── Session helpers ───────────────────────────────────────────────────────────
 export const getToken = () => {
-  // Supabase manages its own session. Return a truthy marker if signed in.
   try {
     const raw = localStorage.getItem("job_ledger_auth");
     if (!raw) return null;
@@ -14,29 +12,23 @@ export const getToken = () => {
     return null;
   }
 };
-export const setToken = () => {}; // no-op (handled by supabase)
+export const setToken = () => {};
 export const clearToken = () => {
   try { supabase.auth.signOut(); } catch {}
 };
-
-// Sync helper for route guard. Components also call api.me() async to verify.
 export const isAuthed = () => !!getToken();
 
-// ---------- Helpers ----------
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function usernameToEmail(username) {
   const u = (username || "").trim();
   if (!u) return "";
   if (u.includes("@")) return u.toLowerCase();
-  // The admin uses the simple username `bidyadhar`.
   if (u.toLowerCase() === ADMIN_USERNAME) return ADMIN_EMAIL;
   return `${u.toLowerCase()}@joblegder.app`;
 }
 
-function nowIso() {
-  return new Date().toISOString();
-}
+function nowIso() { return new Date().toISOString(); }
 
-// Map a Supabase row to the shape components expect.
 function normalizeJob(row) {
   if (!row) return row;
   return {
@@ -55,10 +47,13 @@ function normalizeJob(row) {
     applied_at: row.applied_at,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    source: row.source || "manual",
+    match_reason: row.match_reason || null,
+    match_score: row.match_score || null,
   };
 }
 
-// ---------- Auth ----------
+// ── Auth ──────────────────────────────────────────────────────────────────────
 async function login(username, password) {
   const email = usernameToEmail(username);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -67,7 +62,7 @@ async function login(username, password) {
     e.response = { data: { detail: error.message || "Invalid credentials" } };
     throw e;
   }
-  return { username: username, token: data?.session?.access_token };
+  return { username, token: data?.session?.access_token };
 }
 
 async function me() {
@@ -80,7 +75,7 @@ async function me() {
   return { username: data.user.email === ADMIN_EMAIL ? ADMIN_USERNAME : data.user.email };
 }
 
-// ---------- Jobs ----------
+// ── Jobs CRUD ─────────────────────────────────────────────────────────────────
 async function listJobs() {
   const { data, error } = await supabase
     .from("jobs")
@@ -102,6 +97,7 @@ async function createJob(payload) {
     app_password: payload.app_password || null,
     notes: payload.notes || null,
     applied: false,
+    source: payload.source || "manual",
   };
   const { data, error } = await supabase.from("jobs").insert(insert).select().single();
   if (error) throwApi(error);
@@ -114,45 +110,27 @@ async function updateJob(id, payload) {
     update.applied_at = update.applied ? nowIso() : null;
   }
   const { data, error } = await supabase
-    .from("jobs")
-    .update(update)
-    .eq("id", id)
-    .select()
-    .single();
+    .from("jobs").update(update).eq("id", id).select().single();
   if (error) throwApi(error);
   return normalizeJob(data);
 }
 
 async function toggleApplied(id) {
-  // Need current state to flip
   const { data: current, error: getErr } = await supabase
-    .from("jobs")
-    .select("applied")
-    .eq("id", id)
-    .single();
+    .from("jobs").select("applied").eq("id", id).single();
   if (getErr) throwApi(getErr);
   const newApplied = !current?.applied;
   const { data, error } = await supabase
     .from("jobs")
-    .update({
-      applied: newApplied,
-      applied_at: newApplied ? nowIso() : null,
-      updated_at: nowIso(),
-    })
-    .eq("id", id)
-    .select()
-    .single();
+    .update({ applied: newApplied, applied_at: newApplied ? nowIso() : null, updated_at: nowIso() })
+    .eq("id", id).select().single();
   if (error) throwApi(error);
   return normalizeJob(data);
 }
 
 async function markNotified(id) {
   const { data, error } = await supabase
-    .from("jobs")
-    .update({ notified: true })
-    .eq("id", id)
-    .select()
-    .single();
+    .from("jobs").update({ notified: true }).eq("id", id).select().single();
   if (error) throwApi(error);
   return normalizeJob(data);
 }
@@ -163,33 +141,65 @@ async function deleteJob(id) {
   return { ok: true };
 }
 
+// ── Auto-cleanup: archive expired unapplied jobs ──────────────────────────────
+async function deleteExpiredUnappliedJobs() {
+  const today = new Date().toISOString().split("T")[0];
+
+  // First fetch them so we can archive
+  const { data: expired, error: fetchErr } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("applied", false)
+    .lt("last_date", today)
+    .not("last_date", "is", null);
+
+  if (fetchErr) { console.error("Cleanup fetch error:", fetchErr); return; }
+  if (!expired || expired.length === 0) return;
+
+  // Insert into archived_jobs (if table exists — non-fatal if not)
+  await supabase.from("archived_jobs").insert(
+    expired.map((j) => ({
+      original_id: j.id,
+      job_name: j.job_name,
+      last_date: j.last_date,
+      exam_date: j.exam_date,
+      apply_link: j.apply_link,
+      notes: j.notes,
+      tags: j.tags,
+      start_date: j.start_date,
+      created_at: j.created_at,
+      archive_reason: "last_date_passed",
+    }))
+  );
+
+  // Delete from live table
+  const { error } = await supabase
+    .from("jobs")
+    .delete()
+    .eq("applied", false)
+    .lt("last_date", today)
+    .not("last_date", "is", null);
+
+  if (error) console.error("Cleanup delete error:", error);
+  else console.log(`🗑️ Archived ${expired.length} expired job(s)`);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
 async function stats() {
   const all = await listJobs();
   const today = new Date().toISOString().split("T")[0];
   const applied = all.filter((j) => j.applied).length;
   const upcoming = all.filter((j) => !j.applied && j.last_date >= today).length;
   const overdue = all.filter((j) => !j.applied && j.last_date < today).length;
-  return {
-    total: all.length,
-    applied,
-    pending: all.length - applied,
-    upcoming,
-    overdue,
-  };
+  return { total: all.length, applied, pending: all.length - applied, upcoming, overdue };
 }
 
-// ---------- AI Smart Parse (calls Vercel serverless function) ----------
+// ── AI Smart Parse ────────────────────────────────────────────────────────────
 async function smartParse(text) {
-  // The Vercel serverless function lives at /api/smart-parse.
-  // In local dev (CRA), this is hit via the same host; if a separate base is configured
-  // via REACT_APP_AI_ENDPOINT, that wins.
-  const endpoint =
-    process.env.REACT_APP_AI_ENDPOINT || "/api/smart-parse";
+  const endpoint = process.env.REACT_APP_AI_ENDPOINT || "/api/smart-parse";
   const { data: { session } = {} } = await supabase.auth.getSession();
   const headers = { "Content-Type": "application/json" };
-  if (session?.access_token) {
-    headers.Authorization = `Bearer ${session.access_token}`;
-  }
+  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
   const res = await fetch(endpoint, {
     method: "POST",
     headers,
@@ -197,18 +207,15 @@ async function smartParse(text) {
   });
   if (!res.ok) {
     let detail = `Smart parse failed (${res.status})`;
-    try {
-      const j = await res.json();
-      detail = j?.detail || j?.error || detail;
-    } catch {}
+    try { const j = await res.json(); detail = j?.detail || j?.error || detail; } catch {}
     const e = new Error(detail);
     e.response = { data: { detail } };
     throw e;
   }
-  return await res.json();
+  return res.json();
 }
 
-// ---------- Error mapping ----------
+// ── Error ─────────────────────────────────────────────────────────────────────
 function throwApi(error) {
   const detail = error?.message || "Request failed";
   const status = error?.status || error?.code || 500;
@@ -217,29 +224,8 @@ function throwApi(error) {
   throw e;
 }
 
-async function deleteExpiredUnappliedJobs() {
-  const today = new Date().toISOString().split('T')[0];
-  const { error } = await supabase
-    .from('jobs')
-    .delete()
-    .eq('applied', false)
-    .lt('last_date', today)
-    .not('last_date', 'is', null);
-  if (error) console.error('Cleanup error:', error);
-}
-
 export const api = {
-  login,
-  me,
-  listJobs,
-  createJob,
-  updateJob,
-  markNotified,
-  toggleApplied,
-  deleteJob,
-  stats,
-  smartParse,
-  deleteExpiredUnappliedJobs,
+  login, me, listJobs, createJob, updateJob, markNotified, toggleApplied,
+  deleteJob, stats, smartParse, deleteExpiredUnappliedJobs,
 };
-
 export default api;
