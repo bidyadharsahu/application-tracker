@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Search, X, ChevronRight, Feather } from "lucide-react";
+import { Plus, Search, X, Clock, CheckCircle2, Bell, ChevronRight, AlertCircle, Calendar } from "lucide-react";
 import api from "../lib/api";
 import { sortJobs, daysUntil, formatDate } from "../lib/utils-date";
 import JobCard from "../components/JobCard";
@@ -10,33 +10,32 @@ import { toast } from "sonner";
 
 const getStatus = (j, today) => {
   if (j.applied) return "applied";
-  const isFuture = j.start_date && j.start_date > today;
-  const blank = !j.start_date && !j.exam_date && !j.last_date;
-  return isFuture || blank ? "notices" : "pending";
+  const future = j.start_date && j.start_date > today;
+  const blank  = !j.start_date && !j.exam_date && !j.last_date;
+  return future || blank ? "notices" : "pending";
 };
 
 export default function Landing() {
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs]       = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(null);
-  const [query, setQuery] = useState("");
+  const [tab, setTab]         = useState(null);
+  const [query, setQuery]     = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
-  const fetchJobs = async () => {
+  const fetch = async () => {
     setLoading(true);
     try { setJobs(sortJobs(await api.listJobs())); }
-    catch { toast.error("Could not load the ledger"); }
+    catch { toast.error("Failed to load jobs"); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { api.deleteExpiredUnappliedJobs(); fetchJobs(); }, []);
+  useEffect(() => { api.deleteExpiredUnappliedJobs(); fetch(); }, []);
 
   useEffect(() => {
-    if (!jobs.length) return;
-    jobs.forEach(async (j) => {
+    jobs.forEach(async j => {
       if (j.start_date && j.start_date <= today && !j.notified && !j.applied) {
-        toast.success(`"${j.job_name}" applications are now open`);
+        toast.success(`${j.job_name} is now open!`);
         try { await api.markNotified(j.id); } catch {}
       }
     });
@@ -44,10 +43,10 @@ export default function Landing() {
 
   const handleToggle = async (job) => {
     try {
-      const updated = await api.toggleApplied(job.id);
-      setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? updated : j)));
-      toast.success(updated.applied ? "Marked as Applied" : "Moved back to Pending");
-    } catch { toast.error("Could not update"); }
+      const u = await api.toggleApplied(job.id);
+      setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
+      toast.success(u.applied ? "Marked as Applied ✓" : "Moved to Pending");
+    } catch { toast.error("Update failed"); }
   };
 
   const counts = useMemo(() => ({
@@ -56,275 +55,190 @@ export default function Landing() {
     notices: jobs.filter(j => getStatus(j, today) === "notices").length,
   }), [jobs, today]);
 
-  const filteredJobs = useMemo(() => {
-    if (!activeTab) return [];
-    let list = jobs.filter(j => {
-      const match = getStatus(j, today) === activeTab;
-      const q = !query || j.job_name?.toLowerCase().includes(query.toLowerCase()) ||
-        (j.tags && j.tags.toLowerCase().includes(query.toLowerCase()));
-      return match && q;
+  const list = useMemo(() => {
+    if (!tab) return [];
+    let l = jobs.filter(j => {
+      const s = getStatus(j, today) === tab;
+      const q = !query || j.job_name?.toLowerCase().includes(query.toLowerCase()) || j.tags?.toLowerCase().includes(query.toLowerCase());
+      return s && q;
     });
-    if (activeTab === "applied") {
-      list = [...list].sort((a, b) => {
-        if (!a.exam_date) return 1;
-        if (!b.exam_date) return -1;
-        return new Date(a.exam_date) - new Date(b.exam_date);
-      });
-    }
-    return list;
-  }, [jobs, activeTab, query, today]);
+    if (tab === "applied") l = [...l].sort((a,b) => (!a.exam_date?1:!b.exam_date?-1:new Date(a.exam_date)-new Date(b.exam_date)));
+    return l;
+  }, [jobs, tab, query, today]);
 
   const nextExam = useMemo(() =>
     jobs.filter(j => j.applied && j.exam_date && new Date(j.exam_date) >= new Date())
-      .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date))[0] || null
+        .sort((a,b) => new Date(a.exam_date)-new Date(b.exam_date))[0] || null
   , [jobs]);
 
-  const urgent = useMemo(() => jobs.filter(j => {
-    if (j.applied) return false;
-    const d = daysUntil(j.last_date);
-    return d !== null && d <= 3 && d >= 0;
-  }), [jobs]);
+  const urgent = useMemo(() => jobs.filter(j => { if(j.applied) return false; const d=daysUntil(j.last_date); return d!==null&&d<=3&&d>=0; }), [jobs]);
+  const total  = counts.pending + counts.applied + counts.notices;
+  const pct    = total > 0 ? Math.round((counts.applied/total)*100) : 0;
 
-  const total = counts.pending + counts.applied + counts.notices;
-  const progress = total > 0 ? Math.round((counts.applied / total) * 100) : 0;
-
-  const handleTabClick = (key) => {
-    if (activeTab === key) { setActiveTab(null); setQuery(""); }
-    else { setActiveTab(key); setQuery(""); setShowSearch(false); }
-  };
+  const selectTab = k => { if(tab===k){setTab(null);setQuery("");}else{setTab(k);setQuery("");setShowSearch(false);} };
 
   return (
-    <div style={{ minHeight: "100dvh", position: "relative" }}>
+    <div style={{minHeight:"100dvh",background:"var(--bg)"}}>
 
-      {/* SVG watercolour washes — rendered as inline SVG for max quality */}
-      <WatercolourBackground />
-
-      {/* SVG ink filter for wobbly borders */}
-      <svg style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}>
-        <defs>
-          <filter id="ink-wobble" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.04 0.08" numOctaves="2" seed="3" result="noise"/>
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
-          </filter>
-        </defs>
-      </svg>
-
-      {/* ── Header ───────────────────────────────────────────────────── */}
-      <header className="anim-fade-wash" style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(245,237,214,0.92)",
-        backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(107,79,53,0.18)",
-        paddingTop: "calc(18px + var(--safe-top))",
-        paddingBottom: "16px",
-        boxShadow: "0 2px 20px rgba(42,31,14,0.08)",
+      {/* ── Header ── */}
+      <header style={{
+        position:"sticky",top:0,zIndex:50,
+        background:"rgba(255,255,255,.95)",
+        backdropFilter:"blur(12px)",
+        borderBottom:"1px solid var(--border)",
+        paddingTop:"calc(16px + var(--sat))",
+        paddingBottom:16,padding:"calc(16px + var(--sat)) 20px 16px",
       }}>
-        <div style={{ padding: "0 22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
-            {/* Decorative flourish above title */}
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "0.75rem", color: "var(--ink-faint)", letterSpacing: "0.18em", marginBottom: "2px", fontStyle: "italic" }}>
-              ✦ Ledger of Opportunities ✦
+            <div style={{fontSize:12,fontWeight:600,color:"var(--text-3)",letterSpacing:".06em",textTransform:"uppercase",marginBottom:2}}>
+              Job Ledger
             </div>
-            <h1 className="type-display" style={{ margin: 0, fontSize: "clamp(1.75rem, 7vw, 2.5rem)" }}>
-              The Job Ledger
+            <h1 style={{fontSize:22,fontWeight:800,color:"var(--text-1)",margin:0,lineHeight:1.2}}>
+              My Applications
             </h1>
-            <LiveClock />
           </div>
-
-          {/* Feather-quill add button */}
-          <Link
-            to="/admin/login"
-            data-testid="admin-login-link"
+          <Link to="/admin/login" data-testid="admin-login-link"
             style={{
-              display: "flex", alignItems: "center", gap: "7px",
-              marginTop: "8px",
-              fontFamily: "var(--font-body)",
-              fontSize: "0.9375rem",
-              fontWeight: 600,
-              color: "var(--ink-mid)",
-              textDecoration: "none",
-              background: "linear-gradient(145deg, rgba(253,248,238,0.95), rgba(237,224,190,0.90))",
-              border: "1.5px solid rgba(107,79,53,0.28)",
-              borderRadius: "3px",
-              padding: "10px 16px",
-              boxShadow: "2px 2px 0 rgba(42,31,14,0.14), inset 0 1px 0 rgba(255,255,255,0.6)",
-              transition: "transform 0.15s ease",
+              display:"inline-flex",alignItems:"center",gap:6,
+              background:"var(--blue)",color:"#fff",textDecoration:"none",
+              fontWeight:700,fontSize:14,padding:"11px 18px",
+              borderRadius:"var(--r-full)",
+              boxShadow:"0 2px 8px rgba(29,78,216,.35)",
             }}
-            onTouchStart={e => e.currentTarget.style.transform = "scale(0.94) translateY(1px)"}
-            onTouchEnd={e => e.currentTarget.style.transform = ""}
           >
-            <Feather size={16} strokeWidth={1.5} /> Add Entry
+            <Plus size={17} strokeWidth={2.5}/> Add
           </Link>
         </div>
       </header>
 
-      <main style={{ padding: "0 0 100px", position: "relative", zIndex: 1 }}>
-        <div style={{ padding: "0 22px" }}>
+      <main style={{padding:"0 0 90px"}}>
+        <div style={{padding:"0 16px"}}>
 
-          {/* Deadline alert */}
           <DeadlineAlert jobs={jobs} />
 
-          {/* ── Next exam ribbon ──────────────────────────────────── */}
-          {nextExam && !activeTab && <NextExamRibbon job={nextExam} />}
+          {/* Next exam */}
+          {nextExam && !tab && (
+            <div className="anim-up card" style={{
+              marginTop:16, padding:"14px 16px",
+              borderLeft:"4px solid var(--blue)",
+              display:"flex",alignItems:"center",gap:12,
+            }}>
+              <Calendar size={20} color="var(--blue)" style={{flexShrink:0}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--blue)",textTransform:"uppercase",letterSpacing:".06em"}}>Next Exam</div>
+                <div style={{fontSize:15,fontWeight:700,color:"var(--text-1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{nextExam.job_name}</div>
+                <div style={{fontSize:13,color:"var(--text-3)",marginTop:1}}>
+                  {(() => { const d=Math.ceil((new Date(nextExam.exam_date)-new Date())/86400000); return d===0?"Today!":d===1?"Tomorrow!":d+" days away"; })()}
+                  {" · "}{formatDate(nextExam.exam_date)}
+                </div>
+              </div>
+              <ChevronRight size={16} color="var(--text-4)"/>
+            </div>
+          )}
 
-          {/* ── Urgent whisper ────────────────────────────────────── */}
-          {urgent.length > 0 && !activeTab && (
-            <div className="anim-rise-up delay-1" style={{
-              display: "flex", alignItems: "center", gap: "14px",
-              background: "rgba(139,46,46,0.07)",
-              border: "1px solid rgba(139,46,46,0.20)",
-              borderRadius: "3px",
-              padding: "14px 18px",
-              marginBottom: "20px",
+          {/* Urgent alert */}
+          {urgent.length > 0 && !tab && (
+            <div className="anim-up d1" style={{
+              marginTop:12,padding:"12px 16px",
+              background:"var(--red-bg)",border:"1px solid var(--red-border)",
+              borderRadius:"var(--r-md)",
+              display:"flex",alignItems:"center",gap:10,
             }}>
               <div style={{
-                width: "9px", height: "9px", borderRadius: "50%",
-                background: "var(--pigment-red)", flexShrink: 0,
-                boxShadow: "0 0 0 4px rgba(139,46,46,0.15)",
-                animation: "pulse-sepia 1.8s ease-in-out infinite",
-              }} />
-              <div>
-                <div style={{ fontFamily: "var(--font-accent)", fontSize: "1rem", fontWeight: 600, color: "var(--pigment-red)" }}>
-                  {urgent.length} deadline{urgent.length > 1 ? "s" : ""} within 3 days
-                </div>
-                <div style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: "rgba(139,46,46,0.65)", fontStyle: "italic" }}>
-                  Tap <em>Pending</em> below to review
-                </div>
+                width:8,height:8,borderRadius:"50%",background:"var(--red)",flexShrink:0,
+                animation:"pulse-dot 1.5s ease-in-out infinite",
+              }}/>
+              <div style={{flex:1}}>
+                <span style={{fontSize:14,fontWeight:700,color:"var(--red)"}}>
+                  {urgent.length} deadline{urgent.length>1?"s":""} closing within 3 days!
+                </span>
+                <span style={{fontSize:13,color:"var(--red)",opacity:.75,marginLeft:6}}>Tap Pending →</span>
               </div>
             </div>
           )}
 
-          {/* ── Progress ──────────────────────────────────────────── */}
-          {total > 0 && !activeTab && (
-            <div className="anim-rise-up delay-2 card-parchment" style={{ padding: "18px 20px", marginBottom: "22px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px" }}>
-                <div style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "var(--ink-soft)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                  Applications Progress
-                </div>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", fontStyle: "italic", color: "var(--ink-dark)" }}>
-                  {progress}%
-                </div>
+          {/* Progress bar */}
+          {total > 0 && !tab && (
+            <div className="anim-up d2 card" style={{marginTop:12,padding:"14px 16px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <span style={{fontSize:13,fontWeight:600,color:"var(--text-2)"}}>Overall Progress</span>
+                <span style={{fontSize:14,fontWeight:800,color:"var(--blue)"}}>{pct}%</span>
               </div>
               <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${progress}%` }} />
+                <div className="progress-fill" style={{width:pct+"%"}}/>
               </div>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: "var(--ink-faint)", marginTop: "8px", fontStyle: "italic" }}>
+              <div style={{fontSize:12,color:"var(--text-4)",marginTop:6}}>
                 {counts.applied} applied · {counts.pending} pending · {counts.notices} upcoming
               </div>
             </div>
           )}
 
-          {/* ── Three stat cards ──────────────────────────────────── */}
-          <div className={activeTab ? "" : "anim-rise-up delay-3"}
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "24px" }}>
+          {/* Live clock */}
+          {!tab && <LiveClock />}
 
+          {/* ── 3 stat cards ── */}
+          <div className={tab?"":"anim-up d3"} style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:16}}>
             {[
-              { key: "pending",  label: "Pending",  color: "var(--pigment-amber)", wash: "rgba(212,175,114,0.18)", washBorder: "rgba(139,94,10,0.28)" },
-              { key: "applied",  label: "Applied",  color: "var(--pigment-green)", wash: "rgba(155,184,154,0.20)", washBorder: "rgba(45,90,61,0.28)" },
-              { key: "notices",  label: "Notices",  color: "var(--pigment-blue)",  wash: "rgba(197,216,232,0.22)", washBorder: "rgba(43,74,107,0.24)" },
-            ].map(({ key, label, color, wash, washBorder }) => {
-              const isActive = activeTab === key;
+              { key:"pending", label:"Pending", icon:<Clock size={18}/>,      color:"var(--amber)",  activeBg:"var(--amber-bg)" },
+              { key:"applied", label:"Applied", icon:<CheckCircle2 size={18}/>,color:"var(--green)",  activeBg:"var(--green-bg)" },
+              { key:"notices", label:"Notices", icon:<Bell size={18}/>,        color:"var(--purple)", activeBg:"var(--purple-bg)" },
+            ].map(({key,label,icon,color,activeBg}) => {
+              const on = tab===key;
               return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleTabClick(key)}
-                  data-testid={`filter-card-${key}`}
-                  className={`stat-card ${isActive ? "active-card" : ""}`}
-                  style={isActive ? {
-                    background: `linear-gradient(145deg, ${wash} 0%, rgba(243,234,208,0.96) 100%)`,
-                    borderColor: washBorder,
-                  } : {}}
+                <button key={key} type="button" data-testid={"filter-card-"+key}
+                  onClick={()=>selectTab(key)}
+                  className={"stat-card"+(on?" active":"")}
+                  style={on?{borderColor:color,background:activeBg}:{}}
                 >
-                  {/* Watercolour wash dot */}
-                  <div style={{
-                    width: "8px", height: "8px", borderRadius: "50%",
-                    background: color, margin: "0 auto 10px",
-                    boxShadow: `0 0 8px ${color}55`,
-                    opacity: isActive ? 1 : 0.6,
-                  }} />
-                  <div className="stat-number" style={{ color: isActive ? color : "var(--ink-dark)" }}>
-                    {loading ? "—" : counts[key]}
+                  <div style={{color:on?color:"var(--text-4)",marginBottom:6}}>{icon}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:on?color:"var(--text-1)",lineHeight:1,marginBottom:4}}>
+                    {loading?"—":counts[key]}
                   </div>
-                  <div className="stat-label" style={{ color: isActive ? color : "var(--ink-soft)" }}>
+                  <div style={{fontSize:11,fontWeight:600,color:on?color:"var(--text-3)",textTransform:"uppercase",letterSpacing:".06em"}}>
                     {label}
                   </div>
-                  {isActive && (
-                    <div style={{ marginTop: "8px", fontFamily: "var(--font-display)", fontSize: "0.875rem", color: color, fontStyle: "italic" }}>
-                      ↓ viewing
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* ── Expanded job list ──────────────────────────────────── */}
-          {activeTab && (
-            <div className="anim-expand-down">
+          {/* ── Expanded list ── */}
+          {tab && (
+            <div className="anim-down" style={{marginTop:16}}>
 
               {/* Section header */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-                <div style={{ flex: 1 }}>
-                  <div className="ornament-line">
-                    <span style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", fontStyle: "italic", color: "var(--ink-dark)", whiteSpace: "nowrap" }}>
-                      {activeTab === "pending" ? "Pending Applications" : activeTab === "applied" ? "Applied — by Exam Date" : "Upcoming Notices"}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setShowSearch(s => !s); if (showSearch) setQuery(""); }}
-                  style={{
-                    width: "42px", height: "42px", borderRadius: "3px",
-                    background: showSearch
-                      ? "linear-gradient(160deg, var(--ink-dark), var(--ink-mid))"
-                      : "linear-gradient(145deg, rgba(253,248,238,0.95), rgba(237,224,190,0.90))",
-                    border: "1.5px solid rgba(107,79,53,0.28)",
-                    color: showSearch ? "var(--parch-0)" : "var(--ink-mid)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", flexShrink: 0,
-                    boxShadow: "1px 2px 0 rgba(42,31,14,0.12)",
-                  }}
-                >
-                  {showSearch ? <X size={16} strokeWidth={1.75} /> : <Search size={16} strokeWidth={1.5} />}
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                <h2 style={{flex:1,fontSize:17,fontWeight:700,color:"var(--text-1)",margin:0}}>
+                  {tab==="pending"?"Pending Jobs":tab==="applied"?"Applied (by exam date)":"Upcoming Notices"}
+                </h2>
+                <button type="button" onClick={()=>{setShowSearch(s=>!s);if(showSearch)setQuery("");}}
+                  className="btn btn-ghost btn-icon" style={{width:40,height:40}}>
+                  {showSearch?<X size={17}/>:<Search size={17}/>}
                 </button>
-
-                <div style={{
-                  fontFamily: "var(--font-display)", fontStyle: "italic",
-                  fontSize: "1.125rem", color: "var(--ink-soft)", minWidth: "28px", textAlign: "center"
-                }}>
-                  {filteredJobs.length}
+                <div style={{fontSize:13,fontWeight:600,color:"var(--text-3)",background:"var(--surface-2)",padding:"4px 10px",borderRadius:"var(--r-full)",border:"1px solid var(--border)"}}>
+                  {list.length}
                 </div>
               </div>
 
               {/* Search */}
               {showSearch && (
-                <div className="anim-expand-down" style={{ marginBottom: "16px", position: "relative" }}>
-                  <Search size={17} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "var(--ink-ghost)", pointerEvents: "none" }} />
-                  <input
-                    autoFocus value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Search the ledger…"
-                    data-testid="search-input"
-                    className="input-field"
-                    style={{ paddingLeft: "46px", fontStyle: "italic" }}
-                  />
-                  {query && (
-                    <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--ink-soft)", cursor: "pointer" }}>
-                      <X size={15} />
-                    </button>
-                  )}
+                <div className="anim-down" style={{position:"relative",marginBottom:12}}>
+                  <Search size={16} style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"var(--text-4)",pointerEvents:"none"}}/>
+                  <input autoFocus value={query} onChange={e=>setQuery(e.target.value)}
+                    placeholder="Search jobs…" data-testid="search-input"
+                    className="input" style={{paddingLeft:42,borderRadius:"var(--r-full)"}}/>
+                  {query && <button onClick={()=>setQuery("")} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--text-3)",cursor:"pointer"}}><X size={15}/></button>}
                 </div>
               )}
 
               {/* Cards */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {loading ? <SkeletonCards /> :
-                  filteredJobs.length === 0 ? <EmptyState query={query} tab={activeTab} /> :
-                  filteredJobs.map((job, i) => (
-                    <div key={job.id} className="anim-ink-drop" style={{ animationDelay: `${i * 0.06}s` }}>
-                      <JobCard job={job} onToggle={handleToggle} />
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                {loading ? <SkeletonCards/> :
+                  list.length===0 ? <EmptyState query={query} tab={tab}/> :
+                  list.map((job,i)=>(
+                    <div key={job.id} className="anim-up" style={{animationDelay:i*.04+"s"}}>
+                      <JobCard job={job} onToggle={handleToggle}/>
                     </div>
                   ))
                 }
@@ -332,159 +246,50 @@ export default function Landing() {
             </div>
           )}
 
-          {/* Invitation to tap */}
-          {!activeTab && !loading && (
-            <div className="anim-rise-up delay-5" style={{ textAlign: "center", padding: "32px 20px 0" }}>
-              <div className="anim-float" style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: "var(--ink-faint)", marginBottom: "10px" }}>
-                ✦
-              </div>
-              <div style={{ fontFamily: "var(--font-body)", fontSize: "1rem", fontStyle: "italic", color: "var(--ink-faint)" }}>
-                Tap a card above to open the ledger
-              </div>
+          {/* Idle hint */}
+          {!tab && !loading && (
+            <div style={{textAlign:"center",padding:"40px 0 0",color:"var(--text-4)",fontSize:14,fontWeight:500}}>
+              Tap a card above to view jobs
             </div>
           )}
         </div>
       </main>
-
-      {/* Footer ornament */}
-      <footer style={{ textAlign: "center", padding: "20px", position: "relative", zIndex: 1 }}>
-        <div className="ornament-line">
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "0.875rem", fontStyle: "italic", color: "var(--ink-faint)" }}>
-            Never miss an examination
-          </span>
-        </div>
-      </footer>
-
-      <PWAInstallBanner />
+      <PWAInstallBanner/>
     </div>
   );
 }
 
-/* ── Watercolour SVG background ─────────────────────────────────────────── */
-function WatercolourBackground() {
-  return (
-    <svg
-      style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}
-      preserveAspectRatio="xMidYMid slice"
-      viewBox="0 0 390 844"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <filter id="wc-blur-1"><feGaussianBlur stdDeviation="28"/></filter>
-        <filter id="wc-blur-2"><feGaussianBlur stdDeviation="40"/></filter>
-        <filter id="wc-blur-3"><feGaussianBlur stdDeviation="20"/></filter>
-        <filter id="wc-noise">
-          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
-          <feColorMatrix type="saturate" values="0"/>
-          <feBlend in="SourceGraphic" mode="multiply" result="blend"/>
-          <feComposite in="blend" in2="SourceGraphic" operator="in"/>
-        </filter>
-      </defs>
-
-      {/* Sky — cerulean wash bleeding from top */}
-      <ellipse cx="195" cy="-30" rx="320" ry="200" fill="rgba(184,204,224,0.42)" filter="url(#wc-blur-1)"/>
-      {/* Secondary sky wash */}
-      <ellipse cx="280" cy="80" rx="180" ry="120" fill="rgba(197,216,232,0.28)" filter="url(#wc-blur-2)"/>
-
-      {/* Distant hills — viridian */}
-      <ellipse cx="80" cy="320" rx="220" ry="160" fill="rgba(155,184,154,0.30)" filter="url(#wc-blur-2)"/>
-      <ellipse cx="340" cy="280" rx="160" ry="120" fill="rgba(135,167,135,0.22)" filter="url(#wc-blur-1)"/>
-
-      {/* Warm sunlight — yellow ochre pool */}
-      <ellipse cx="310" cy="200" rx="180" ry="130" fill="rgba(212,175,114,0.25)" filter="url(#wc-blur-2)"/>
-
-      {/* Misty ground — raw sienna */}
-      <ellipse cx="195" cy="750" rx="300" ry="160" fill="rgba(193,165,128,0.22)" filter="url(#wc-blur-1)"/>
-
-      {/* Rose madder accent — right edge glow */}
-      <ellipse cx="420" cy="500" rx="140" ry="200" fill="rgba(212,165,160,0.18)" filter="url(#wc-blur-2)"/>
-
-      {/* Ink water ripple lines — bottom */}
-      <ellipse cx="195" cy="844" rx="250" ry="80" fill="rgba(184,204,224,0.18)" filter="url(#wc-blur-3)"/>
-
-      {/* Paper grain overlay */}
-      <rect width="390" height="844" fill="rgba(245,237,214,0.08)" filter="url(#wc-noise)" opacity="0.6"/>
-    </svg>
-  );
-}
-
-/* ── Next exam ribbon ────────────────────────────────────────────────────── */
-function NextExamRibbon({ job }) {
-  const days = Math.ceil((new Date(job.exam_date) - new Date()) / 86400000);
-  const urgent = days <= 7;
-  return (
-    <div className="anim-rise-up" style={{
-      background: urgent
-        ? "linear-gradient(135deg, rgba(139,46,46,0.08) 0%, rgba(212,165,160,0.15) 100%)"
-        : "linear-gradient(135deg, rgba(43,74,107,0.07) 0%, rgba(197,216,232,0.18) 100%)",
-      border: `1px solid ${urgent ? "rgba(139,46,46,0.22)" : "rgba(43,74,107,0.18)"}`,
-      borderRadius: "4px",
-      padding: "16px 18px",
-      marginBottom: "20px",
-      display: "flex", alignItems: "center", gap: "16px",
-    }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "0.8rem", letterSpacing: "0.10em", textTransform: "uppercase", color: urgent ? "var(--pigment-red)" : "var(--pigment-blue)", marginBottom: "3px" }}>
-          Next Examination
-        </div>
-        <div style={{ fontFamily: "var(--font-accent)", fontSize: "1.125rem", fontWeight: 600, color: "var(--ink-dark)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {job.job_name}
-        </div>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "0.9375rem", fontStyle: "italic", color: urgent ? "var(--pigment-red)" : "var(--pigment-blue)", marginTop: "3px" }}>
-          {days === 0 ? "Today — do not miss it!" : days === 1 ? "Tomorrow!" : `In ${days} days`}
-          {" · "}{new Date(job.exam_date).toLocaleDateString("en-IN", { day: "2-digit", month: "long" })}
-        </div>
-      </div>
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "1.75rem", fontStyle: "italic", color: urgent ? "var(--pigment-red)" : "var(--pigment-blue)", flexShrink: 0, opacity: 0.85 }}>
-        {days}d
-      </div>
-    </div>
-  );
-}
-
-/* ── Live clock ──────────────────────────────────────────────────────────── */
 function LiveClock() {
-  const [now, setNow] = useState(new Date());
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+  const [now,setNow]=useState(new Date());
+  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t);},[]);
   return (
-    <div style={{ marginTop: "4px", fontFamily: "var(--font-body)", fontSize: "0.875rem", fontStyle: "italic", color: "var(--ink-soft)" }}>
-      {now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
-      {" · "}
-      <span style={{ fontVariantNumeric: "tabular-nums" }}>
-        {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+    <div style={{marginTop:12,padding:"10px 14px",background:"var(--surface-2)",borderRadius:"var(--r-md)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <span style={{fontSize:13,color:"var(--text-3)",fontWeight:500}}>
+        {now.toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}
+      </span>
+      <span style={{fontSize:16,fontWeight:700,color:"var(--text-1)",fontVariantNumeric:"tabular-nums"}}>
+        {now.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
       </span>
     </div>
   );
 }
 
-/* ── Skeleton ────────────────────────────────────────────────────────────── */
 function SkeletonCards() {
-  return (
-    <>
-      {[1,2,3].map(i => (
-        <div key={i} className="card-parchment" style={{ padding: "24px" }}>
-          <div className="skeleton" style={{ height: "22px", width: "65%", marginBottom: "14px" }}/>
-          <div className="skeleton" style={{ height: "14px", width: "42%", marginBottom: "10px" }}/>
-          <div className="skeleton" style={{ height: "14px", width: "28%" }}/>
-        </div>
-      ))}
-    </>
-  );
+  return (<>{[1,2,3].map(i=>(
+    <div key={i} className="card" style={{padding:20}}>
+      <div className="skeleton" style={{height:18,width:"65%",marginBottom:12}}/>
+      <div className="skeleton" style={{height:13,width:"42%",marginBottom:8}}/>
+      <div className="skeleton" style={{height:13,width:"30%"}}/>
+    </div>
+  ))}</>);
 }
 
-/* ── Empty state ─────────────────────────────────────────────────────────── */
-function EmptyState({ query, tab }) {
+function EmptyState({query,tab}) {
   return (
-    <div data-testid="empty-state" className="card-parchment anim-quill" style={{ padding: "52px 24px", textAlign: "center" }}>
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "3rem", color: "var(--ink-faint)", marginBottom: "14px" }}>
-        {query ? "⌕" : "✦"}
-      </div>
-      <div style={{ fontFamily: "var(--font-accent)", fontSize: "1.25rem", fontWeight: 600, color: "var(--ink-mid)", marginBottom: "8px" }}>
-        {query ? "Nothing matches" : `No ${tab} entries`}
-      </div>
-      <div style={{ fontFamily: "var(--font-body)", fontSize: "1rem", fontStyle: "italic", color: "var(--ink-faint)" }}>
-        {query ? "Try a different search" : tab === "applied" ? "Mark a job as applied to see it here" : "Add entries from the admin panel"}
-      </div>
+    <div data-testid="empty-state" className="card anim-scale" style={{padding:"48px 20px",textAlign:"center"}}>
+      <div style={{fontSize:40,marginBottom:12}}>{query?"🔍":tab==="applied"?"📭":tab==="pending"?"🎉":"📬"}</div>
+      <div style={{fontSize:17,fontWeight:700,color:"var(--text-1)",marginBottom:6}}>{query?"Nothing found":`No ${tab} jobs yet`}</div>
+      <div style={{fontSize:14,color:"var(--text-3)"}}>{query?"Try different keywords":tab==="applied"?"Mark a job applied to see it here":"Add jobs from the admin panel"}</div>
     </div>
   );
 }
