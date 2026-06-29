@@ -1,46 +1,52 @@
-import React,{useState,useEffect} from "react";
-import {X,AlertCircle} from "lucide-react";
-import {daysUntil} from "../lib/utils-date";
 
-export default function DeadlineAlert({jobs}){
-  const [visible,setVisible]=useState(false);
-  useEffect(()=>{if(!sessionStorage.getItem("popup_dismissed"))setVisible(true);},[]);
-  const dismiss=()=>{sessionStorage.setItem("popup_dismissed","1");setVisible(false);};
+import React, { useState, useEffect } from "react";
+import { X, AlertTriangle } from "lucide-react";
+import { daysUntil } from "../lib/utils-date";
 
-  const urgent=jobs.filter(j=>{if(j.applied)return false;const d=daysUntil(j.last_date);return d!==null&&d<=3&&d>=0;});
-  if(!visible||urgent.length===0)return null;
+export default function DeadlineAlert({ jobs }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { if (!sessionStorage.getItem("popup_dismissed")) setVisible(true); }, []);
+  const dismiss = () => { sessionStorage.setItem("popup_dismissed", "1"); setVisible(false); };
 
-  let sX=0;
-  return(
-    <div className="anim-up" data-testid="deadline-alert" role="alert"
-      onTouchStart={e=>{sX=e.touches[0].clientX;}}
-      onTouchEnd={e=>{if(Math.abs(e.changedTouches[0].clientX-sX)>60)dismiss();}}
-      style={{background:"var(--red-bg)",border:"1px solid var(--red-border)",borderRadius:"var(--r-md)",padding:"14px 16px",marginTop:16,position:"relative"}}>
+  const urgent = jobs.filter(j => {
+    if (j.applied) return false;
+    const d = daysUntil(j.last_date);
+    return d !== null && d <= 3 && d >= 0;
+  });
+
+  if (!visible || urgent.length === 0) return null;
+
+  let sX = 0;
+  return (
+    <div data-testid="deadline-alert" role="alert"
+      onTouchStart={e => { sX = e.touches[0].clientX; }}
+      onTouchEnd={e => { if (Math.abs(e.changedTouches[0].clientX - sX) > 60) dismiss(); }}
+      style={{ background: "var(--c-red-bg)", borderRadius: 14, padding: "14px 16px", marginBottom: 12, position: "relative" }}>
       <button onClick={dismiss} type="button" aria-label="Dismiss"
-        style={{position:"absolute",top:10,right:10,background:"none",border:"none",color:"var(--red)",cursor:"pointer",padding:4,display:"flex"}}>
-        <X size={16}/>
+        style={{ position: "absolute", top: 10, right: 10, background: "none", border: "none", color: "var(--c-red)", cursor: "pointer", padding: 4, display: "flex" }}>
+        <X size={16} />
       </button>
-      <div style={{display:"flex",alignItems:"flex-start",gap:10,paddingRight:28}}>
-        <AlertCircle size={18} color="var(--red)" style={{flexShrink:0,marginTop:1}}/>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, paddingRight: 28 }}>
+        <AlertTriangle size={18} color="var(--c-red)" style={{ flexShrink: 0, marginTop: 1 }} />
         <div>
-          <div style={{fontSize:14,fontWeight:700,color:"var(--red)",marginBottom:8}}>
-            {urgent.length} deadline{urgent.length>1?"s":""} closing soon!
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--c-red)", marginBottom: 8 }}>
+            {urgent.length} deadline{urgent.length > 1 ? "s" : ""} closing soon!
           </div>
-          <ul style={{margin:0,padding:0,listStyle:"none",display:"flex",flexDirection:"column",gap:6}}>
-            {urgent.slice(0,3).map(j=>{
-              const d=daysUntil(j.last_date);
-              return(
-                <li key={j.id} data-testid={"urgent-job-"+j.id} style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:12,fontWeight:700,padding:"2px 8px",background:d===0?"var(--red)":"var(--red-bg)",color:d===0?"#fff":"var(--red)",border:"1px solid var(--red-border)",borderRadius:"var(--r-full)",flexShrink:0}}>
-                    {d===0?"Today":d===1?"Tomorrow":d+" days"}
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+            {urgent.slice(0, 3).map(j => {
+              const d = daysUntil(j.last_date);
+              return (
+                <li key={j.id} data-testid={`urgent-job-${j.id}`} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", background: d === 0 ? "var(--c-red)" : "rgba(239,68,68,.12)", color: d === 0 ? "#fff" : "var(--c-red)", borderRadius: 99, flexShrink: 0 }}>
+                    {d === 0 ? "Today" : d === 1 ? "Tomorrow" : `${d} days`}
                   </span>
-                  <span style={{fontSize:14,fontWeight:600,color:"var(--text-1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.job_name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.job_name}</span>
                 </li>
               );
             })}
-            {urgent.length>3&&<li style={{fontSize:12,color:"var(--text-3)"}}>+{urgent.length-3} more</li>}
+            {urgent.length > 3 && <li style={{ fontSize: 12, color: "var(--t3)" }}>+{urgent.length - 3} more</li>}
           </ul>
-          <div style={{fontSize:12,color:"var(--red)",opacity:.65,marginTop:8}}>Swipe or tap ✕ to dismiss</div>
+          <div style={{ fontSize: 12, color: "var(--c-red)", opacity: .6, marginTop: 8 }}>Swipe to dismiss</div>
         </div>
       </div>
     </div>
