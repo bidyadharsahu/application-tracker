@@ -1,67 +1,46 @@
-import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
-import { daysUntil } from "../lib/utils-date";
+import React,{useState,useEffect} from "react";
+import {X,AlertCircle} from "lucide-react";
+import {daysUntil} from "../lib/utils-date";
 
-export default function DeadlineAlert({ jobs }) {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => { if (!sessionStorage.getItem("popup_dismissed")) setVisible(true); }, []);
-  const dismiss = () => { sessionStorage.setItem("popup_dismissed", "1"); setVisible(false); };
+export default function DeadlineAlert({jobs}){
+  const [visible,setVisible]=useState(false);
+  useEffect(()=>{if(!sessionStorage.getItem("popup_dismissed"))setVisible(true);},[]);
+  const dismiss=()=>{sessionStorage.setItem("popup_dismissed","1");setVisible(false);};
 
-  const urgent = jobs.filter(j => {
-    if (j.applied) return false;
-    const d = daysUntil(j.last_date);
-    return d !== null && d <= 3 && d >= 0;
-  });
+  const urgent=jobs.filter(j=>{if(j.applied)return false;const d=daysUntil(j.last_date);return d!==null&&d<=3&&d>=0;});
+  if(!visible||urgent.length===0)return null;
 
-  if (!visible || urgent.length === 0) return null;
-
-  let startX = 0;
-  return (
-    <div className="anim-rise-up card-parchment" data-testid="deadline-alert" role="alert"
-      onTouchStart={e => { startX = e.touches[0].clientX; }}
-      onTouchEnd={e => { if (Math.abs(e.changedTouches[0].clientX - startX) > 60) dismiss(); }}
-      style={{
-        marginBottom: "20px", padding: "16px 18px", position: "relative",
-        border: "1px solid rgba(139,46,46,0.28)",
-        background: "linear-gradient(135deg, rgba(253,248,238,0.97) 0%, rgba(239,220,210,0.93) 100%)",
-      }}
-    >
+  let sX=0;
+  return(
+    <div className="anim-up" data-testid="deadline-alert" role="alert"
+      onTouchStart={e=>{sX=e.touches[0].clientX;}}
+      onTouchEnd={e=>{if(Math.abs(e.changedTouches[0].clientX-sX)>60)dismiss();}}
+      style={{background:"var(--red-bg)",border:"1px solid var(--red-border)",borderRadius:"var(--r-md)",padding:"14px 16px",marginTop:16,position:"relative"}}>
       <button onClick={dismiss} type="button" aria-label="Dismiss"
-        style={{ position: "absolute", top: "12px", right: "12px", background: "none", border: "none", color: "var(--ink-soft)", cursor: "pointer", padding: "4px" }}>
-        <X size={15} strokeWidth={1.5}/>
+        style={{position:"absolute",top:10,right:10,background:"none",border:"none",color:"var(--red)",cursor:"pointer",padding:4,display:"flex"}}>
+        <X size={16}/>
       </button>
-
-      <div style={{ paddingRight: "28px" }}>
-        <div style={{ fontFamily: "var(--font-accent)", fontSize: "1.0625rem", fontWeight: 600, color: "var(--pigment-red)", marginBottom: "10px" }}>
-          ⚑ {urgent.length} deadline{urgent.length > 1 ? "s" : ""} approaching
-        </div>
-        <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-          {urgent.slice(0, 3).map(j => {
-            const d = daysUntil(j.last_date);
-            return (
-              <li key={j.id} data-testid={`urgent-job-${j.id}`} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-                <span style={{
-                  fontFamily: "var(--font-body)", fontSize: "0.8rem", fontWeight: 600,
-                  padding: "2px 10px", background: d === 0 ? "var(--pigment-red)" : "rgba(139,46,46,0.12)",
-                  color: d === 0 ? "white" : "var(--pigment-red)",
-                  borderRadius: "2px", flexShrink: 0
-                }}>
-                  {d === 0 ? "Today" : d === 1 ? "Tomorrow" : `${d} days`}
-                </span>
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "1rem", color: "var(--ink-dark)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {j.job_name}
-                </span>
-              </li>
-            );
-          })}
-          {urgent.length > 3 && (
-            <li style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", fontStyle: "italic", color: "var(--ink-soft)" }}>
-              and {urgent.length - 3} more...
-            </li>
-          )}
-        </ul>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", fontStyle: "italic", color: "rgba(139,46,46,0.55)", marginTop: "8px" }}>
-          Swipe to dismiss
+      <div style={{display:"flex",alignItems:"flex-start",gap:10,paddingRight:28}}>
+        <AlertCircle size={18} color="var(--red)" style={{flexShrink:0,marginTop:1}}/>
+        <div>
+          <div style={{fontSize:14,fontWeight:700,color:"var(--red)",marginBottom:8}}>
+            {urgent.length} deadline{urgent.length>1?"s":""} closing soon!
+          </div>
+          <ul style={{margin:0,padding:0,listStyle:"none",display:"flex",flexDirection:"column",gap:6}}>
+            {urgent.slice(0,3).map(j=>{
+              const d=daysUntil(j.last_date);
+              return(
+                <li key={j.id} data-testid={"urgent-job-"+j.id} style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:12,fontWeight:700,padding:"2px 8px",background:d===0?"var(--red)":"var(--red-bg)",color:d===0?"#fff":"var(--red)",border:"1px solid var(--red-border)",borderRadius:"var(--r-full)",flexShrink:0}}>
+                    {d===0?"Today":d===1?"Tomorrow":d+" days"}
+                  </span>
+                  <span style={{fontSize:14,fontWeight:600,color:"var(--text-1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{j.job_name}</span>
+                </li>
+              );
+            })}
+            {urgent.length>3&&<li style={{fontSize:12,color:"var(--text-3)"}}>+{urgent.length-3} more</li>}
+          </ul>
+          <div style={{fontSize:12,color:"var(--red)",opacity:.65,marginTop:8}}>Swipe or tap ✕ to dismiss</div>
         </div>
       </div>
     </div>
