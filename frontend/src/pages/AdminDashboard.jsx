@@ -1,187 +1,127 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Plus, Sparkles, LogOut, ArrowLeft, RefreshCw, Clock, CheckCircle2, Bell, BookOpen, Newspaper } from "lucide-react";
-import { toast } from "sonner";
-import api, { clearToken } from "../lib/api";
-import { sortJobs } from "../lib/utils-date";
+import React,{useEffect,useState,useMemo} from "react";
+import {useNavigate,Link} from "react-router-dom";
+import {Plus,Sparkles,LogOut,ArrowLeft,RefreshCw} from "lucide-react";
+import {toast} from "sonner";
+import api,{clearToken} from "../lib/api";
+import {sortJobs} from "../lib/utils-date";
 import JobCard from "../components/JobCard";
 import JobFormModal from "../components/JobFormModal";
 import SmartPasteModal from "../components/SmartPasteModal";
 
-const TABS = [
-  { key: "all",     label: "All",     icon: <BookOpen size={16} /> },
-  { key: "pending", label: "Pending", icon: <Clock size={16} /> },
-  { key: "applied", label: "Applied", icon: <CheckCircle2 size={16} /> },
-  { key: "notices", label: "Notices", icon: <Bell size={16} /> },
-];
+const TABS=[{k:"all",l:"All"},{k:"pending",l:"Pending"},{k:"applied",l:"Applied"},{k:"notices",l:"Notices"}];
 
-export default function AdminDashboard() {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-  const [pasteOpen, setPasteOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState(null);
-  const [prefill, setPrefill] = useState(null);
-  const [tab, setTab] = useState("all");
-  const navigate = useNavigate();
+export default function AdminDashboard(){
+  const [jobs,setJobs]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [formOpen,setFormOpen]=useState(false);
+  const [pasteOpen,setPasteOpen]=useState(false);
+  const [editingJob,setEditingJob]=useState(null);
+  const [prefill,setPrefill]=useState(null);
+  const [tab,setTab]=useState("all");
+  const nav=useNavigate();
+  const today=new Date().toISOString().split("T")[0];
 
-  const today = new Date().toISOString().split("T")[0];
-  const getStatus = (j) => {
-    if (j.applied) return "applied";
-    const f = j.start_date && j.start_date > today;
-    const b = !j.start_date && !j.exam_date && !j.last_date;
-    return (f || b) ? "notices" : "pending";
+  const getStatus=j=>{
+    if(j.applied)return"applied";
+    const f=j.start_date&&j.start_date>today;
+    const b=!j.start_date&&!j.exam_date&&!j.last_date;
+    return(f||b)?"notices":"pending";
   };
 
-  const fetchJobs = async () => {
+  const fetch=async()=>{
     setLoading(true);
-    try { setJobs(sortJobs(await api.listJobs())); }
-    catch (e) { if (e?.response?.status === 401) { clearToken(); navigate("/admin/login"); } else toast.error("Load failed"); }
-    finally { setLoading(false); }
+    try{setJobs(sortJobs(await api.listJobs()));}
+    catch(e){if(e?.response?.status===401){clearToken();nav("/admin/login");}else toast.error("Load failed");}
+    finally{setLoading(false);}
+  };
+  useEffect(()=>{fetch();},[]);
+
+  const counts=useMemo(()=>({all:jobs.length,pending:jobs.filter(j=>getStatus(j)==="pending").length,applied:jobs.filter(j=>getStatus(j)==="applied").length,notices:jobs.filter(j=>getStatus(j)==="notices").length}),[jobs]);
+
+  const visible=useMemo(()=>{
+    let l=tab==="all"?jobs:jobs.filter(j=>getStatus(j)===tab);
+    if(tab==="applied")l=[...l].sort((a,b)=>(!a.exam_date?1:!b.exam_date?-1:new Date(a.exam_date)-new Date(b.exam_date)));
+    return l;
+  },[jobs,tab]);
+
+  const save=async(payload)=>{
+    try{
+      if(editingJob){await api.updateJob(editingJob.id,payload);toast.success("Updated ✓");}
+      else{await api.createJob(payload);toast.success("Job added ✓");}
+      setFormOpen(false);setEditingJob(null);setPrefill(null);fetch();
+    }catch(e){toast.error(e?.response?.data?.detail||"Save failed");}
+  };
+  const del=async(job)=>{
+    if(!window.confirm("Delete \""+job.job_name+"\"?"))return;
+    try{await api.deleteJob(job.id);toast.success("Deleted");fetch();}catch{toast.error("Delete failed");}
+  };
+  const toggle=async(job)=>{
+    try{await api.toggleApplied(job.id);toast.success("Updated!");fetch();}catch{toast.error("Failed");}
   };
 
-  useEffect(() => { fetchJobs(); }, []);
-
-  const counts = useMemo(() => ({
-    all: jobs.length,
-    pending: jobs.filter(j => getStatus(j) === "pending").length,
-    applied: jobs.filter(j => getStatus(j) === "applied").length,
-    notices: jobs.filter(j => getStatus(j) === "notices").length,
-  }), [jobs]);
-
-  const visible = useMemo(() => {
-    let list = tab === "all" ? jobs : jobs.filter(j => getStatus(j) === tab);
-    if (tab === "applied") list = [...list].sort((a, b) => {
-      if (!a.exam_date) return 1; if (!b.exam_date) return -1;
-      return new Date(a.exam_date) - new Date(b.exam_date);
-    });
-    return list;
-  }, [jobs, tab]);
-
-  const handleSave = async (payload) => {
-    try {
-      if (editingJob) { await api.updateJob(editingJob.id, payload); toast.success("Updated ✅"); }
-      else { await api.createJob(payload); toast.success("Published ✅"); }
-      setFormOpen(false); setEditingJob(null); setPrefill(null); fetchJobs();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Save failed"); }
-  };
-  const handleDelete = async (job) => {
-    if (!window.confirm(`Delete "${job.job_name}"?`)) return;
-    try { await api.deleteJob(job.id); toast.success("Deleted"); fetchJobs(); }
-    catch { toast.error("Delete failed"); }
-  };
-  const handleToggle = async (job) => {
-    try { await api.toggleApplied(job.id); toast.success("Updated!"); fetchJobs(); }
-    catch { toast.error("Update failed"); }
-  };
-
-  return (
-    <div style={{ minHeight: "100dvh", background: "var(--bg)", overflowX: "hidden" }}>
-
+  return(
+    <div style={{minHeight:"100dvh",background:"var(--bg)"}}>
       {/* Header */}
-      <header style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(15,15,26,0.9)", backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderBottom: "1px solid var(--border)",
-        paddingTop: "calc(16px + var(--safe-top))",
-        paddingBottom: "14px", paddingLeft: "20px", paddingRight: "20px"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+      <header style={{position:"sticky",top:0,zIndex:50,background:"rgba(255,255,255,.96)",backdropFilter:"blur(12px)",borderBottom:"1px solid var(--border)",paddingTop:"calc(14px + var(--sat))",paddingBottom:14,padding:"calc(14px + var(--sat)) 16px 14px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
           <div>
-            <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--ink-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Editor's Desk</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--ink)", letterSpacing: "-0.02em" }}>Admin Panel</div>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--text-4)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:2}}>Admin</div>
+            <div style={{fontSize:20,fontWeight:800,color:"var(--text-1)"}}>Job Manager</div>
           </div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <Link to="/" style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: "44px", height: "44px", borderRadius: "50%",
-              background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
-              color: "var(--ink)", textDecoration: "none"
-            }}>
-              <ArrowLeft size={18} />
-            </Link>
-            <button type="button" onClick={fetchJobs} style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: "44px", height: "44px", borderRadius: "50%",
-              background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
-              color: "var(--ink)", cursor: "pointer"
-            }}>
-              <RefreshCw size={16} />
-            </button>
-            <button type="button" onClick={() => { clearToken(); toast.success("Signed out"); navigate("/"); }} style={{
-              display: "flex", alignItems: "center", justifyContent: "center",
-              width: "44px", height: "44px", borderRadius: "50%",
-              background: "rgba(255,101,132,0.1)", border: "1px solid rgba(255,101,132,0.25)",
-              color: "var(--accent-2)", cursor: "pointer"
-            }}>
-              <LogOut size={16} />
-            </button>
+          <div style={{display:"flex",gap:8}}>
+            <Link to="/" className="btn btn-ghost btn-icon"><ArrowLeft size={18}/></Link>
+            <button type="button" onClick={fetch} className="btn btn-ghost btn-icon"><RefreshCw size={16}/></button>
+            <button type="button" onClick={()=>{clearToken();toast.success("Signed out");nav("/");}} className="btn btn-danger btn-icon"><LogOut size={16}/></button>
           </div>
         </div>
-
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
-          <button type="button" onClick={() => { setEditingJob(null); setPrefill(null); setFormOpen(true); }} className="btn-primary" style={{ flex: 1, minHeight: "48px", fontSize: "0.9375rem" }} data-testid="new-job-btn">
-            <Plus size={18} /> New Job
+        <div style={{display:"flex",gap:8,marginBottom:12}}>
+          <button type="button" onClick={()=>{setEditingJob(null);setPrefill(null);setFormOpen(true);}} className="btn btn-primary" data-testid="new-job-btn" style={{flex:1}}>
+            <Plus size={17}/> New Job
           </button>
-          <button type="button" onClick={() => setPasteOpen(true)} className="btn-secondary" style={{ flex: 1, minHeight: "48px", fontSize: "0.9375rem" }} data-testid="smart-paste-btn">
-            <Sparkles size={18} /> Smart Paste
+          <button type="button" onClick={()=>setPasteOpen(true)} className="btn btn-secondary" data-testid="smart-paste-btn" style={{flex:1}}>
+            <Sparkles size={17}/> Smart Paste
           </button>
         </div>
-
-        {/* Tab bar */}
-        <div style={{ display: "flex", gap: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "var(--radius-md)", padding: "4px" }}>
-          {TABS.map(({ key, label, icon }) => (
-            <button key={key} type="button" onClick={() => setTab(key)} style={{
-              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
-              padding: "9px 4px",
-              background: tab === key ? "var(--accent)" : "transparent",
-              borderRadius: "calc(var(--radius-md) - 2px)",
-              border: "none", color: tab === key ? "white" : "var(--ink-muted)",
-              fontSize: "0.8125rem", fontWeight: 700, cursor: "pointer",
-              transition: "all 0.2s ease"
+        {/* Tabs */}
+        <div style={{display:"flex",background:"var(--surface-2)",borderRadius:"var(--r-md)",padding:4,gap:4}}>
+          {TABS.map(({k,l})=>(
+            <button key={k} type="button" onClick={()=>setTab(k)} style={{
+              flex:1,padding:"8px 4px",borderRadius:"var(--r-sm)",border:"none",cursor:"pointer",
+              background:tab===k?"var(--surface)":"transparent",
+              color:tab===k?"var(--text-1)":"var(--text-3)",
+              fontWeight:tab===k?700:500,fontSize:13,
+              boxShadow:tab===k?"0 1px 3px rgba(0,0,0,.08)":undefined,
+              transition:"all .18s ease",
             }}>
-              {icon}
-              <span style={{ display: counts[key] > 9 ? "none" : undefined }}>{counts[key]}</span>
+              {l} <span style={{fontSize:11,color:tab===k?"var(--blue)":"var(--text-4)",fontWeight:700}}>({counts[k]})</span>
             </button>
           ))}
         </div>
       </header>
 
-      <main style={{ padding: "20px 20px 100px" }}>
-        <div style={{ fontSize: "0.8rem", color: "var(--ink-muted)", fontWeight: 600, marginBottom: "14px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          {counts[tab]} job{counts[tab] !== 1 ? "s" : ""} {tab === "all" ? "total" : `in ${tab}`}
-        </div>
-
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[1,2,3].map(i => (
-              <div key={i} style={{ background: "var(--bg-card)", borderRadius: "var(--radius-lg)", padding: "24px", border: "1px solid var(--border)" }}>
-                <div className="skeleton" style={{ height: "20px", width: "65%", marginBottom: "12px" }} />
-                <div className="skeleton" style={{ height: "14px", width: "40%" }} />
-              </div>
-            ))}
+      <main style={{padding:"16px 16px 90px"}}>
+        {loading?(
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {[1,2,3].map(i=><div key={i} className="card" style={{padding:20}}><div className="skeleton" style={{height:18,width:"60%",marginBottom:12}}/><div className="skeleton" style={{height:13,width:"38%"}}/></div>)}
           </div>
-        ) : visible.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--bg-card)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border)" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "12px" }}>📋</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--ink)", marginBottom: "6px" }}>No jobs here</div>
-            <div style={{ fontSize: "0.9375rem", color: "var(--ink-muted)" }}>Tap "New Job" or "Smart Paste" to add one</div>
+        ):visible.length===0?(
+          <div className="card anim-scale" style={{padding:"52px 20px",textAlign:"center"}}>
+            <div style={{fontSize:36,marginBottom:12}}>📋</div>
+            <div style={{fontSize:17,fontWeight:700,color:"var(--text-1)",marginBottom:6}}>No jobs here</div>
+            <div style={{fontSize:14,color:"var(--text-3)"}}>Tap New Job or Smart Paste to add one</div>
           </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }} data-testid="admin-jobs-grid">
-            {visible.map((job, i) => (
-              <div key={job.id} className="anim-fade-up" style={{ animationDelay: `${i * 0.04}s` }}>
-                <JobCard job={job} admin onEdit={j => { setEditingJob(j); setPrefill(null); setFormOpen(true); }} onDelete={handleDelete} onToggle={handleToggle} />
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:12}} data-testid="admin-jobs-grid">
+            {visible.map((job,i)=>(
+              <div key={job.id} className="anim-up" style={{animationDelay:i*.04+"s"}}>
+                <JobCard job={job} admin onEdit={j=>{setEditingJob(j);setPrefill(null);setFormOpen(true);}} onDelete={del} onToggle={toggle}/>
               </div>
             ))}
           </div>
         )}
       </main>
-
-      <JobFormModal open={formOpen} onClose={() => { setFormOpen(false); setEditingJob(null); setPrefill(null); }} onSave={handleSave} initial={editingJob} prefill={prefill} />
-      <SmartPasteModal open={pasteOpen} onClose={() => setPasteOpen(false)} onParsed={data => { setPasteOpen(false); setEditingJob(null); setPrefill(data); setFormOpen(true); }} />
+      <JobFormModal open={formOpen} onClose={()=>{setFormOpen(false);setEditingJob(null);setPrefill(null);}} onSave={save} initial={editingJob} prefill={prefill}/>
+      <SmartPasteModal open={pasteOpen} onClose={()=>setPasteOpen(false)} onParsed={data=>{setPasteOpen(false);setEditingJob(null);setPrefill(data);setFormOpen(true);}}/>
     </div>
   );
 }
