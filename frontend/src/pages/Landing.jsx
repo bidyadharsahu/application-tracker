@@ -48,7 +48,6 @@ export default function Landing({ setUrgentCount }) {
     try {
       const u = await api.toggleApplied(job.id);
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
-      toast.success(u.applied ? "Marked as Applied" : "Moved to Pending");
     } catch { toast.error("Update failed"); }
   };
 
@@ -75,8 +74,11 @@ export default function Landing({ setUrgentCount }) {
 
   const urgent = useMemo(() => jobs.filter(j => { if (j.applied) return false; const d = daysUntil(j.last_date); return d !== null && d <= 3 && d >= 0; }), [jobs]);
 
-  const total = counts.pending + counts.applied + counts.notices;
-  const pct   = total > 0 ? Math.round((counts.applied / total) * 100) : 0;
+  // Most recently applied job — useful quick reference, no math/percentages needed
+  const recentlyApplied = useMemo(() =>
+    jobs.filter(j => j.applied && j.applied_at)
+        .sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at))[0] || null, [jobs]);
+
   const hour  = new Date().getHours();
   const greet = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
@@ -101,31 +103,6 @@ export default function Landing({ setUrgentCount }) {
 
         <div style={{ padding: "10px 16px 0" }}>
 
-          {/* Progress card — gradient, Apple-Health-card style */}
-          {total > 0 && (
-            <div className="a-up" style={{
-              background: "linear-gradient(135deg,#0A84FF 0%,#5E5CE6 100%)",
-              borderRadius: "var(--radius-xl)", padding: "18px 18px 16px", marginBottom: 12,
-              boxShadow: "0 8px 24px rgba(10,132,255,0.28)",
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>Application Progress</span>
-                <span style={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>{pct}%</span>
-              </div>
-              <div className="ios-progress-track">
-                <div className="ios-progress-fill" style={{ width: pct + "%" }} />
-              </div>
-              <div style={{ display: "flex", gap: 22, marginTop: 14 }}>
-                {[["Pending", counts.pending], ["Applied", counts.applied], ["Notices", counts.notices]].map(([l, v]) => (
-                  <div key={l}>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{v}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: 600, marginTop: 2 }}>{l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <DeadlineAlert jobs={jobs} />
 
           {urgent.length > 0 && (
@@ -144,7 +121,7 @@ export default function Landing({ setUrgentCount }) {
 
           {nextExam && (
             <button type="button" onClick={() => goTab("applied")} className="ios-card ios-card-press a-up d1"
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 16, textAlign: "left" }}>
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 12, textAlign: "left" }}>
               <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--tint-blue-bg)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <Calendar size={18} color="var(--ios-blue)" />
               </div>
@@ -160,6 +137,21 @@ export default function Landing({ setUrgentCount }) {
             </button>
           )}
 
+          {/* Quick reference to the last thing you applied to — replaces the old progress bar */}
+          {recentlyApplied && (
+            <button type="button" onClick={() => goTab("applied")} className="ios-card ios-card-press a-up d2"
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 16, textAlign: "left" }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--tint-green-bg)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <CheckCircle2 size={18} color="var(--ios-green)" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ios-green)", textTransform: "uppercase", letterSpacing: ".04em" }}>Last Applied</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--label-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recentlyApplied.job_name}</div>
+              </div>
+              <ChevronRight size={17} color="var(--label-4)" />
+            </button>
+          )}
+
           <div style={{ fontSize: 13, fontWeight: 600, color: "var(--label-3)", textTransform: "uppercase", letterSpacing: ".03em", marginBottom: 8, paddingLeft: 4 }}>
             Categories
           </div>
@@ -169,7 +161,7 @@ export default function Landing({ setUrgentCount }) {
               { k: "applied", label: "Applied", icon: <CheckCircle2 size={24} strokeWidth={1.8} />, bg: "var(--tint-green-bg)", fg: "#1A8A3D" },
               { k: "notices", label: "Notices", icon: <Bell size={24} strokeWidth={1.8} />, bg: "var(--tint-purple-bg)", fg: "#8A38B5" },
             ].map(({ k, label, icon, bg, fg }, i) => (
-              <button key={k} type="button" data-testid={"filter-card-" + k} onClick={() => goTab(k)} className={"stat-tile a-up d" + (i + 2)}>
+              <button key={k} type="button" data-testid={"filter-card-" + k} onClick={() => goTab(k)} className={"stat-tile a-up d" + (i + 3)}>
                 <div style={{ width: 46, height: 46, borderRadius: 14, background: bg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", color: fg }}>
                   {icon}
                 </div>
