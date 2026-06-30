@@ -8,6 +8,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import { isAuthed } from "./lib/api";
 import { supabase } from "./lib/supabase";
+import { I18nProvider, useI18n } from "./lib/i18n";
 import "./App.css";
 
 const RequireAuth = ({ children }) => isAuthed() ? children : <Navigate to="/admin/login" replace />;
@@ -15,27 +16,28 @@ const RequireAuth = ({ children }) => isAuthed() ? children : <Navigate to="/adm
 function TabBar({ urgentCount }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const path = location.pathname;
   if (path.startsWith("/admin")) return null;
 
   const tab = new URLSearchParams(location.search).get("tab");
 
   const tabs = [
-    { to: "/",             icon: Briefcase,    label: "Home",    on: !tab },
-    { to: "/?tab=applied", icon: CheckCircle2, label: "Applied", on: tab === "applied" },
-    { to: "/?tab=notices", icon: Bell,         label: "Notices", on: tab === "notices" },
-    { to: "/admin/login",  icon: Settings,     label: "Admin",   on: false },
+    { to: "/",             icon: Briefcase,    label: t("nav_home"),    key: "home",    on: !tab },
+    { to: "/?tab=applied", icon: CheckCircle2, label: t("nav_applied"), key: "applied", on: tab === "applied" },
+    { to: "/?tab=notices", icon: Bell,         label: t("nav_notices"), key: "notices", on: tab === "notices" },
+    { to: "/admin/login",  icon: Settings,     label: t("nav_admin"),   key: "admin",   on: false },
   ];
 
   return (
     <nav className="tab-bar" role="navigation">
-      {tabs.map(({ to, icon: Icon, label, on }) => (
-        <button key={label} type="button" className={"tab-item" + (on ? " active" : "")} onClick={() => navigate(to)}>
+      {tabs.map(({ to, icon: Icon, label, key, on }) => (
+        <button key={key} type="button" className={"tab-item tg-press" + (on ? " active" : "")} onClick={() => navigate(to)}>
           <div className="tab-icon-wrap">
-            <Icon size={25} strokeWidth={on ? 2.3 : 1.8} color={on ? "var(--ios-blue)" : "var(--label-3)"} fill={on && label !== "Admin" ? (on ? "var(--ios-blue)" : "none") : "none"} fillOpacity={on && label !== "Admin" ? 0.15 : 0} />
+            <Icon size={25} strokeWidth={on ? 2.3 : 1.8} color={on ? "var(--ios-blue)" : "var(--label-3)"} fill={on && key !== "admin" ? "var(--ios-blue)" : "none"} fillOpacity={on && key !== "admin" ? 0.15 : 0} />
           </div>
           <span className="tab-label">{label}</span>
-          {label === "Home" && urgentCount > 0 && !on && <span className="tab-badge">{urgentCount}</span>}
+          {key === "home" && urgentCount > 0 && !on && <span className="tab-badge">{urgentCount}</span>}
         </button>
       ))}
     </nav>
@@ -88,13 +90,15 @@ function AppShell() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppShell />
-      <Toaster position="top-center" richColors toastOptions={{
-        style: { background: "rgba(255,255,255,0.96)", backdropFilter: "blur(20px)", color: "#000",
-          border: "0.5px solid var(--separator)", borderRadius: 14, fontFamily: "inherit", fontSize: 15,
-          fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,.16)" },
-      }} />
-    </BrowserRouter>
+    <I18nProvider>
+      <BrowserRouter>
+        <AppShell />
+        <Toaster position="top-center" richColors toastOptions={{
+          style: { background: "rgba(255,255,255,0.96)", backdropFilter: "blur(20px)", color: "#000",
+            border: "0.5px solid var(--separator)", borderRadius: 14, fontFamily: "inherit", fontSize: 15,
+            fontWeight: 600, boxShadow: "0 8px 30px rgba(0,0,0,.16)" },
+        }} />
+      </BrowserRouter>
+    </I18nProvider>
   );
 }
