@@ -3,9 +3,11 @@ import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Tra
 import { formatDate, daysUntil } from "../lib/utils-date";
 import Countdown from "./Countdown";
 import supabase from "../lib/supabase";
+import { useI18n } from "../lib/i18n";
 import { toast } from "sonner";
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
+  const { t } = useI18n();
   const isApplied    = !!job.applied;
   const today        = new Date().toISOString().split("T")[0];
   const isFuture     = job.start_date && job.start_date > today;
@@ -33,9 +35,9 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     try {
       const path = `${job.id}/${type}-${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from("job-documents").upload(path, file);
-      if (error) { toast.error("Upload failed"); return; }
+      if (error) { toast.error(t("upload_failed")); return; }
       await supabase.from("job_documents").insert({ job_id: job.id, file_name: file.name, file_path: path, document_type: type });
-      toast.success(`${type.replace("_", " ")} saved`);
+      toast.success(t("document_saved", { type: type.replace("_", " ") }));
       const { data } = await supabase.from("job_documents").select("*").eq("job_id", job.id);
       setDocs(data || []);
     } finally { setUploading(false); }
@@ -46,7 +48,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     await supabase.storage.from("job-documents").remove([doc.file_path]);
     await supabase.from("job_documents").delete().eq("id", doc.id);
     setDocs(prev => prev.filter(d => d.id !== doc.id));
-    toast.success("Document deleted");
+    toast.success(t("document_deleted"));
   };
 
   const openDoc = async (p) => {
@@ -54,23 +56,23 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
-  const copy = (text, label) => { navigator.clipboard.writeText(text); toast.success(`${label} copied`); };
+  const copy = (text, labelKey) => { navigator.clipboard.writeText(text); toast.success(t("copied", { label: t(labelKey) })); };
 
   const dotColor = isApplied ? "var(--ios-green)" : isUrgent ? "var(--ios-red)" : isNotStarted ? "var(--ios-purple)" : "var(--ios-orange)";
 
-  // Undo-aware toggle: lets a person undo an accidental tap within 4s
+  // Undo-aware toggle: lets a person undo an accidental tap immediately via the toast action
   const handleToggleClick = () => {
     if (!onToggle) return;
     const wasApplied = isApplied;
     onToggle(job);
     if (!wasApplied) {
-      toast.success("Marked as Applied", {
-        action: { label: "Undo", onClick: () => onToggle(job) },
+      toast.success(t("marked_applied_toast"), {
+        action: { label: t("undo_btn"), onClick: () => onToggle(job) },
       });
     } else {
-      toast("Moved back to Pending", {
+      toast(t("moved_to_pending_toast"), {
         icon: <RotateCcw size={15} />,
-        action: { label: "Undo", onClick: () => onToggle(job) },
+        action: { label: t("undo_btn"), onClick: () => onToggle(job) },
       });
     }
   };
@@ -88,15 +90,15 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           <span data-testid={`status-stamp-${job.id}`}
             className={`status-pill ${isApplied ? "pill-applied" : isUrgent ? "pill-urgent" : isNotStarted ? "pill-notice" : "pill-pending"}`}
             style={{ flexShrink: 0 }}>
-            {isApplied ? "✓ Applied" : isUrgent ? "Urgent" : isNotStarted ? "Soon" : "Pending"}
+            {isApplied ? `✓ ${t("status_applied")}` : isUrgent ? t("status_urgent") : isNotStarted ? t("status_soon") : t("status_pending")}
           </span>
         </div>
 
         {job.tags && (
           <div className="scroll-x" style={{ marginBottom: 10, paddingLeft: 18 }}>
-            {job.tags.split(",").map((t, i) => t.trim() && (
+            {job.tags.split(",").map((tg, i) => tg.trim() && (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "var(--tint-blue-bg)", color: "var(--ios-blue)", padding: "3px 9px", borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
-                <Tag size={9} />{t.trim()}
+                <Tag size={9} />{tg.trim()}
               </span>
             ))}
           </div>
@@ -112,15 +114,15 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         <div style={{ paddingLeft: 18 }}>
           <div style={{ display: "grid", gridTemplateColumns: isApplied ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 10 }}>
             {!isApplied && (
-              <DateCell icon={<CalendarDays size={13} />} label="Last Date"
-                value={job.last_date ? formatDate(job.last_date) : "TBA"}
-                sub={deadlineDays !== null && deadlineDays >= 0 ? (deadlineDays === 0 ? "Today" : deadlineDays === 1 ? "Tomorrow" : `${deadlineDays}d left`) : deadlineDays !== null && deadlineDays < 0 ? "Overdue" : null}
+              <DateCell icon={<CalendarDays size={13} />} label={t("last_date")}
+                value={job.last_date ? formatDate(job.last_date) : t("tba")}
+                sub={deadlineDays !== null && deadlineDays >= 0 ? (deadlineDays === 0 ? t("today") : deadlineDays === 1 ? t("tomorrow") : t("days_left", { n: deadlineDays })) : deadlineDays !== null && deadlineDays < 0 ? t("overdue") : null}
                 subColor={deadlineDays !== null && deadlineDays <= 1 ? "var(--ios-red)" : "#B25900"}
                 testId={`job-last-date-${job.id}`} />
             )}
-            <DateCell icon={<FileText size={13} />} label="Exam Date"
-              value={job.exam_date ? formatDate(job.exam_date) : "TBA"}
-              sub={examDays !== null ? (examDays < 0 ? "Passed" : examDays === 0 ? "Today" : examDays === 1 ? "Tomorrow" : `${examDays}d away`) : null}
+            <DateCell icon={<FileText size={13} />} label={t("exam_date")}
+              value={job.exam_date ? formatDate(job.exam_date) : t("tba")}
+              sub={examDays !== null ? (examDays < 0 ? t("passed") : examDays === 0 ? t("today") : examDays === 1 ? t("tomorrow") : t("days_away", { n: examDays })) : null}
               subColor={examDays !== null && examDays <= 1 ? "var(--ios-red)" : examDays !== null && examDays <= 7 ? "#B25900" : "var(--label-3)"}
               testId={`job-exam-date-${job.id}`} />
           </div>
@@ -135,16 +137,18 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
           {(job.app_username || job.app_password) && (
             <div style={{ background: "var(--tint-blue-bg)", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ios-blue)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 7 }}>Login</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ios-blue)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 7 }}>{t("login_label")}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                 {job.app_username && (
-                  <button type="button" onClick={() => copy(job.app_username, "Username")}
+                  <button type="button" onClick={() => copy(job.app_username, "username_label")}
+                    className="tg-press"
                     style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "none", borderRadius: 8, padding: "7px 11px", fontSize: 14, fontWeight: 600, color: "var(--label-1)", cursor: "pointer" }}>
                     <User size={13} color="var(--ios-blue)" />{job.app_username}<Copy size={11} color="var(--label-4)" />
                   </button>
                 )}
                 {job.app_password && (
-                  <button type="button" onClick={() => copy(job.app_password, "Password")}
+                  <button type="button" onClick={() => copy(job.app_password, "password_label")}
+                    className="tg-press"
                     style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "none", borderRadius: 8, padding: "7px 11px", fontSize: 14, fontWeight: 600, color: "var(--label-1)", cursor: "pointer" }}>
                     <Lock size={13} color="var(--ios-blue)" />{job.app_password}<Copy size={11} color="var(--label-4)" />
                   </button>
@@ -155,9 +159,10 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
           <div style={{ marginBottom: 12 }}>
             <button type="button" onClick={() => setDocsOpen(p => !p)}
+              className="tg-press"
               style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "var(--bg-tertiary)", border: "none", borderRadius: 10, padding: "10px 14px", fontSize: 14, fontWeight: 600, color: "var(--label-2)", cursor: "pointer" }}>
               <Paperclip size={15} color="var(--label-3)" />
-              <span>Documents</span>
+              <span>{t("documents")}</span>
               {docs.length > 0 && <span style={{ background: "var(--ios-blue)", color: "#fff", borderRadius: 99, padding: "0 7px", fontSize: 11, fontWeight: 700, marginLeft: 2 }}>{docs.length}</span>}
               <span style={{ marginLeft: "auto" }}>{docsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
             </button>
@@ -165,7 +170,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
               <div className="a-in" style={{ background: "var(--bg-tertiary)", borderRadius: "0 0 10px 10px", padding: 12 }}>
                 <div className="scroll-x" style={{ marginBottom: docs.length > 0 ? 10 : 0 }}>
                   {["admit_card", "hall_ticket", "result", "other"].map(type => (
-                    <label key={type} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", borderRadius: 99, padding: "7px 13px", fontSize: 13, fontWeight: 600, color: "var(--label-2)", cursor: "pointer", flexShrink: 0, opacity: uploading ? .5 : 1 }}>
+                    <label key={type} className="tg-press" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", borderRadius: 99, padding: "7px 13px", fontSize: 13, fontWeight: 600, color: "var(--label-2)", cursor: "pointer", flexShrink: 0, opacity: uploading ? .5 : 1 }}>
                       {type.replace("_", " ")}
                       <input type="file" style={{ display: "none" }} accept=".pdf,.jpg,.jpeg,.png" disabled={uploading} onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], type)} />
                     </label>
@@ -174,10 +179,10 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                 {docs.map(doc => (
                   <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderTop: "0.5px solid var(--separator)" }}>
                     <span style={{ fontSize: 18, flexShrink: 0 }}>{doc.document_type === "admit_card" ? "🎫" : doc.document_type === "hall_ticket" ? "🎟" : doc.document_type === "result" ? "📊" : "📄"}</span>
-                    <button type="button" onClick={() => openDoc(doc.file_path)} style={{ flex: 1, textAlign: "left", background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "var(--ios-blue)", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0 }}>
+                    <button type="button" onClick={() => openDoc(doc.file_path)} className="tg-press" style={{ flex: 1, textAlign: "left", background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "var(--ios-blue)", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0 }}>
                       {doc.document_type?.replace("_", " ")} — {doc.file_name}
                     </button>
-                    <button type="button" onClick={() => deleteDoc(doc)} style={{ background: "none", border: "none", color: "var(--ios-red)", cursor: "pointer", padding: 4, display: "flex", flexShrink: 0 }}><Trash2 size={14} /></button>
+                    <button type="button" onClick={() => deleteDoc(doc)} className="tg-press" style={{ background: "none", border: "none", color: "var(--ios-red)", cursor: "pointer", padding: 4, display: "flex", flexShrink: 0 }}><Trash2 size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -186,35 +191,34 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
           <div style={{ height: 0.5, background: "var(--separator)", marginBottom: 12 }} />
 
-          {/* ── Action row — now correctly reflects applied state ── */}
+          {/* ── Action row — clearly reflects applied state ── */}
           <div style={{ display: "flex", gap: 8 }}>
             {isFuture ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-tertiary)", borderRadius: 99, padding: "11px", fontSize: 14, fontWeight: 600, color: "var(--label-3)" }}>
-                Opens {formatDate(job.start_date)}
+                {t("opens_on", { date: formatDate(job.start_date) })}
               </div>
             ) : isApplied ? (
-              // Once applied: clearly green "Applied" pill button that still opens the link, plus an explicit undo button
               <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`}
-                className="btn btn-success-tinted" style={{ flex: 1, textDecoration: "none" }}>
-                <CheckCircle2 size={16} strokeWidth={2.5} /> Applied — Open Link
+                className="btn btn-success-tinted tg-press" style={{ flex: 1, textDecoration: "none" }}>
+                <CheckCircle2 size={16} strokeWidth={2.5} /> {t("applied_open_link")}
               </a>
             ) : (
               <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`}
-                className="btn btn-filled" style={{ flex: 1, textDecoration: "none" }}>
-                Apply Now <ExternalLink size={15} strokeWidth={2.5} />
+                className="btn btn-filled tg-press" style={{ flex: 1, textDecoration: "none" }}>
+                {t("apply_now")} <ExternalLink size={15} strokeWidth={2.5} />
               </a>
             )}
 
             {/* Single toggle button, always present, correctly labeled both on Home and Admin */}
             <button type="button" onClick={handleToggleClick} data-testid={`toggle-applied-${job.id}`}
-              className="btn btn-gray" style={{ flexShrink: 0 }}
-              title={isApplied ? "Mark as not applied" : "Mark as applied"}>
+              className="btn btn-gray tg-press" style={{ flexShrink: 0 }}
+              title={isApplied ? t("undo_btn") : t("mark_btn")}>
               {isApplied ? <RotateCcw size={16} /> : <Circle size={16} />}
-              {isApplied ? "Undo" : "Mark"}
+              {isApplied ? t("undo_btn") : t("mark_btn")}
             </button>
             {admin && <>
-              <button type="button" onClick={() => onEdit && onEdit(job)} data-testid={`edit-job-${job.id}`} className="btn btn-gray btn-icon"><Pencil size={16} /></button>
-              <button type="button" onClick={() => onDelete && onDelete(job)} data-testid={`delete-job-${job.id}`} className="btn btn-danger-tinted btn-icon"><Trash2 size={16} /></button>
+              <button type="button" onClick={() => onEdit && onEdit(job)} data-testid={`edit-job-${job.id}`} className="btn btn-gray btn-icon tg-press"><Pencil size={16} /></button>
+              <button type="button" onClick={() => onDelete && onDelete(job)} data-testid={`delete-job-${job.id}`} className="btn btn-danger-tinted btn-icon tg-press"><Trash2 size={16} /></button>
             </>}
           </div>
         </div>
