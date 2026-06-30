@@ -1,4 +1,3 @@
-/* App-specific overrides if any */
-.App {
-  min-height: 100vh;
-}
+/* App.css is intentionally minimal — the real app-shell rules
+   (.App height/flex, .app-screen, .app-scroll, .tab-bar) live in
+   index.css as the single source of truth for layout. */
