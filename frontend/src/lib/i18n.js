@@ -81,7 +81,6 @@ const dict = {
   deadline_passed_ago:      { en: "Deadline passed {n}d ago", or: "ଶେଷ ତାରିଖ {n} ଦିନ ପୂର୍ବେ ସରିଗଲା" },
 
   // ── Deadline alert popup ────────────────────────────────────
-  deadlines_closing_soon:   { en: "deadline{s} closing soon", or: "ଶେଷ ତାରିଖ ଶୀଘ୍ର ଆସୁଛି" },
   swipe_to_dismiss:         { en: "Swipe to dismiss",         or: "ବନ୍ଦ କରିବାକୁ ଟାଣନ୍ତୁ" },
   more_jobs:                { en: "+{n} more",                or: "+{n} ଅଧିକ" },
 
