@@ -62,6 +62,7 @@ const dict = {
   exam_date:                { en: "Exam Date",               or: "ପରୀକ୍ଷା ତାରିଖ" },
   tba:                      { en: "TBA",                     or: "ଘୋଷଣା ବାକି" },
   days_left:                { en: "{n}d left",               or: "{n} ଦିନ ବାକି" },
+  days_left_full:           { en: "{n} days left",           or: "{n} ଦିନ ବାକି" },
   overdue:                  { en: "Overdue",                 or: "ସମୟ ସରିଗଲା" },
   passed:                   { en: "Passed",                  or: "ସରିଗଲା" },
   days_away:                { en: "{n}d away",               or: "{n} ଦିନ ବାକି" },
