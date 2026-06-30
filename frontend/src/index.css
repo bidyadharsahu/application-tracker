@@ -98,7 +98,7 @@ body {
   flex: 1; overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding-bottom: calc(var(--tabbar-h) + 12px);
+  padding-bottom: calc(var(--tabbar-h) + var(--sab) + 12px); /* tab bar real height = tabbar-h + safe-area; was previously short by --sab, clipping bottom content */
 }
 
 /* ── Large title (Apple's iOS 11+ large-title pattern) ───── */
@@ -145,7 +145,7 @@ body {
   touch-action: manipulation;
   position: relative;
 }
-.tab-item .tab-icon-wrap { display: flex; align-items: center; justify-content: center; height: 28px; transition: transform .15s cubic-bezier(.34,1.4,.64,1); }
+.tab-item .tab-icon-wrap { display: flex; align-items: center; justify-content: center; height: 28px; transition: transform .14s var(--ease-spring); }
 .tab-item:active .tab-icon-wrap { transform: scale(0.86); }
 .tab-item .tab-label { font-size: 10px; font-weight: 600; color: var(--label-3); letter-spacing: 0.01em; }
 .tab-item.active .tab-label { color: var(--ios-blue); }
@@ -164,7 +164,7 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--elev-1);
 }
-.ios-card-press { transition: transform .15s cubic-bezier(.34,1.4,.64,1), background .12s; cursor: pointer; }
+.ios-card-press { transition: transform .14s var(--ease-out-soft), background .1s; cursor: pointer; }
 .ios-card-press:active { transform: scale(0.975); background: var(--bg-tertiary); }
 
 /* ── Inset grouped list (rows inside one rounded card) ── */
@@ -187,7 +187,7 @@ body {
   text-align: center;
   cursor: pointer;
   box-shadow: var(--elev-1);
-  transition: transform .18s cubic-bezier(.34,1.4,.64,1), box-shadow .18s ease;
+  transition: transform .16s var(--ease-spring), box-shadow .16s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   position: relative;
@@ -201,7 +201,7 @@ body {
   font-family: inherit; font-weight: 600; font-size: 17px;
   border: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: opacity .1s, transform .12s cubic-bezier(.34,1.4,.64,1);
+  transition: opacity .1s, transform .12s var(--ease-spring);
   white-space: nowrap;
   border-radius: var(--radius-md);
   min-height: 50px; padding: 0 20px;
@@ -248,19 +248,54 @@ body {
 .ios-progress-track { height: 6px; background: rgba(255,255,255,0.28); border-radius: 99px; overflow: hidden; }
 .ios-progress-fill  { height: 100%; background: #fff; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
 
-/* ── Animations ──────────────────────────────────────── */
-@keyframes springUp { 0%{opacity:0;transform:translateY(18px) scale(.98);} 60%{opacity:1;transform:translateY(-1px);} 100%{opacity:1;transform:translateY(0);} }
+/* ── Animations — Telegram-grade spring physics ──────────
+   Telegram's signature feel: short duration (180-260ms),
+   a custom spring curve that slightly overshoots then settles,
+   and tight stagger deltas (~30-40ms) so lists feel like one
+   continuous motion rather than separate pops. ──────────── */
+
+/* Telegram-style spring: quick acceleration, gentle overshoot, no bounce-back jitter */
+:root {
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-swift: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes springUp {
+  0%   { opacity: 0; transform: translateY(14px) scale(.97); }
+  55%  { opacity: 1; transform: translateY(-1.5px) scale(1.004); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-@keyframes popIn  { 0%{opacity:0;transform:scale(.9)} 70%{transform:scale(1.02)} 100%{opacity:1;transform:scale(1)} }
+@keyframes popIn  { 0%{opacity:0;transform:scale(.92)} 60%{transform:scale(1.018)} 100%{opacity:1;transform:scale(1)} }
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes slideDownOut { from{transform:translateY(0);opacity:1} to{transform:translateY(14px);opacity:0} }
 @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
 @keyframes pulseRing { 0%{box-shadow:0 0 0 0 rgba(255,59,48,.45)} 100%{box-shadow:0 0 0 8px rgba(255,59,48,0)} }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes swipeDismissRight { to { transform: translateX(120%); opacity: 0; } }
+@keyframes tabFadeSwitch { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
-.a-up  { animation: springUp .42s cubic-bezier(.34,1.2,.64,1) both; }
-.a-in  { animation: fadeIn .25s ease both; }
-.a-pop { animation: popIn .3s cubic-bezier(.34,1.4,.64,1) both; }
-.d1{animation-delay:.04s}.d2{animation-delay:.08s}.d3{animation-delay:.13s}.d4{animation-delay:.18s}.d5{animation-delay:.24s}
+/* Entrance — used for cards, list rows, sections appearing on screen */
+.a-up  { animation: springUp .26s var(--ease-spring) both; }
+/* Plain crossfade — used for inline toggles like search bars */
+.a-in  { animation: fadeIn .18s var(--ease-swift) both; }
+/* Pop — used for modals, empty states, anything appearing "into place" */
+.a-pop { animation: popIn .22s var(--ease-spring) both; }
+/* Screen/tab transition — used when switching Home ⇄ Pending ⇄ Applied ⇄ Notices */
+.a-tab { animation: tabFadeSwitch .2s var(--ease-out-soft) both; }
+/* Exit — used right before an element is removed from the DOM (e.g. dismissed alert) */
+.a-exit { animation: slideDownOut .18s var(--ease-swift) both; }
+
+/* Tight Telegram-style stagger — list items feel like one wave, not separate pops */
+.d1{animation-delay:.025s}.d2{animation-delay:.05s}.d3{animation-delay:.075s}.d4{animation-delay:.1s}.d5{animation-delay:.125s}
+
+/* Press feedback — every tappable surface settles instantly, no lag */
+.tg-press { transition: transform .12s var(--ease-out-soft); }
+.tg-press:active { transform: scale(.96); }
+
+/* Swipe-to-dismiss helper class — JS adds this right before removing the node */
+.swiping-away { animation: swipeDismissRight .22s var(--ease-swift) both; }
 
 /* ── Skeleton ────────────────────────────────────────── */
 .ios-skel {
@@ -278,7 +313,7 @@ body {
   border-radius: 20px 20px 0 0;
   max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding: 0 16px calc(20px + var(--sab));
-  animation: slideUp .34s cubic-bezier(.34,1.1,.64,1) both;
+  animation: slideUp .26s var(--ease-out-soft) both;
 }
 .ios-sheet-handle { width: 36px; height: 5px; background: var(--separator-opaque); border-radius: 99px; margin: 10px auto 16px; }
 
@@ -289,3 +324,28 @@ body {
 ::-webkit-scrollbar { display: none; }
 .scroll-x { display: flex; gap: 8px; overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
 .scroll-x::-webkit-scrollbar { display: none; }
+
+
+/* ── Language switcher (compact pill button in the header) ─── */
+.lang-switch {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: inherit; font-weight: 700; font-size: 13px;
+  background: var(--fill-3); color: var(--label-1);
+  border: none; border-radius: var(--radius-pill);
+  padding: 6px 12px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform .12s var(--ease-out-soft), background .12s;
+}
+.lang-switch:active { transform: scale(.92); background: var(--fill-2); }
+
+/* ── Odia script rendering — give it breathing room since
+   conjunct glyphs render taller than Latin uppercase/lowercase ── */
+:lang(or), [data-lang="or"] {
+  line-height: 1.55;
+}
+:lang(or) h1, [data-lang="or"] h1,
+:lang(or) h2, [data-lang="or"] h2,
+:lang(or) h3, [data-lang="or"] h3 {
+  line-height: 1.35;
+}
