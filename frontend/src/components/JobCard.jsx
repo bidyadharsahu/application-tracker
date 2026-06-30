@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip, User, Lock, Tag } from "lucide-react";
+import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip, User, Lock, Tag, RotateCcw } from "lucide-react";
 import { formatDate, daysUntil } from "../lib/utils-date";
 import Countdown from "./Countdown";
 import supabase from "../lib/supabase";
@@ -59,6 +58,23 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
   const dotColor = isApplied ? "var(--ios-green)" : isUrgent ? "var(--ios-red)" : isNotStarted ? "var(--ios-purple)" : "var(--ios-orange)";
 
+  // Undo-aware toggle: lets a person undo an accidental tap within 4s
+  const handleToggleClick = () => {
+    if (!onToggle) return;
+    const wasApplied = isApplied;
+    onToggle(job);
+    if (!wasApplied) {
+      toast.success("Marked as Applied", {
+        action: { label: "Undo", onClick: () => onToggle(job) },
+      });
+    } else {
+      toast("Moved back to Pending", {
+        icon: <RotateCcw size={15} />,
+        action: { label: "Undo", onClick: () => onToggle(job) },
+      });
+    }
+  };
+
   return (
     <article data-testid={`job-card-${job.id}`} className="ios-card" style={{ overflow: "hidden" }}>
       <div style={{ padding: "16px 16px 14px" }}>
@@ -72,7 +88,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           <span data-testid={`status-stamp-${job.id}`}
             className={`status-pill ${isApplied ? "pill-applied" : isUrgent ? "pill-urgent" : isNotStarted ? "pill-notice" : "pill-pending"}`}
             style={{ flexShrink: 0 }}>
-            {isApplied ? "Applied" : isUrgent ? "Urgent" : isNotStarted ? "Soon" : "Pending"}
+            {isApplied ? "✓ Applied" : isUrgent ? "Urgent" : isNotStarted ? "Soon" : "Pending"}
           </span>
         </div>
 
@@ -170,23 +186,32 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
           <div style={{ height: 0.5, background: "var(--separator)", marginBottom: 12 }} />
 
+          {/* ── Action row — now correctly reflects applied state ── */}
           <div style={{ display: "flex", gap: 8 }}>
             {isFuture ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-tertiary)", borderRadius: 99, padding: "11px", fontSize: 14, fontWeight: 600, color: "var(--label-3)" }}>
                 Opens {formatDate(job.start_date)}
               </div>
+            ) : isApplied ? (
+              // Once applied: clearly green "Applied" pill button that still opens the link, plus an explicit undo button
+              <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`}
+                className="btn btn-success-tinted" style={{ flex: 1, textDecoration: "none" }}>
+                <CheckCircle2 size={16} strokeWidth={2.5} /> Applied — Open Link
+              </a>
             ) : (
-              <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`} className="btn btn-filled" style={{ flex: 1, textDecoration: "none" }}>
+              <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`}
+                className="btn btn-filled" style={{ flex: 1, textDecoration: "none" }}>
                 Apply Now <ExternalLink size={15} strokeWidth={2.5} />
               </a>
             )}
-            {(!isApplied || admin) && (
-              <button type="button" onClick={() => onToggle && onToggle(job)} data-testid={`toggle-applied-${job.id}`}
-                className={isApplied ? "btn btn-success-tinted" : "btn btn-gray"} style={{ flexShrink: 0 }}>
-                {isApplied ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-                {isApplied ? "Applied" : "Mark"}
-              </button>
-            )}
+
+            {/* Single toggle button, always present, correctly labeled both on Home and Admin */}
+            <button type="button" onClick={handleToggleClick} data-testid={`toggle-applied-${job.id}`}
+              className="btn btn-gray" style={{ flexShrink: 0 }}
+              title={isApplied ? "Mark as not applied" : "Mark as applied"}>
+              {isApplied ? <RotateCcw size={16} /> : <Circle size={16} />}
+              {isApplied ? "Undo" : "Mark"}
+            </button>
             {admin && <>
               <button type="button" onClick={() => onEdit && onEdit(job)} data-testid={`edit-job-${job.id}`} className="btn btn-gray btn-icon"><Pencil size={16} /></button>
               <button type="button" onClick={() => onDelete && onDelete(job)} data-testid={`delete-job-${job.id}`} className="btn btn-danger-tinted btn-icon"><Trash2 size={16} /></button>
