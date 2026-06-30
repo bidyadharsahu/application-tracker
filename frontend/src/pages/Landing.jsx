@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { Plus, Search, X, Clock, CheckCircle2, Bell, ChevronRight, AlertTriangle, Calendar } from "lucide-react";
 import api from "../lib/api";
 import { sortJobs, daysUntil, formatDate } from "../lib/utils-date";
@@ -16,9 +16,9 @@ const getStatus = (j, today) => {
 };
 
 export default function Landing({ setUrgentCount }) {
-  const [jobs, setJobs]         = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [query, setQuery]       = useState("");
+  const [jobs, setJobs]       = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery]     = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const tab   = searchParams.get("tab");
@@ -40,11 +40,7 @@ export default function Landing({ setUrgentCount }) {
         try { await api.markNotified(j.id); } catch {}
       }
     });
-    const urg = jobs.filter(j => {
-      if (j.applied) return false;
-      const d = daysUntil(j.last_date);
-      return d !== null && d <= 3 && d >= 0;
-    }).length;
+    const urg = jobs.filter(j => { if (j.applied) return false; const d = daysUntil(j.last_date); return d !== null && d <= 3 && d >= 0; }).length;
     setUrgentCount && setUrgentCount(urg);
   }, [jobs]);
 
@@ -52,7 +48,7 @@ export default function Landing({ setUrgentCount }) {
     try {
       const u = await api.toggleApplied(job.id);
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
-      toast.success(u.applied ? "Marked as Applied!" : "Moved to Pending");
+      toast.success(u.applied ? "Marked as Applied" : "Moved to Pending");
     } catch { toast.error("Update failed"); }
   };
 
@@ -66,12 +62,10 @@ export default function Landing({ setUrgentCount }) {
     if (!tab) return [];
     let l = jobs.filter(j => {
       const s = getStatus(j, today) === tab;
-      const q = !query || j.job_name?.toLowerCase().includes(query.toLowerCase()) ||
-                j.tags?.toLowerCase().includes(query.toLowerCase());
+      const q = !query || j.job_name?.toLowerCase().includes(query.toLowerCase()) || j.tags?.toLowerCase().includes(query.toLowerCase());
       return s && q;
     });
-    if (tab === "applied")
-      l = [...l].sort((a, b) => !a.exam_date ? 1 : !b.exam_date ? -1 : new Date(a.exam_date) - new Date(b.exam_date));
+    if (tab === "applied") l = [...l].sort((a, b) => !a.exam_date ? 1 : !b.exam_date ? -1 : new Date(a.exam_date) - new Date(b.exam_date));
     return l;
   }, [jobs, tab, query, today]);
 
@@ -79,8 +73,7 @@ export default function Landing({ setUrgentCount }) {
     jobs.filter(j => j.applied && j.exam_date && new Date(j.exam_date) >= new Date())
         .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date))[0] || null, [jobs]);
 
-  const urgent = useMemo(() =>
-    jobs.filter(j => { if (j.applied) return false; const d = daysUntil(j.last_date); return d !== null && d <= 3 && d >= 0; }), [jobs]);
+  const urgent = useMemo(() => jobs.filter(j => { if (j.applied) return false; const d = daysUntil(j.last_date); return d !== null && d <= 3 && d >= 0; }), [jobs]);
 
   const total = counts.pending + counts.applied + counts.notices;
   const pct   = total > 0 ? Math.round((counts.applied / total) * 100) : 0;
@@ -89,95 +82,99 @@ export default function Landing({ setUrgentCount }) {
 
   const goTab = k => { setQuery(""); setShowSearch(false); setSearchParams(k ? { tab: k } : {}); };
 
-  /* HOME */
+  /* ════════ HOME ════════ */
   if (!tab) return (
     <div className="app-screen">
       <div className="app-scroll">
-        <div className="hero-header">
+        <div className="nav-large-title">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,.6)", letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>
-                {greet} 👋
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1.15, letterSpacing: "-.02em" }}>
-                My Applications
-              </div>
-              <LiveClock />
+              <div className="eyebrow">{greet}</div>
+              <h1>My Applications</h1>
             </div>
-            <Link to="/admin/login" data-testid="admin-login-link" className="btn btn-white btn-sm" style={{ textDecoration: "none", marginTop: 4 }}>
+            <Link to="/admin/login" data-testid="admin-login-link" className="btn btn-tinted btn-sm" style={{ textDecoration: "none", marginTop: 10 }}>
               <Plus size={16} strokeWidth={2.5} /> Add
             </Link>
           </div>
+          <LiveClock />
+        </div>
 
+        <div style={{ padding: "10px 16px 0" }}>
+
+          {/* Progress card — gradient, Apple-Health-card style */}
           {total > 0 && (
-            <div style={{ marginTop: 20, background: "rgba(255,255,255,.12)", borderRadius: 16, padding: "14px 16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,.75)" }}>Progress</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: "#fff" }}>{pct}%</span>
+            <div className="a-up" style={{
+              background: "linear-gradient(135deg,#0A84FF 0%,#5E5CE6 100%)",
+              borderRadius: "var(--radius-xl)", padding: "18px 18px 16px", marginBottom: 12,
+              boxShadow: "0 8px 24px rgba(10,132,255,0.28)",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>Application Progress</span>
+                <span style={{ fontSize: 17, fontWeight: 800, color: "#fff" }}>{pct}%</span>
               </div>
-              <div style={{ height: 6, background: "rgba(255,255,255,.2)", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: pct + "%", background: "#fff", borderRadius: 99, transition: "width .9s ease" }} />
+              <div className="ios-progress-track">
+                <div className="ios-progress-fill" style={{ width: pct + "%" }} />
               </div>
-              <div style={{ display: "flex", gap: 20, marginTop: 12 }}>
+              <div style={{ display: "flex", gap: 22, marginTop: 14 }}>
                 {[["Pending", counts.pending], ["Applied", counts.applied], ["Notices", counts.notices]].map(([l, v]) => (
                   <div key={l}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{v}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,.6)", fontWeight: 600 }}>{l}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{v}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: 600, marginTop: 2 }}>{l}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
-        </div>
 
-        <div style={{ padding: "16px 16px 0" }}>
           <DeadlineAlert jobs={jobs} />
 
           {urgent.length > 0 && (
-            <button type="button" onClick={() => goTab("pending")} className="card card-press a-up"
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 12, background: "var(--c-red-bg)", textAlign: "left" }}>
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--c-red)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <AlertTriangle size={18} color="#fff" />
+            <button type="button" onClick={() => goTab("pending")} className="ios-card ios-card-press a-up"
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 12, textAlign: "left" }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--tint-red-bg)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, animation: "pulseRing 1.6s ease infinite" }}>
+                <AlertTriangle size={18} color="var(--ios-red)" />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--c-red)" }}>{urgent.length} deadline{urgent.length > 1 ? "s" : ""} closing soon!</div>
-                <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 1 }}>Tap to review</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--label-1)" }}>{urgent.length} deadline{urgent.length > 1 ? "s" : ""} closing soon</div>
+                <div style={{ fontSize: 13, color: "var(--label-3)", marginTop: 1 }}>Tap to review pending jobs</div>
               </div>
-              <ChevronRight size={16} color="var(--c-red)" />
+              <ChevronRight size={17} color="var(--label-4)" />
             </button>
           )}
 
           {nextExam && (
-            <button type="button" onClick={() => goTab("applied")} className="card card-press a-up d1"
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 12, textAlign: "left" }}>
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: "linear-gradient(135deg,var(--brand-from),var(--brand-to))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Calendar size={18} color="#fff" />
+            <button type="button" onClick={() => goTab("applied")} className="ios-card ios-card-press a-up d1"
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginBottom: 16, textAlign: "left" }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--tint-blue-bg)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Calendar size={18} color="var(--ios-blue)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--brand)", textTransform: "uppercase", letterSpacing: ".06em" }}>Next Exam</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextExam.job_name}</div>
-                <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 1 }}>
-                  {(() => { const d = Math.ceil((new Date(nextExam.exam_date) - new Date()) / 86400000); return d === 0 ? "Today!" : d === 1 ? "Tomorrow!" : `In ${d} days`; })()}
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ios-blue)", textTransform: "uppercase", letterSpacing: ".04em" }}>Next Exam</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--label-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{nextExam.job_name}</div>
+                <div style={{ fontSize: 13, color: "var(--label-3)", marginTop: 1 }}>
+                  {(() => { const d = Math.ceil((new Date(nextExam.exam_date) - new Date()) / 86400000); return d === 0 ? "Today" : d === 1 ? "Tomorrow" : `In ${d} days`; })()}
                   {" · "}{formatDate(nextExam.exam_date)}
                 </div>
               </div>
-              <ChevronRight size={16} color="var(--t4)" />
+              <ChevronRight size={17} color="var(--label-4)" />
             </button>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--label-3)", textTransform: "uppercase", letterSpacing: ".03em", marginBottom: 8, paddingLeft: 4 }}>
+            Categories
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 8 }}>
             {[
-              { k: "pending", label: "Pending", gFrom: "#F59E0B", gTo: "#FCD34D", shadow: "#F59E0B44" },
-              { k: "applied", label: "Applied", gFrom: "#00C27A", gTo: "#34D399", shadow: "#00C27A44" },
-              { k: "notices", label: "Notices", gFrom: "#8B5CF6", gTo: "#A78BFA", shadow: "#8B5CF644" },
-            ].map(({ k, label, gFrom, gTo, shadow }, i) => (
-              <button key={k} type="button" data-testid={"filter-card-" + k} onClick={() => goTab(k)}
-                className={"stat-pill a-up d" + (i + 2)}>
-                <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg,${gFrom},${gTo})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", boxShadow: `0 4px 12px ${shadow}` }}>
-                  {k === "pending" ? <Clock size={22} color="#fff" /> : k === "applied" ? <CheckCircle2 size={22} color="#fff" /> : <Bell size={22} color="#fff" />}
+              { k: "pending", label: "Pending", icon: <Clock size={24} strokeWidth={1.8} />, bg: "var(--tint-orange-bg)", fg: "#B25900" },
+              { k: "applied", label: "Applied", icon: <CheckCircle2 size={24} strokeWidth={1.8} />, bg: "var(--tint-green-bg)", fg: "#1A8A3D" },
+              { k: "notices", label: "Notices", icon: <Bell size={24} strokeWidth={1.8} />, bg: "var(--tint-purple-bg)", fg: "#8A38B5" },
+            ].map(({ k, label, icon, bg, fg }, i) => (
+              <button key={k} type="button" data-testid={"filter-card-" + k} onClick={() => goTab(k)} className={"stat-tile a-up d" + (i + 2)}>
+                <div style={{ width: 46, height: 46, borderRadius: 14, background: bg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", color: fg }}>
+                  {icon}
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: "var(--t1)", lineHeight: 1, marginBottom: 3 }}>{loading ? "—" : counts[k]}</div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".05em" }}>{label}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "var(--label-1)", lineHeight: 1, marginBottom: 3 }}>{loading ? "—" : counts[k]}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--label-2)" }}>{label}</div>
               </button>
             ))}
           </div>
@@ -186,40 +183,38 @@ export default function Landing({ setUrgentCount }) {
     </div>
   );
 
-  /* TAB SCREENS */
-  const tabCfg = {
-    pending: { label: "Pending",  color: "var(--c-amber)",  sub: null },
-    applied: { label: "Applied",  color: "var(--c-green)",  sub: "by exam date" },
-    notices: { label: "Notices",  color: "var(--c-purple)", sub: null },
-  };
-  const cfg = tabCfg[tab] || tabCfg.pending;
+  /* ════════ TAB SCREENS ════════ */
+  const cfg = {
+    pending: { label: "Pending Jobs", sub: null },
+    applied: { label: "Applied Jobs", sub: "Sorted by exam date" },
+    notices: { label: "Notices",      sub: null },
+  }[tab] || { label: "Jobs" };
 
   return (
     <div className="app-screen">
-      <div style={{ background: "rgba(255,255,255,.96)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", padding: `calc(14px + var(--sat)) 16px 12px`, flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--t1)" }}>{cfg.label}</div>
-            {cfg.sub && <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 1 }}>Sorted {cfg.sub}</div>}
-          </div>
-          <button type="button" onClick={() => { setShowSearch(s => !s); if (showSearch) setQuery(""); }}
-            className="btn btn-ghost btn-sq" style={{ width: 40, height: 40, borderRadius: 11 }}>
-            {showSearch ? <X size={17} /> : <Search size={17} />}
-          </button>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t3)", background: "var(--surface-3)", padding: "5px 12px", borderRadius: 99 }}>
-            {list.length}
-          </div>
+      <div className="nav-inline-title">
+        <div style={{ flex: 1 }}>
+          <h2>{cfg.label}</h2>
+          {cfg.sub && <div style={{ fontSize: 12, color: "var(--label-3)", marginTop: 1 }}>{cfg.sub}</div>}
         </div>
-        {showSearch && (
-          <div className="a-in" style={{ marginTop: 10, position: "relative" }}>
-            <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--t4)", pointerEvents: "none" }} />
-            <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
-              placeholder={`Search ${cfg.label.toLowerCase()}…`} data-testid="search-input"
-              className="input" style={{ paddingLeft: 40, borderRadius: 12, minHeight: 44 }} />
-            {query && <button onClick={() => setQuery("")} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--t3)", cursor: "pointer" }}><X size={15} /></button>}
-          </div>
-        )}
+        <button type="button" onClick={() => { setShowSearch(s => !s); if (showSearch) setQuery(""); }} className="btn btn-gray btn-icon">
+          {showSearch ? <X size={18} /> : <Search size={18} />}
+        </button>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--label-2)", background: "var(--fill-3)", padding: "5px 11px", borderRadius: 99 }}>
+          {list.length}
+        </div>
       </div>
+
+      {showSearch && (
+        <div className="a-in" style={{ padding: "10px 16px 0", position: "relative", flexShrink: 0 }}>
+          <Search size={16} style={{ position: "absolute", left: 30, top: 23, color: "var(--label-4)", pointerEvents: "none" }} />
+          <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
+            placeholder={`Search ${cfg.label.toLowerCase()}…`} data-testid="search-input"
+            className="ios-input" style={{ paddingLeft: 40 }} />
+          {query && <button onClick={() => setQuery("")} style={{ position: "absolute", right: 30, top: 23, background: "none", border: "none", color: "var(--label-3)", cursor: "pointer" }}><X size={16} /></button>}
+        </div>
+      )}
+
       <div className="app-scroll" style={{ padding: "12px 16px" }}>
         {loading ? <SkeletonCards /> :
           list.length === 0 ? <EmptyState query={query} tab={tab} /> :
@@ -238,29 +233,29 @@ function LiveClock() {
   const [now, setNow] = useState(new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
   return (
-    <div style={{ fontSize: 13, color: "rgba(255,255,255,.65)", marginTop: 3, fontWeight: 500 }}>
-      {now.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}{" · "}
-      <span style={{ fontVariantNumeric: "tabular-nums" }}>{now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+    <div style={{ fontSize: 14, color: "var(--label-3)", marginTop: 6, fontWeight: 500 }}>
+      {now.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+      {" · "}<span style={{ fontVariantNumeric: "tabular-nums" }}>{now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
     </div>
   );
 }
 
 function SkeletonCards() {
   return <>{[1, 2, 3].map(i => (
-    <div key={i} className="card" style={{ padding: 20, marginBottom: 12 }}>
-      <div className="skel" style={{ height: 18, width: "65%", marginBottom: 12 }} />
-      <div className="skel" style={{ height: 13, width: "42%", marginBottom: 8 }} />
-      <div className="skel" style={{ height: 13, width: "30%" }} />
+    <div key={i} className="ios-card" style={{ padding: 18, marginBottom: 12 }}>
+      <div className="ios-skel" style={{ height: 17, width: "65%", marginBottom: 12 }} />
+      <div className="ios-skel" style={{ height: 13, width: "42%", marginBottom: 8 }} />
+      <div className="ios-skel" style={{ height: 13, width: "30%" }} />
     </div>
   ))}</>;
 }
 
 function EmptyState({ query, tab }) {
   return (
-    <div data-testid="empty-state" className="card a-pop" style={{ padding: "48px 20px", textAlign: "center" }}>
+    <div data-testid="empty-state" className="ios-card a-pop" style={{ padding: "48px 20px", textAlign: "center" }}>
       <div style={{ fontSize: 42, marginBottom: 12 }}>{query ? "🔍" : tab === "applied" ? "📭" : tab === "pending" ? "🎉" : "📬"}</div>
-      <div style={{ fontSize: 17, fontWeight: 700, color: "var(--t1)", marginBottom: 6 }}>{query ? "Nothing found" : `No ${tab} jobs`}</div>
-      <div style={{ fontSize: 14, color: "var(--t3)" }}>{query ? "Try different keywords" : tab === "applied" ? "Mark jobs as applied to see them here" : "Add jobs from Admin tab"}</div>
+      <div style={{ fontSize: 17, fontWeight: 700, color: "var(--label-1)", marginBottom: 6 }}>{query ? "No results" : `No ${tab} jobs`}</div>
+      <div style={{ fontSize: 14, color: "var(--label-3)" }}>{query ? "Try different keywords" : tab === "applied" ? "Mark jobs applied to see them here" : "Add jobs from the Admin tab"}</div>
     </div>
   );
 }
