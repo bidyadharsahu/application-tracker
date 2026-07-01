@@ -1,33 +1,41 @@
+
 import React, { useState, useEffect } from "react";
-import { ExternalLink, CalendarDays, FileText, CheckCircle2, Circle, Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip, User, Lock, Tag, RotateCcw } from "lucide-react";
-import { formatDate, daysUntil } from "../lib/utils-date";
+import {
+  ExternalLink, CalendarDays, FileText, CheckCircle2, Circle,
+  Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip,
+  User, Lock, Tag, RotateCcw,
+} from "lucide-react";
+import { formatDate, daysUntil, isMonthOnly, getMonthName } from "../lib/utils-date";
 import Countdown from "./Countdown";
-import supabase from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 import { useI18n } from "../lib/i18n";
 import { toast } from "sonner";
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const isApplied    = !!job.applied;
   const today        = new Date().toISOString().split("T")[0];
   const isFuture     = job.start_date && job.start_date > today;
   const allBlank     = !job.start_date && !job.exam_date && !job.last_date;
   const isNotStarted = isFuture || allBlank;
 
-  const [docsOpen, setDocsOpen]   = useState(false);
-  const [docs, setDocs]           = useState([]);
-  const [uploading, setUploading] = useState(false);
+  const [docsOpen,   setDocsOpen]   = useState(false);
+  const [docs,       setDocs]       = useState([]);
+  const [uploading,  setUploading]  = useState(false);
 
-  const examDays     = job.exam_date ? Math.ceil((new Date(job.exam_date) - new Date()) / 86400000) : null;
+  const examDays     = job.exam_date && !isMonthOnly(job.exam_date)
+    ? Math.ceil((new Date(job.exam_date) - new Date()) / 86400000)
+    : null;
   const deadlineDays = job.last_date ? daysUntil(job.last_date) : null;
   const isUrgent     = !isApplied && (
     (deadlineDays !== null && deadlineDays <= 3 && deadlineDays >= 0) ||
-    (examDays !== null && examDays >= 0 && examDays <= 5)
+    (examDays     !== null && examDays     >= 0 && examDays     <= 5)
   );
 
   useEffect(() => {
     if (!docsOpen) return;
-    supabase.from("job_documents").select("*").eq("job_id", job.id).then(({ data }) => setDocs(data || []));
+    supabase.from("job_documents").select("*").eq("job_id", job.id)
+      .then(({ data }) => setDocs(data || []));
   }, [docsOpen, job.id]);
 
   const uploadDoc = async (file, type) => {
@@ -36,7 +44,9 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       const path = `${job.id}/${type}-${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from("job-documents").upload(path, file);
       if (error) { toast.error(t("upload_failed")); return; }
-      await supabase.from("job_documents").insert({ job_id: job.id, file_name: file.name, file_path: path, document_type: type });
+      await supabase.from("job_documents").insert({
+        job_id: job.id, file_name: file.name, file_path: path, document_type: type,
+      });
       toast.success(t("document_saved", { type: type.replace("_", " ") }));
       const { data } = await supabase.from("job_documents").select("*").eq("job_id", job.id);
       setDocs(data || []);
@@ -44,7 +54,10 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   };
 
   const deleteDoc = async (doc) => {
-    if (!window.confirm(`Delete "${doc.file_name}"?`)) return;
+    const confirmMsg = lang === "or"
+      ? `"${doc.file_name}" ଡିଲିଟ କରିବେ?`
+      : `Delete "${doc.file_name}"?`;
+    if (!window.confirm(confirmMsg)) return;
     await supabase.storage.from("job-documents").remove([doc.file_path]);
     await supabase.from("job_documents").delete().eq("id", doc.id);
     setDocs(prev => prev.filter(d => d.id !== doc.id));
@@ -56,11 +69,16 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
-  const copy = (text, labelKey) => { navigator.clipboard.writeText(text); toast.success(t("copied", { label: t(labelKey) })); };
+  const copy = (text, labelKey) => {
+    navigator.clipboard.writeText(text);
+    toast.success(t("copied", { label: t(labelKey) }));
+  };
 
-  const dotColor = isApplied ? "var(--ios-green)" : isUrgent ? "var(--ios-red)" : isNotStarted ? "var(--ios-purple)" : "var(--ios-orange)";
+  const dotColor = isApplied    ? "var(--ios-green)"
+                 : isUrgent     ? "var(--ios-red)"
+                 : isNotStarted ? "var(--ios-purple)"
+                 :                "var(--ios-orange)";
 
-  // Undo-aware toggle: lets a person undo an accidental tap immediately via the toast action
   const handleToggleClick = () => {
     if (!onToggle) return;
     const wasApplied = isApplied;
@@ -77,112 +95,265 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     }
   };
 
+  // Exam date display: month-only gets special note label
+  const examDateValue = job.exam_date
+    ? isMonthOnly(job.exam_date)
+      ? getMonthName(job.exam_date)
+      : formatDate(job.exam_date)
+    : t("tba");
+
+  const examDateSub = isMonthOnly(job.exam_date)
+    ? (lang === "or" ? "ମାସ ଅନୁমାନ — ତାରିଖ ଘୋଷଣା ବାକି" : "Month approx — exact date TBA")
+    : examDays !== null
+      ? examDays < 0  ? t("passed")
+      : examDays === 0 ? t("today")
+      : examDays === 1 ? t("tomorrow")
+      : t("days_away", { n: examDays })
+      : null;
+
+  const examSubColor = isMonthOnly(job.exam_date) ? "var(--ios-purple)"
+    : examDays !== null && examDays <= 1 ? "var(--ios-red)"
+    : examDays !== null && examDays <= 7 ? "#B25900"
+    : "var(--label-3)";
+
   return (
     <article data-testid={`job-card-${job.id}`} className="ios-card" style={{ overflow: "hidden" }}>
       <div style={{ padding: "16px 16px 14px" }}>
 
         {/* Title row */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, marginTop: 7, flexShrink: 0 }} />
-          <h3 data-testid={`job-title-${job.id}`} style={{ fontSize: 16, fontWeight: 700, color: "var(--label-1)", flex: 1, lineHeight: 1.35, letterSpacing: "-.01em" }}>
+          <div style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: dotColor, marginTop: 7, flexShrink: 0,
+          }} />
+          <h3 data-testid={`job-title-${job.id}`} style={{
+            fontSize: 16, fontWeight: 700, color: "var(--label-1)",
+            flex: 1, lineHeight: 1.35, letterSpacing: "-.01em",
+          }}>
             {job.job_name}
           </h3>
-          <span data-testid={`status-stamp-${job.id}`}
-            className={`status-pill ${isApplied ? "pill-applied" : isUrgent ? "pill-urgent" : isNotStarted ? "pill-notice" : "pill-pending"}`}
-            style={{ flexShrink: 0 }}>
-            {isApplied ? `✓ ${t("status_applied")}` : isUrgent ? t("status_urgent") : isNotStarted ? t("status_soon") : t("status_pending")}
+          <span
+            data-testid={`status-stamp-${job.id}`}
+            className={`status-pill ${
+              isApplied    ? "pill-applied" :
+              isUrgent     ? "pill-urgent"  :
+              isNotStarted ? "pill-notice"  : "pill-pending"
+            }`}
+            style={{ flexShrink: 0 }}
+          >
+            {isApplied    ? `✓ ${t("status_applied")}` :
+             isUrgent     ? t("status_urgent")          :
+             isNotStarted ? t("status_soon")            :
+                            t("status_pending")}
           </span>
         </div>
 
+        {/* Tags */}
         {job.tags && (
           <div className="scroll-x" style={{ marginBottom: 10, paddingLeft: 18 }}>
             {job.tags.split(",").map((tg, i) => tg.trim() && (
-              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 3, background: "var(--tint-blue-bg)", color: "var(--ios-blue)", padding: "3px 9px", borderRadius: 99, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>
+              <span key={i} style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                background: "var(--tint-blue-bg)", color: "var(--ios-blue)",
+                padding: "3px 9px", borderRadius: 99,
+                fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
+              }}>
                 <Tag size={9} />{tg.trim()}
               </span>
             ))}
           </div>
         )}
 
+        {/* Auto-match badge */}
         {job.source && job.source !== "manual" && (
-          <div style={{ background: "var(--tint-green-bg)", borderRadius: 10, padding: "8px 12px", marginBottom: 10, marginLeft: 18 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#1A8A3D" }}>Auto-found · {job.match_score}% match</div>
-            {job.match_reason && <div style={{ fontSize: 12, color: "var(--label-3)", marginTop: 2 }}>{job.match_reason}</div>}
+          <div style={{
+            background: "var(--tint-green-bg)", borderRadius: 10,
+            padding: "8px 12px", marginBottom: 10, marginLeft: 18,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#1A8A3D" }}>
+              {lang === "or" ? "ସ୍ୱୟଂ ଖୋଜ" : "Auto-found"} · {job.match_score}%
+            </div>
+            {job.match_reason && (
+              <div style={{ fontSize: 12, color: "var(--label-3)", marginTop: 2 }}>
+                {job.match_reason}
+              </div>
+            )}
           </div>
         )}
 
         <div style={{ paddingLeft: 18 }}>
-          <div style={{ display: "grid", gridTemplateColumns: isApplied ? "1fr" : "1fr 1fr", gap: 8, marginBottom: 10 }}>
+          {/* Date cells */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isApplied ? "1fr" : "1fr 1fr",
+            gap: 8, marginBottom: 10,
+          }}>
             {!isApplied && (
-              <DateCell icon={<CalendarDays size={13} />} label={t("last_date")}
+              <DateCell
+                icon={<CalendarDays size={13} />}
+                label={t("last_date")}
                 value={job.last_date ? formatDate(job.last_date) : t("tba")}
-                sub={deadlineDays !== null && deadlineDays >= 0 ? (deadlineDays === 0 ? t("today") : deadlineDays === 1 ? t("tomorrow") : t("days_left", { n: deadlineDays })) : deadlineDays !== null && deadlineDays < 0 ? t("overdue") : null}
+                sub={
+                  deadlineDays !== null && deadlineDays >= 0
+                    ? deadlineDays === 0 ? t("today")
+                    : deadlineDays === 1 ? t("tomorrow")
+                    : t("days_left", { n: deadlineDays })
+                    : deadlineDays !== null && deadlineDays < 0
+                    ? t("overdue") : null
+                }
                 subColor={deadlineDays !== null && deadlineDays <= 1 ? "var(--ios-red)" : "#B25900"}
-                testId={`job-last-date-${job.id}`} />
+                testId={`job-last-date-${job.id}`}
+              />
             )}
-            <DateCell icon={<FileText size={13} />} label={t("exam_date")}
-              value={job.exam_date ? formatDate(job.exam_date) : t("tba")}
-              sub={examDays !== null ? (examDays < 0 ? t("passed") : examDays === 0 ? t("today") : examDays === 1 ? t("tomorrow") : t("days_away", { n: examDays })) : null}
-              subColor={examDays !== null && examDays <= 1 ? "var(--ios-red)" : examDays !== null && examDays <= 7 ? "#B25900" : "var(--label-3)"}
-              testId={`job-exam-date-${job.id}`} />
+            <DateCell
+              icon={<FileText size={13} />}
+              label={t("exam_date")}
+              value={examDateValue}
+              sub={examDateSub}
+              subColor={examSubColor}
+              testId={`job-exam-date-${job.id}`}
+            />
           </div>
 
-          {!isApplied && job.last_date && <div style={{ marginBottom: 10 }}><Countdown targetDate={job.last_date} /></div>}
+          {/* Countdown bar */}
+          {!isApplied && job.last_date && (
+            <div style={{ marginBottom: 10 }}>
+              <Countdown targetDate={job.last_date} />
+            </div>
+          )}
 
+          {/* Notes */}
           {job.notes && (
-            <div data-testid={`job-notes-${job.id}`} style={{ background: "var(--bg-tertiary)", borderRadius: 10, padding: "10px 12px", marginBottom: 10, fontSize: 14, color: "var(--label-2)", lineHeight: 1.5 }}>
+            <div data-testid={`job-notes-${job.id}`} style={{
+              background: "var(--bg-tertiary)", borderRadius: 10,
+              padding: "10px 12px", marginBottom: 10,
+              fontSize: 14, color: "var(--label-2)", lineHeight: 1.55,
+            }}>
               {job.notes}
             </div>
           )}
 
+          {/* Login credentials */}
           {(job.app_username || job.app_password) && (
-            <div style={{ background: "var(--tint-blue-bg)", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ios-blue)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 7 }}>{t("login_label")}</div>
+            <div style={{
+              background: "var(--tint-blue-bg)", borderRadius: 10,
+              padding: "10px 12px", marginBottom: 10,
+            }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: "var(--ios-blue)",
+                textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 7,
+              }}>
+                {t("login_label")}
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                 {job.app_username && (
                   <button type="button" onClick={() => copy(job.app_username, "username_label")}
                     className="tg-press"
-                    style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "none", borderRadius: 8, padding: "7px 11px", fontSize: 14, fontWeight: 600, color: "var(--label-1)", cursor: "pointer" }}>
-                    <User size={13} color="var(--ios-blue)" />{job.app_username}<Copy size={11} color="var(--label-4)" />
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      background: "#fff", border: "none", borderRadius: 8,
+                      padding: "7px 11px", fontSize: 14, fontWeight: 600,
+                      color: "var(--label-1)", cursor: "pointer",
+                    }}>
+                    <User size={13} color="var(--ios-blue)" />
+                    {job.app_username}
+                    <Copy size={11} color="var(--label-4)" />
                   </button>
                 )}
                 {job.app_password && (
                   <button type="button" onClick={() => copy(job.app_password, "password_label")}
                     className="tg-press"
-                    style={{ display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "none", borderRadius: 8, padding: "7px 11px", fontSize: 14, fontWeight: 600, color: "var(--label-1)", cursor: "pointer" }}>
-                    <Lock size={13} color="var(--ios-blue)" />{job.app_password}<Copy size={11} color="var(--label-4)" />
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      background: "#fff", border: "none", borderRadius: 8,
+                      padding: "7px 11px", fontSize: 14, fontWeight: 600,
+                      color: "var(--label-1)", cursor: "pointer",
+                    }}>
+                    <Lock size={13} color="var(--ios-blue)" />
+                    {job.app_password}
+                    <Copy size={11} color="var(--label-4)" />
                   </button>
                 )}
               </div>
             </div>
           )}
 
+          {/* Documents */}
           <div style={{ marginBottom: 12 }}>
             <button type="button" onClick={() => setDocsOpen(p => !p)}
               className="tg-press"
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", background: "var(--bg-tertiary)", border: "none", borderRadius: 10, padding: "10px 14px", fontSize: 14, fontWeight: 600, color: "var(--label-2)", cursor: "pointer" }}>
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", background: "var(--bg-tertiary)",
+                border: "none", borderRadius: 10,
+                padding: "10px 14px", fontSize: 14, fontWeight: 600,
+                color: "var(--label-2)", cursor: "pointer",
+              }}>
               <Paperclip size={15} color="var(--label-3)" />
               <span>{t("documents")}</span>
-              {docs.length > 0 && <span style={{ background: "var(--ios-blue)", color: "#fff", borderRadius: 99, padding: "0 7px", fontSize: 11, fontWeight: 700, marginLeft: 2 }}>{docs.length}</span>}
-              <span style={{ marginLeft: "auto" }}>{docsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
+              {docs.length > 0 && (
+                <span style={{
+                  background: "var(--ios-blue)", color: "#fff",
+                  borderRadius: 99, padding: "0 7px",
+                  fontSize: 11, fontWeight: 700, marginLeft: 2,
+                }}>
+                  {docs.length}
+                </span>
+              )}
+              <span style={{ marginLeft: "auto" }}>
+                {docsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </span>
             </button>
+
             {docsOpen && (
-              <div className="a-in" style={{ background: "var(--bg-tertiary)", borderRadius: "0 0 10px 10px", padding: 12 }}>
+              <div className="a-in" style={{
+                background: "var(--bg-tertiary)",
+                borderRadius: "0 0 10px 10px", padding: 12,
+              }}>
                 <div className="scroll-x" style={{ marginBottom: docs.length > 0 ? 10 : 0 }}>
                   {["admit_card", "hall_ticket", "result", "other"].map(type => (
-                    <label key={type} className="tg-press" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", borderRadius: 99, padding: "7px 13px", fontSize: 13, fontWeight: 600, color: "var(--label-2)", cursor: "pointer", flexShrink: 0, opacity: uploading ? .5 : 1 }}>
+                    <label key={type} className="tg-press" style={{
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      background: "#fff", borderRadius: 99, padding: "7px 13px",
+                      fontSize: 13, fontWeight: 600, color: "var(--label-2)",
+                      cursor: "pointer", flexShrink: 0, opacity: uploading ? .5 : 1,
+                    }}>
                       {type.replace("_", " ")}
-                      <input type="file" style={{ display: "none" }} accept=".pdf,.jpg,.jpeg,.png" disabled={uploading} onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], type)} />
+                      <input type="file" style={{ display: "none" }}
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        disabled={uploading}
+                        onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], type)} />
                     </label>
                   ))}
                 </div>
                 {docs.map(doc => (
-                  <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderTop: "0.5px solid var(--separator)" }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{doc.document_type === "admit_card" ? "🎫" : doc.document_type === "hall_ticket" ? "🎟" : doc.document_type === "result" ? "📊" : "📄"}</span>
-                    <button type="button" onClick={() => openDoc(doc.file_path)} className="tg-press" style={{ flex: 1, textAlign: "left", background: "none", border: "none", fontSize: 14, fontWeight: 600, color: "var(--ios-blue)", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0 }}>
+                  <div key={doc.id} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "9px 0", borderTop: "0.5px solid var(--separator)",
+                  }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>
+                      {doc.document_type === "admit_card" ? "🎫"
+                       : doc.document_type === "hall_ticket" ? "🎟"
+                       : doc.document_type === "result" ? "📊" : "📄"}
+                    </span>
+                    <button type="button" onClick={() => openDoc(doc.file_path)}
+                      className="tg-press"
+                      style={{
+                        flex: 1, textAlign: "left", background: "none", border: "none",
+                        fontSize: 14, fontWeight: 600, color: "var(--ios-blue)",
+                        cursor: "pointer", overflow: "hidden",
+                        textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0,
+                      }}>
                       {doc.document_type?.replace("_", " ")} — {doc.file_name}
                     </button>
-                    <button type="button" onClick={() => deleteDoc(doc)} className="tg-press" style={{ background: "none", border: "none", color: "var(--ios-red)", cursor: "pointer", padding: 4, display: "flex", flexShrink: 0 }}><Trash2 size={14} /></button>
+                    <button type="button" onClick={() => deleteDoc(doc)}
+                      className="tg-press"
+                      style={{
+                        background: "none", border: "none", color: "var(--ios-red)",
+                        cursor: "pointer", padding: 4, display: "flex", flexShrink: 0,
+                      }}>
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -191,35 +362,57 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
           <div style={{ height: 0.5, background: "var(--separator)", marginBottom: 12 }} />
 
-          {/* ── Action row — clearly reflects applied state ── */}
+          {/* Action buttons */}
           <div style={{ display: "flex", gap: 8 }}>
             {isFuture ? (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-tertiary)", borderRadius: 99, padding: "11px", fontSize: 14, fontWeight: 600, color: "var(--label-3)" }}>
+              <div style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                background: "var(--bg-tertiary)", borderRadius: 99,
+                padding: "11px", fontSize: 14, fontWeight: 600, color: "var(--label-3)",
+              }}>
                 {t("opens_on", { date: formatDate(job.start_date) })}
               </div>
             ) : isApplied ? (
-              <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`}
-                className="btn btn-success-tinted tg-press" style={{ flex: 1, textDecoration: "none" }}>
-                <CheckCircle2 size={16} strokeWidth={2.5} /> {t("applied_open_link")}
+              <a href={job.apply_link} target="_blank" rel="noopener noreferrer"
+                data-testid={`apply-link-${job.id}`}
+                className="btn btn-success-tinted tg-press"
+                style={{ flex: 1, textDecoration: "none" }}>
+                <CheckCircle2 size={16} strokeWidth={2.5} />
+                {t("applied_open_link")}
               </a>
             ) : (
-              <a href={job.apply_link} target="_blank" rel="noopener noreferrer" data-testid={`apply-link-${job.id}`}
-                className="btn btn-filled tg-press" style={{ flex: 1, textDecoration: "none" }}>
-                {t("apply_now")} <ExternalLink size={15} strokeWidth={2.5} />
+              <a href={job.apply_link} target="_blank" rel="noopener noreferrer"
+                data-testid={`apply-link-${job.id}`}
+                className="btn btn-filled tg-press"
+                style={{ flex: 1, textDecoration: "none" }}>
+                {t("apply_now")}
+                <ExternalLink size={15} strokeWidth={2.5} />
               </a>
             )}
 
-            {/* Single toggle button, always present, correctly labeled both on Home and Admin */}
-            <button type="button" onClick={handleToggleClick} data-testid={`toggle-applied-${job.id}`}
-              className="btn btn-gray tg-press" style={{ flexShrink: 0 }}
+            <button type="button" onClick={handleToggleClick}
+              data-testid={`toggle-applied-${job.id}`}
+              className="btn btn-gray tg-press"
+              style={{ flexShrink: 0 }}
               title={isApplied ? t("undo_btn") : t("mark_btn")}>
               {isApplied ? <RotateCcw size={16} /> : <Circle size={16} />}
               {isApplied ? t("undo_btn") : t("mark_btn")}
             </button>
-            {admin && <>
-              <button type="button" onClick={() => onEdit && onEdit(job)} data-testid={`edit-job-${job.id}`} className="btn btn-gray btn-icon tg-press"><Pencil size={16} /></button>
-              <button type="button" onClick={() => onDelete && onDelete(job)} data-testid={`delete-job-${job.id}`} className="btn btn-danger-tinted btn-icon tg-press"><Trash2 size={16} /></button>
-            </>}
+
+            {admin && (
+              <>
+                <button type="button" onClick={() => onEdit && onEdit(job)}
+                  data-testid={`edit-job-${job.id}`}
+                  className="btn btn-gray btn-icon tg-press">
+                  <Pencil size={16} />
+                </button>
+                <button type="button" onClick={() => onDelete && onDelete(job)}
+                  data-testid={`delete-job-${job.id}`}
+                  className="btn btn-danger-tinted btn-icon tg-press">
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -230,9 +423,21 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 function DateCell({ icon, label, value, sub, subColor, testId }) {
   return (
     <div style={{ background: "var(--bg-tertiary)", borderRadius: 10, padding: "10px 12px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "var(--label-4)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 4 }}>{icon}{label}</div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--label-1)" }} data-testid={testId}>{value}</div>
-      {sub && <div style={{ fontSize: 12, fontWeight: 700, color: subColor, marginTop: 2 }}>{sub}</div>}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 4,
+        fontSize: 11, fontWeight: 600, color: "var(--label-4)",
+        textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 4,
+      }}>
+        {icon}{label}
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--label-1)" }} data-testid={testId}>
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 12, fontWeight: 700, color: subColor, marginTop: 2 }}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 }
