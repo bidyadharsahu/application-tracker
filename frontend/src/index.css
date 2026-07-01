@@ -1,1 +1,478 @@
-test
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════
+   JOB LEDGER — Apple HIG + Telegram-grade motion system
+   Single source of truth for every design token.
+══════════════════════════════════════════════════════════ */
+
+:root {
+  /* iOS System Colors */
+  --ios-blue:    #007AFF;
+  --ios-green:   #34C759;
+  --ios-orange:  #FF9500;
+  --ios-red:     #FF3B30;
+  --ios-purple:  #AF52DE;
+  --ios-teal:    #30B0C7;
+  --ios-indigo:  #5856D6;
+
+  /* Backgrounds */
+  --bg-primary:   #F2F2F7;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary:  #F2F2F7;
+  --bg-elevated:  #FFFFFF;
+
+  /* Fills */
+  --fill-1: rgba(120,120,128,0.20);
+  --fill-2: rgba(120,120,128,0.16);
+  --fill-3: rgba(120,120,128,0.12);
+  --fill-4: rgba(120,120,128,0.08);
+
+  /* Labels */
+  --label-1: rgba(0,0,0,0.88);
+  --label-2: rgba(60,60,67,0.68);
+  --label-3: rgba(60,60,67,0.46);
+  --label-4: rgba(60,60,67,0.30);
+
+  /* Separators */
+  --separator:        rgba(60,60,67,0.20);
+  --separator-opaque: #C6C6C8;
+
+  /* Status tints */
+  --tint-blue-bg:   #E8F1FF;
+  --tint-green-bg:  #E7F8EC;
+  --tint-orange-bg: #FFF2E0;
+  --tint-red-bg:    #FFEAE9;
+  --tint-purple-bg: #F6EAFB;
+
+  /* Radii */
+  --radius-xs:   8px;
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --elev-1:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --elev-2:   0 4px 14px rgba(0,0,0,0.08);
+  --elev-3:   0 8px 28px rgba(0,0,0,0.12);
+  --elev-nav: 0 -0.5px 0 rgba(0,0,0,0.10);
+
+  /* Layout */
+  --tabbar-h: 83px;
+  --sat: env(safe-area-inset-top,    0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+
+  /* ── Telegram-grade easing curves ──────────────────────
+     These cubic-bezier values replicate Telegram iOS 2024+
+     motion: fast start, slight overshoot, crisp settle.
+  ── */
+  --tg-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --tg-out:    cubic-bezier(0.22,  1,     0.36, 1);
+  --tg-swift:  cubic-bezier(0.4,   0,     0.2,  1);
+
+  /* Aliases */
+  --ease-spring:   var(--tg-spring);
+  --ease-out-soft: var(--tg-out);
+  --ease-swift:    var(--tg-swift);
+}
+
+/* ── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
+  overscroll-behavior: none;
+}
+html, body {
+  height: 100%; height: 100dvh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+               'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.41;
+  letter-spacing: -0.01em;
+  color: var(--label-1);
+  background: var(--bg-primary);
+  overscroll-behavior: none;
+}
+#root { height: 100%; height: 100dvh; overflow: hidden; }
+.App  { height: 100%; display: flex; flex-direction: column; }
+
+/* ── App shell ──────────────────────────────────────────── */
+.app-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+/* SCROLL FIX — bottom content always visible above tab bar */
+.app-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: calc(var(--tabbar-h) + var(--sab) + 24px);
+  scroll-behavior: smooth;
+}
+
+/* ── Large title ────────────────────────────────────────── */
+.nav-large-title {
+  padding: calc(8px + var(--sat)) 16px 6px;
+  background: var(--bg-primary);
+  position: relative;
+  z-index: 10;
+}
+.nav-large-title .eyebrow {
+  font-size: 13px; font-weight: 600;
+  color: var(--label-3); letter-spacing: 0.02em; margin-bottom: 2px;
+}
+.nav-large-title h1 {
+  font-size: 34px; font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--label-1); line-height: 1.1;
+}
+
+.nav-inline-title {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(242,242,247,0.94);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 0.5px solid var(--separator);
+  padding: calc(10px + var(--sat)) 16px 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-inline-title h2 { font-size: 17px; font-weight: 600; color: var(--label-1); }
+
+/* ── Tab bar ────────────────────────────────────────────── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: var(--tabbar-h);
+  padding-bottom: var(--sab);
+  background: rgba(249,249,251,0.96);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-top: 0.5px solid var(--separator);
+  display: flex;
+  box-shadow: var(--elev-nav);
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; border: none; background: transparent; cursor: pointer;
+  padding: 6px 0 2px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  position: relative;
+}
+.tab-item .tab-icon-wrap {
+  display: flex; align-items: center; justify-content: center;
+  height: 30px; width: 46px;
+  border-radius: 14px;
+  transition: transform 0.15s var(--tg-spring), background 0.18s var(--tg-out);
+}
+.tab-item:active .tab-icon-wrap { transform: scale(0.80); }
+.tab-item.active .tab-icon-wrap { background: rgba(0,122,255,0.13); }
+.tab-item .tab-label {
+  font-size: 10px; font-weight: 600;
+  color: var(--label-3); letter-spacing: 0.01em;
+  transition: color 0.18s var(--tg-out);
+}
+.tab-item.active .tab-label { color: var(--ios-blue); }
+.tab-badge {
+  position: absolute; top: 2px; right: calc(50% - 20px);
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--ios-red); color: #fff;
+  border-radius: 99px; border: 1.5px solid rgba(249,249,251,0.96);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  animation: popIn .22s var(--tg-spring) both;
+}
+/* Telegram-style blue dot under active tab */
+.tab-item.active::after {
+  content: '';
+  position: absolute; bottom: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--ios-blue);
+  animation: dotPop .22s var(--tg-spring) both;
+}
+@keyframes dotPop {
+  from { transform: translateX(-50%) scale(0); opacity: 0; }
+  to   { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* ── Cards ──────────────────────────────────────────────── */
+.ios-card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-1);
+}
+.ios-card-press {
+  cursor: pointer;
+  transition: transform 0.15s var(--tg-spring), box-shadow 0.15s var(--tg-out), background 0.1s;
+}
+.ios-card-press:active {
+  transform: scale(0.972);
+  box-shadow: var(--elev-2);
+  background: var(--bg-tertiary);
+}
+
+/* ── Inset list ─────────────────────────────────────────── */
+.ios-list { background: var(--bg-secondary); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--elev-1); }
+.ios-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; min-height: 48px;
+  border-bottom: 0.5px solid var(--separator);
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-row:last-child { border-bottom: none; }
+.ios-row-press { cursor: pointer; transition: background .1s; }
+.ios-row-press:active { background: var(--fill-4); }
+
+/* ── Stat tile ──────────────────────────────────────────── */
+.stat-tile {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 18px 10px 14px;
+  text-align: center; cursor: pointer;
+  box-shadow: var(--elev-1);
+  transition: transform 0.17s var(--tg-spring), box-shadow 0.17s var(--tg-out);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  position: relative;
+}
+.stat-tile:active { transform: scale(0.90); box-shadow: var(--elev-2); }
+.stat-tile.on { box-shadow: 0 0 0 2px var(--ios-blue), var(--elev-2); }
+
+/* ── Buttons ────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: inherit; font-weight: 600; font-size: 17px;
+  border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.13s var(--tg-spring), opacity 0.1s var(--tg-out);
+  white-space: nowrap;
+  border-radius: var(--radius-md);
+  min-height: 50px; padding: 0 20px;
+}
+.btn:active { transform: scale(0.94); opacity: 0.80; }
+.btn:disabled { opacity: 0.35; pointer-events: none; }
+
+.btn-filled         { background: var(--ios-blue);       color: #fff; }
+.btn-tinted         { background: var(--tint-blue-bg);   color: var(--ios-blue); }
+.btn-gray           { background: var(--fill-3);          color: var(--label-1); }
+.btn-plain          { background: transparent;            color: var(--ios-blue); padding: 0 8px; min-height: 36px; }
+.btn-danger-tinted  { background: var(--tint-red-bg);    color: var(--ios-red); }
+.btn-success-tinted { background: var(--tint-green-bg);  color: var(--ios-green); }
+
+.btn-sm   { min-height: 36px; padding: 0 14px; font-size: 14px; border-radius: var(--radius-sm); }
+.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: var(--radius-sm); }
+
+/* ── Status pill ────────────────────────────────────────── */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.pill-pending { background: var(--tint-orange-bg); color: #B25900; }
+.pill-applied { background: var(--tint-green-bg);  color: #1A8A3D; }
+.pill-notice  { background: var(--tint-purple-bg); color: #8A38B5; }
+.pill-urgent  { background: var(--tint-red-bg);    color: #D6291E; }
+
+/* ── Input ──────────────────────────────────────────────── */
+.ios-input {
+  width: 100%; background: var(--bg-tertiary);
+  border: none; border-radius: var(--radius-md);
+  padding: 13px 14px;
+  font-family: inherit; font-size: 17px; color: var(--label-1);
+  outline: none;
+  transition: box-shadow 0.18s var(--tg-out), background 0.15s;
+  -webkit-appearance: none; min-height: 48px;
+}
+.ios-input::placeholder { color: var(--label-4); }
+.ios-input:focus { box-shadow: 0 0 0 2.5px var(--ios-blue); background: var(--bg-secondary); }
+.ios-label { font-size: 13px; font-weight: 600; color: var(--label-2); margin-bottom: 6px; display: block; }
+
+/* ── Progress ───────────────────────────────────────────── */
+.ios-progress-track { height: 6px; background: rgba(255,255,255,0.28); border-radius: 99px; overflow: hidden; }
+.ios-progress-fill  { height: 100%; background: #fff; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
+
+/* ══════════════════════════════════════════════════════════
+   TELEGRAM-GRADE ANIMATION SYSTEM
+   Exact motion language of Telegram iOS 2024:
+   springUp  — list items entering (staggered wave)
+   popIn     — modals / empty states appearing
+   tabSwitch — screen transition on tab change
+   slideUp   — bottom sheet entry
+   shimmer   — skeleton loading pulse
+══════════════════════════════════════════════════════════ */
+
+/* Card/row entrance: slight rise + spring overshoot */
+@keyframes springUp {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.96); }
+  55%  { opacity: 1; transform: translateY(-2px)  scale(1.006); }
+  78%  { transform: translateY(0.5px) scale(0.999); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Modal / empty state: scale-in with spring bounce */
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(0.86); }
+  55%  { transform: scale(1.025); }
+  78%  { transform: scale(0.995); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Tab screen switch: subtle rise + fade */
+@keyframes tabSwitch {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Plain fade */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Bottom sheet slide up */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Exit: slide down + fade */
+@keyframes slideDownOut {
+  from { transform: translateY(0);   opacity: 1; }
+  to   { transform: translateY(16px); opacity: 0; }
+}
+
+/* Shimmer for skeleton */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Pulse ring for urgent alert icon */
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0   rgba(255,59,48,.50); }
+  100% { box-shadow: 0 0 0 10px rgba(255,59,48,0); }
+}
+
+/* Spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Swipe dismiss (right) */
+@keyframes swipeDismissRight {
+  to { transform: translateX(130%); opacity: 0; }
+}
+
+/* Language switch pop — tactile confirmation */
+@keyframes langTogglePop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.86) rotate(-3deg); }
+  65%  { transform: scale(1.08) rotate(1deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* ── Animation utility classes ──────────────────────────── */
+.a-up   { animation: springUp  0.28s var(--tg-spring) both; }
+.a-in   { animation: fadeIn    0.18s var(--tg-swift)  both; }
+.a-pop  { animation: popIn     0.26s var(--tg-spring) both; }
+.a-tab  { animation: tabSwitch 0.22s var(--tg-out)    both; }
+.a-exit { animation: slideDownOut 0.18s var(--tg-swift) both; }
+
+/* Stagger delays — list feels like one continuous wave */
+.d1 { animation-delay: 0.025s; }
+.d2 { animation-delay: 0.050s; }
+.d3 { animation-delay: 0.075s; }
+.d4 { animation-delay: 0.100s; }
+.d5 { animation-delay: 0.125s; }
+.d6 { animation-delay: 0.150s; }
+
+/* ── Press feedback on every tappable surface ───────────── */
+.tg-press {
+  transition: transform 0.13s var(--tg-spring), opacity 0.10s var(--tg-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.tg-press:active { transform: scale(0.94); opacity: 0.78; }
+
+/* Swipe-dismiss helper */
+.swiping-away { animation: swipeDismissRight 0.22s var(--tg-swift) both; }
+
+/* ── Skeleton shimmer ───────────────────────────────────── */
+.ios-skel {
+  background: linear-gradient(90deg, var(--fill-3) 25%, var(--fill-4) 50%, var(--fill-3) 75%);
+  background-size: 200% auto;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: var(--radius-xs);
+}
+
+/* ── Bottom sheet ───────────────────────────────────────── */
+.ios-sheet { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; }
+.ios-sheet-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.44);
+  animation: fadeIn 0.22s ease both;
+  backdrop-filter: blur(3px);
+}
+.ios-sheet-panel {
+  position: relative; z-index: 1; width: 100%;
+  background: var(--bg-primary);
+  border-radius: 22px 22px 0 0;
+  max-height: 93dvh; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px calc(28px + var(--sab));
+  animation: slideUp 0.28s var(--tg-out) both;
+  box-shadow: 0 -6px 40px rgba(0,0,0,0.18);
+}
+.ios-sheet-handle {
+  width: 36px; height: 5px;
+  background: var(--separator-opaque);
+  border-radius: 99px;
+  margin: 10px auto 16px;
+}
+
+/* ── Language toggle button ─────────────────────────────── */
+.lang-switch {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: inherit; font-weight: 700; font-size: 13px;
+  background: var(--fill-3); color: var(--label-1);
+  border: none; border-radius: var(--radius-pill);
+  padding: 6px 13px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.13s var(--tg-spring), background 0.12s;
+}
+.lang-switch:active { transform: scale(0.86); background: var(--fill-2); }
+.lang-switching { animation: langTogglePop 0.34s var(--tg-spring) both; }
+
+/* ── Odia script needs more vertical line-height ────────── */
+:lang(or), [data-lang="or"] { line-height: 1.60; }
+:lang(or) h1, [data-lang="or"] h1,
+:lang(or) h2, [data-lang="or"] h2 { line-height: 1.38; }
+
+/* ── Misc ───────────────────────────────────────────────── */
+:focus         { outline: none; }
+:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 2px; border-radius: 4px; }
+::selection    { background: rgba(0,122,255,.2); }
+::-webkit-scrollbar { display: none; }
+.scroll-x {
+  display: flex; gap: 8px; overflow-x: auto;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.scroll-x::-webkit-scrollbar { display: none; }
