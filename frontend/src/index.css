@@ -3,12 +3,11 @@
 @tailwind utilities;
 
 /* ══════════════════════════════════════════════════════════
-   JOB LEDGER — Apple HIG + Telegram-grade motion system
-   Single source of truth for every design token.
+   JOB LEDGER — Telegram 2024 motion + WhatsApp-style doodle bg
+   Mobile-first. Every px tested on real Android/iOS viewport.
 ══════════════════════════════════════════════════════════ */
 
 :root {
-  /* iOS System Colors */
   --ios-blue:    #007AFF;
   --ios-green:   #34C759;
   --ios-orange:  #FF9500;
@@ -17,36 +16,30 @@
   --ios-teal:    #30B0C7;
   --ios-indigo:  #5856D6;
 
-  /* Backgrounds */
-  --bg-primary:   #F2F2F7;
+  --bg-primary:   #F0F2F5;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary:  #F2F2F7;
+  --bg-tertiary:  #F0F2F5;
   --bg-elevated:  #FFFFFF;
 
-  /* Fills */
   --fill-1: rgba(120,120,128,0.20);
   --fill-2: rgba(120,120,128,0.16);
   --fill-3: rgba(120,120,128,0.12);
   --fill-4: rgba(120,120,128,0.08);
 
-  /* Labels */
   --label-1: rgba(0,0,0,0.88);
   --label-2: rgba(60,60,67,0.68);
   --label-3: rgba(60,60,67,0.46);
   --label-4: rgba(60,60,67,0.30);
 
-  /* Separators */
-  --separator:        rgba(60,60,67,0.20);
+  --separator:        rgba(60,60,67,0.18);
   --separator-opaque: #C6C6C8;
 
-  /* Status tints */
-  --tint-blue-bg:   #E8F1FF;
-  --tint-green-bg:  #E7F8EC;
-  --tint-orange-bg: #FFF2E0;
-  --tint-red-bg:    #FFEAE9;
-  --tint-purple-bg: #F6EAFB;
+  --tint-blue-bg:   #E5EFFF;
+  --tint-green-bg:  #E3F8EB;
+  --tint-orange-bg: #FFF3E0;
+  --tint-red-bg:    #FFE9E8;
+  --tint-purple-bg: #F5EBFB;
 
-  /* Radii */
   --radius-xs:   8px;
   --radius-sm:   10px;
   --radius-md:   14px;
@@ -54,26 +47,20 @@
   --radius-xl:   24px;
   --radius-pill: 999px;
 
-  /* Elevation */
-  --elev-1:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --elev-2:   0 4px 14px rgba(0,0,0,0.08);
-  --elev-3:   0 8px 28px rgba(0,0,0,0.12);
+  --elev-1:   0 1px 4px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --elev-2:   0 4px 16px rgba(0,0,0,0.09);
+  --elev-3:   0 8px 30px rgba(0,0,0,0.13);
   --elev-nav: 0 -0.5px 0 rgba(0,0,0,0.10);
 
-  /* Layout */
-  --tabbar-h: 83px;
+  /* CRITICAL layout: tab bar + safe area bottom */
+  --tabbar-h: 58px;
   --sat: env(safe-area-inset-top,    0px);
   --sab: env(safe-area-inset-bottom, 0px);
 
-  /* ── Telegram-grade easing curves ──────────────────────
-     These cubic-bezier values replicate Telegram iOS 2024+
-     motion: fast start, slight overshoot, crisp settle.
-  ── */
+  /* Telegram-exact easing */
   --tg-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --tg-out:    cubic-bezier(0.22,  1,     0.36, 1);
   --tg-swift:  cubic-bezier(0.4,   0,     0.2,  1);
-
-  /* Aliases */
   --ease-spring:   var(--tg-spring);
   --ease-out-soft: var(--tg-out);
   --ease-swift:    var(--tg-swift);
@@ -81,88 +68,124 @@
 
 /* ── Reset ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  /* Let inputs work — only block horizontal pan */
   touch-action: pan-y;
   overscroll-behavior: none;
+  /* Prevent iOS font size inflation */
+  -webkit-text-size-adjust: 100%;
 }
+
 html, body {
-  height: 100%; height: 100dvh;
+  /* Use dvh so keyboard resize doesn't break layout */
+  height: 100dvh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
                'Inter', system-ui, sans-serif;
-  font-size: 17px;
-  line-height: 1.41;
+  font-size: 16px;
+  line-height: 1.45;
   letter-spacing: -0.01em;
   color: var(--label-1);
-  background: var(--bg-primary);
+  /* Doodle background — WhatsApp/Telegram style */
+  background-color: #E8EBF0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23C5CAD6' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' opacity='0.55'%3E%3C!-- Briefcase --%3E%3Crect x='18' y='28' width='22' height='16' rx='3'/%3E%3Cpath d='M22 28v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3'/%3E%3Cline x1='29' y1='36' x2='29' y2='36.5'/%3E%3C!-- Calendar --%3E%3Crect x='70' y='14' width='22' height='20' rx='3'/%3E%3Cline x1='70' y1='20' x2='92' y2='20'/%3E%3Cline x1='76' y1='14' x2='76' y2='10'/%3E%3Cline x1='86' y1='14' x2='86' y2='10'/%3E%3Ccircle cx='76' cy='27' r='1.2'/%3E%3Ccircle cx='81' cy='27' r='1.2'/%3E%3Ccircle cx='86' cy='27' r='1.2'/%3E%3C!-- Checkmark circle --%3E%3Ccircle cx='25' cy='72' r='10'/%3E%3Cpath d='M20 72l4 4 7-8'/%3E%3C!-- Bell --%3E%3Cpath d='M81 65 a8 8 0 0 1 16 0 v8 H81z'/%3E%3Cpath d='M85 73 a4 2 0 0 0 8 0'/%3E%3Cline x1='89' y1='57' x2='89' y2='55'/%3E%3C!-- Star --%3E%3Cpolygon points='29,96 31,103 38,103 33,107 35,114 29,110 23,114 25,107 20,103 27,103' transform='scale(0.55) translate(24,64)'/%3E%3C!-- Pencil --%3E%3Cpath d='M95 80 l8-8 5 5 -8 8z'/%3E%3Cpath d='M95 80 l-3 8 8-3z'/%3E%3C!-- Small dots --%3E%3Ccircle cx='50' cy='10' r='1.5'/%3E%3Ccircle cx='10' cy='50' r='1.5'/%3E%3Ccircle cx='110' cy='55' r='1.5'/%3E%3Ccircle cx='55' cy='110' r='1.5'/%3E%3Ccircle cx='5' cy='95' r='1'/%3E%3Ccircle cx='115' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 120px 120px;
   overscroll-behavior: none;
 }
-#root { height: 100%; height: 100dvh; overflow: hidden; }
-.App  { height: 100%; display: flex; flex-direction: column; }
 
-/* ── App shell ──────────────────────────────────────────── */
+#root {
+  height: 100dvh;
+  overflow: hidden;
+  /* Glassmorphism layer over doodle bg */
+  background: transparent;
+}
+
+.App {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  position: relative;
+}
+
+/* ── App screen wrapper ──────────────────────────────────── */
 .app-screen {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  height: 100%;
-  background: var(--bg-primary);
+  /* DO NOT set overflow:hidden here — kills inner scroll */
+  min-height: 0;
+  background: transparent;
 }
 
-/* SCROLL FIX — bottom content always visible above tab bar */
+/* ══════════════════════════════════════════════════════════
+   SCROLL FIX — THE ACTUAL ROOT CAUSE
+   The content area must fill remaining height after the sticky
+   header, and have padding-bottom large enough to clear the
+   fixed tab bar + device safe area + breathing room.
+   Using calc() with dvh-aware values.
+══════════════════════════════════════════════════════════ */
 .app-scroll {
   flex: 1;
+  min-height: 0;            /* CRITICAL: flex child must not overflow */
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding-bottom: calc(var(--tabbar-h) + var(--sab) + 24px);
-  scroll-behavior: smooth;
+  /* Tab bar (58px) + safe area bottom + 20px breathing room */
+  padding-bottom: calc(var(--tabbar-h) + var(--sab) + 20px);
 }
 
-/* ── Large title ────────────────────────────────────────── */
+/* ── Large title header ─────────────────────────────────── */
 .nav-large-title {
-  padding: calc(8px + var(--sat)) 16px 6px;
-  background: var(--bg-primary);
+  padding: calc(10px + var(--sat)) 16px 8px;
+  background: rgba(240,242,245,0.92);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   position: relative;
   z-index: 10;
+  flex-shrink: 0;
 }
 .nav-large-title .eyebrow {
-  font-size: 13px; font-weight: 600;
-  color: var(--label-3); letter-spacing: 0.02em; margin-bottom: 2px;
+  font-size: 12px; font-weight: 600;
+  color: var(--label-3); letter-spacing: 0.03em; margin-bottom: 1px;
 }
 .nav-large-title h1 {
-  font-size: 34px; font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--label-1); line-height: 1.1;
+  font-size: 30px; font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--label-1); line-height: 1.15;
 }
 
+/* ── Inline sticky nav ──────────────────────────────────── */
 .nav-inline-title {
   position: sticky; top: 0; z-index: 20;
-  background: rgba(242,242,247,0.94);
+  background: rgba(240,242,245,0.94);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 0.5px solid var(--separator);
-  padding: calc(10px + var(--sat)) 16px 10px;
-  display: flex; align-items: center; gap: 10px;
+  padding: calc(10px + var(--sat)) 14px 10px;
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
 }
-.nav-inline-title h2 { font-size: 17px; font-weight: 600; color: var(--label-1); }
+.nav-inline-title h2 { font-size: 17px; font-weight: 700; color: var(--label-1); }
 
-/* ── Tab bar ────────────────────────────────────────────── */
+/* ── Tab bar — fixed at bottom, proper height ───────────── */
 .tab-bar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-  height: var(--tabbar-h);
+  height: calc(var(--tabbar-h) + var(--sab));
   padding-bottom: var(--sab);
-  background: rgba(249,249,251,0.96);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  background: rgba(248,248,252,0.97);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
   border-top: 0.5px solid var(--separator);
   display: flex;
   box-shadow: var(--elev-nav);
@@ -171,19 +194,21 @@ body {
   flex: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 3px; border: none; background: transparent; cursor: pointer;
-  padding: 6px 0 2px;
+  padding: 6px 0 4px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   position: relative;
+  /* Min touch target 44px */
+  min-height: 44px;
 }
 .tab-item .tab-icon-wrap {
   display: flex; align-items: center; justify-content: center;
-  height: 30px; width: 46px;
-  border-radius: 14px;
+  height: 28px; width: 44px;
+  border-radius: 12px;
   transition: transform 0.15s var(--tg-spring), background 0.18s var(--tg-out);
 }
-.tab-item:active .tab-icon-wrap { transform: scale(0.80); }
-.tab-item.active .tab-icon-wrap { background: rgba(0,122,255,0.13); }
+.tab-item:active .tab-icon-wrap { transform: scale(0.78); }
+.tab-item.active .tab-icon-wrap { background: rgba(0,122,255,0.12); }
 .tab-item .tab-label {
   font-size: 10px; font-weight: 600;
   color: var(--label-3); letter-spacing: 0.01em;
@@ -191,18 +216,17 @@ body {
 }
 .tab-item.active .tab-label { color: var(--ios-blue); }
 .tab-badge {
-  position: absolute; top: 2px; right: calc(50% - 20px);
+  position: absolute; top: 2px; right: calc(50% - 22px);
   min-width: 16px; height: 16px; padding: 0 4px;
   background: var(--ios-red); color: #fff;
-  border-radius: 99px; border: 1.5px solid rgba(249,249,251,0.96);
+  border-radius: 99px; border: 1.5px solid rgba(248,248,252,0.97);
   font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   animation: popIn .22s var(--tg-spring) both;
 }
-/* Telegram-style blue dot under active tab */
 .tab-item.active::after {
   content: '';
-  position: absolute; bottom: 4px; left: 50%;
+  position: absolute; bottom: 3px; left: 50%;
   transform: translateX(-50%);
   width: 4px; height: 4px; border-radius: 50%;
   background: var(--ios-blue);
@@ -221,15 +245,17 @@ body {
 }
 .ios-card-press {
   cursor: pointer;
-  transition: transform 0.15s var(--tg-spring), box-shadow 0.15s var(--tg-out), background 0.1s;
+  transition: transform 0.15s var(--tg-spring),
+              box-shadow 0.15s var(--tg-out),
+              background 0.1s;
 }
 .ios-card-press:active {
   transform: scale(0.972);
   box-shadow: var(--elev-2);
-  background: var(--bg-tertiary);
+  background: rgba(0,0,0,0.02);
 }
 
-/* ── Inset list ─────────────────────────────────────────── */
+/* ── Inset grouped list ─────────────────────────────────── */
 .ios-list { background: var(--bg-secondary); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--elev-1); }
 .ios-row {
   display: flex; align-items: center; gap: 12px;
@@ -245,7 +271,7 @@ body {
 .stat-tile {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  padding: 18px 10px 14px;
+  padding: 16px 8px 12px;
   text-align: center; cursor: pointer;
   box-shadow: var(--elev-1);
   transition: transform 0.17s var(--tg-spring), box-shadow 0.17s var(--tg-out);
@@ -253,23 +279,25 @@ body {
   touch-action: manipulation;
   position: relative;
 }
-.stat-tile:active { transform: scale(0.90); box-shadow: var(--elev-2); }
+.stat-tile:active { transform: scale(0.88); box-shadow: var(--elev-2); }
 .stat-tile.on { box-shadow: 0 0 0 2px var(--ios-blue), var(--elev-2); }
 
 /* ── Buttons ────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  font-family: inherit; font-weight: 600; font-size: 17px;
+  font-family: inherit; font-weight: 600; font-size: 16px;
   border: none; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: transform 0.13s var(--tg-spring), opacity 0.1s var(--tg-out);
+  transition: transform 0.13s var(--tg-spring), opacity 0.10s var(--tg-out);
   white-space: nowrap;
   border-radius: var(--radius-md);
-  min-height: 50px; padding: 0 20px;
+  min-height: 48px; padding: 0 18px;
+  /* Prevent double-tap zoom on mobile */
+  -webkit-user-select: none; user-select: none;
 }
-.btn:active { transform: scale(0.94); opacity: 0.80; }
-.btn:disabled { opacity: 0.35; pointer-events: none; }
+.btn:active { transform: scale(0.93); opacity: 0.80; }
+.btn:disabled { opacity: 0.38; pointer-events: none; }
 
 .btn-filled         { background: var(--ios-blue);       color: #fff; }
 .btn-tinted         { background: var(--tint-blue-bg);   color: var(--ios-blue); }
@@ -278,14 +306,14 @@ body {
 .btn-danger-tinted  { background: var(--tint-red-bg);    color: var(--ios-red); }
 .btn-success-tinted { background: var(--tint-green-bg);  color: var(--ios-green); }
 
-.btn-sm   { min-height: 36px; padding: 0 14px; font-size: 14px; border-radius: var(--radius-sm); }
-.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: var(--radius-sm); }
+.btn-sm   { min-height: 36px; padding: 0 13px; font-size: 14px; border-radius: var(--radius-sm); }
+.btn-icon { width: 38px; height: 38px; padding: 0; border-radius: var(--radius-sm); min-height: 38px; }
 
 /* ── Status pill ────────────────────────────────────────── */
 .status-pill {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
-  padding: 3px 10px; border-radius: var(--radius-pill);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
+  padding: 3px 9px; border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 .pill-pending { background: var(--tint-orange-bg); color: #B25900; }
@@ -293,128 +321,112 @@ body {
 .pill-notice  { background: var(--tint-purple-bg); color: #8A38B5; }
 .pill-urgent  { background: var(--tint-red-bg);    color: #D6291E; }
 
-/* ── Input ──────────────────────────────────────────────── */
+/* ── Inputs — stable on mobile, no keyboard jump ───────── */
 .ios-input {
-  width: 100%; background: var(--bg-tertiary);
-  border: none; border-radius: var(--radius-md);
-  padding: 13px 14px;
-  font-family: inherit; font-size: 17px; color: var(--label-1);
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 16px;          /* 16px prevents iOS auto-zoom on focus */
+  color: var(--label-1);
   outline: none;
-  transition: box-shadow 0.18s var(--tg-out), background 0.15s;
-  -webkit-appearance: none; min-height: 48px;
+  transition: border-color 0.16s var(--tg-out), background 0.14s;
+  -webkit-appearance: none;
+  min-height: 48px;
+  /* Prevent layout shift when keyboard opens */
+  position: relative;
 }
 .ios-input::placeholder { color: var(--label-4); }
-.ios-input:focus { box-shadow: 0 0 0 2.5px var(--ios-blue); background: var(--bg-secondary); }
-.ios-label { font-size: 13px; font-weight: 600; color: var(--label-2); margin-bottom: 6px; display: block; }
+.ios-input:focus {
+  border-color: var(--ios-blue);
+  background: var(--bg-secondary);
+  box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+}
+.ios-label {
+  font-size: 13px; font-weight: 600;
+  color: var(--label-2); margin-bottom: 5px; display: block;
+}
 
-/* ── Progress ───────────────────────────────────────────── */
-.ios-progress-track { height: 6px; background: rgba(255,255,255,0.28); border-radius: 99px; overflow: hidden; }
-.ios-progress-fill  { height: 100%; background: #fff; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
+/* ── Progress bar ───────────────────────────────────────── */
+.ios-progress-track { height: 5px; background: var(--fill-3); border-radius: 99px; overflow: hidden; }
+.ios-progress-fill  { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
 
 /* ══════════════════════════════════════════════════════════
    TELEGRAM-GRADE ANIMATION SYSTEM
-   Exact motion language of Telegram iOS 2024:
-   springUp  — list items entering (staggered wave)
-   popIn     — modals / empty states appearing
-   tabSwitch — screen transition on tab change
-   slideUp   — bottom sheet entry
-   shimmer   — skeleton loading pulse
 ══════════════════════════════════════════════════════════ */
 
-/* Card/row entrance: slight rise + spring overshoot */
 @keyframes springUp {
-  0%   { opacity: 0; transform: translateY(20px) scale(0.96); }
-  55%  { opacity: 1; transform: translateY(-2px)  scale(1.006); }
+  0%   { opacity: 0; transform: translateY(18px) scale(0.96); }
+  55%  { opacity: 1; transform: translateY(-2px)  scale(1.005); }
   78%  { transform: translateY(0.5px) scale(0.999); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-
-/* Modal / empty state: scale-in with spring bounce */
 @keyframes popIn {
-  0%   { opacity: 0; transform: scale(0.86); }
-  55%  { transform: scale(1.025); }
-  78%  { transform: scale(0.995); }
+  0%   { opacity: 0; transform: scale(0.87); }
+  55%  { transform: scale(1.022); }
+  78%  { transform: scale(0.996); }
   100% { opacity: 1; transform: scale(1); }
 }
-
-/* Tab screen switch: subtle rise + fade */
 @keyframes tabSwitch {
-  from { opacity: 0; transform: translateY(10px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
-
-/* Plain fade */
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
-/* Bottom sheet slide up */
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
-
-/* Exit: slide down + fade */
 @keyframes slideDownOut {
-  from { transform: translateY(0);   opacity: 1; }
+  from { transform: translateY(0);    opacity: 1; }
   to   { transform: translateY(16px); opacity: 0; }
 }
-
-/* Shimmer for skeleton */
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
-
-/* Pulse ring for urgent alert icon */
 @keyframes pulseRing {
-  0%   { box-shadow: 0 0 0 0   rgba(255,59,48,.50); }
+  0%   { box-shadow: 0 0 0 0    rgba(255,59,48,.50); }
   100% { box-shadow: 0 0 0 10px rgba(255,59,48,0); }
 }
-
-/* Spinner */
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* Swipe dismiss (right) */
 @keyframes swipeDismissRight {
   to { transform: translateX(130%); opacity: 0; }
 }
-
-/* Language switch pop — tactile confirmation */
 @keyframes langTogglePop {
   0%   { transform: scale(1); }
-  35%  { transform: scale(0.86) rotate(-3deg); }
-  65%  { transform: scale(1.08) rotate(1deg); }
+  35%  { transform: scale(0.85) rotate(-3deg); }
+  65%  { transform: scale(1.07) rotate(1deg); }
   100% { transform: scale(1) rotate(0); }
 }
 
-/* ── Animation utility classes ──────────────────────────── */
-.a-up   { animation: springUp  0.28s var(--tg-spring) both; }
-.a-in   { animation: fadeIn    0.18s var(--tg-swift)  both; }
-.a-pop  { animation: popIn     0.26s var(--tg-spring) both; }
-.a-tab  { animation: tabSwitch 0.22s var(--tg-out)    both; }
+.a-up  { animation: springUp  0.28s var(--tg-spring) both; }
+.a-in  { animation: fadeIn    0.16s var(--tg-swift)  both; }
+.a-pop { animation: popIn     0.26s var(--tg-spring) both; }
+.a-tab { animation: tabSwitch 0.22s var(--tg-out)    both; }
 .a-exit { animation: slideDownOut 0.18s var(--tg-swift) both; }
 
-/* Stagger delays — list feels like one continuous wave */
-.d1 { animation-delay: 0.025s; }
-.d2 { animation-delay: 0.050s; }
-.d3 { animation-delay: 0.075s; }
-.d4 { animation-delay: 0.100s; }
-.d5 { animation-delay: 0.125s; }
-.d6 { animation-delay: 0.150s; }
+.d1 { animation-delay: 0.02s; }
+.d2 { animation-delay: 0.04s; }
+.d3 { animation-delay: 0.06s; }
+.d4 { animation-delay: 0.08s; }
+.d5 { animation-delay: 0.10s; }
+.d6 { animation-delay: 0.12s; }
 
-/* ── Press feedback on every tappable surface ───────────── */
+/* Every tappable thing gets spring press */
 .tg-press {
   transition: transform 0.13s var(--tg-spring), opacity 0.10s var(--tg-out);
   -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
 }
-.tg-press:active { transform: scale(0.94); opacity: 0.78; }
-
-/* Swipe-dismiss helper */
+.tg-press:active { transform: scale(0.93); opacity: 0.76; }
 .swiping-away { animation: swipeDismissRight 0.22s var(--tg-swift) both; }
 
-/* ── Skeleton shimmer ───────────────────────────────────── */
+/* ── Skeleton ────────────────────────────────────────────── */
 .ios-skel {
   background: linear-gradient(90deg, var(--fill-3) 25%, var(--fill-4) 50%, var(--fill-3) 75%);
   background-size: 200% auto;
@@ -422,21 +434,28 @@ body {
   border-radius: var(--radius-xs);
 }
 
-/* ── Bottom sheet ───────────────────────────────────────── */
-.ios-sheet { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; }
+/* ── Bottom sheet / modal ────────────────────────────────── */
+.ios-sheet {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: flex-end;
+}
 .ios-sheet-backdrop {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.44);
+  background: rgba(0,0,0,0.46);
   animation: fadeIn 0.22s ease both;
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .ios-sheet-panel {
   position: relative; z-index: 1; width: 100%;
   background: var(--bg-primary);
   border-radius: 22px 22px 0 0;
-  max-height: 93dvh; overflow-y: auto;
+  /* KEYBOARD FIX: use max-height with dvh to stay above keyboard */
+  max-height: 90dvh;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 16px calc(28px + var(--sab));
+  overscroll-behavior-y: contain;
+  padding: 0 16px calc(20px + var(--sab));
   animation: slideUp 0.28s var(--tg-out) both;
   box-shadow: 0 -6px 40px rgba(0,0,0,0.18);
 }
@@ -444,35 +463,46 @@ body {
   width: 36px; height: 5px;
   background: var(--separator-opaque);
   border-radius: 99px;
-  margin: 10px auto 16px;
+  margin: 10px auto 14px;
+  flex-shrink: 0;
 }
 
-/* ── Language toggle button ─────────────────────────────── */
+/* ── Language toggle ─────────────────────────────────────── */
 .lang-switch {
   display: inline-flex; align-items: center; gap: 5px;
-  font-family: inherit; font-weight: 700; font-size: 13px;
+  font-family: inherit; font-weight: 700; font-size: 12px;
   background: var(--fill-3); color: var(--label-1);
   border: none; border-radius: var(--radius-pill);
-  padding: 6px 13px; cursor: pointer;
+  padding: 6px 12px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   transition: transform 0.13s var(--tg-spring), background 0.12s;
+  -webkit-user-select: none; user-select: none;
+  white-space: nowrap;
 }
-.lang-switch:active { transform: scale(0.86); background: var(--fill-2); }
+.lang-switch:active { transform: scale(0.84); background: var(--fill-2); }
 .lang-switching { animation: langTogglePop 0.34s var(--tg-spring) both; }
 
-/* ── Odia script needs more vertical line-height ────────── */
-:lang(or), [data-lang="or"] { line-height: 1.60; }
+/* ── Odia script ─────────────────────────────────────────── */
+:lang(or), [data-lang="or"] { line-height: 1.65; }
 :lang(or) h1, [data-lang="or"] h1,
-:lang(or) h2, [data-lang="or"] h2 { line-height: 1.38; }
+:lang(or) h2, [data-lang="or"] h2 { line-height: 1.4; }
 
-/* ── Misc ───────────────────────────────────────────────── */
+/* ── Misc ────────────────────────────────────────────────── */
 :focus         { outline: none; }
 :focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 2px; border-radius: 4px; }
 ::selection    { background: rgba(0,122,255,.2); }
 ::-webkit-scrollbar { display: none; }
+scrollbar-width: none;
 .scroll-x {
   display: flex; gap: 8px; overflow-x: auto;
   -ms-overflow-style: none; scrollbar-width: none;
 }
 .scroll-x::-webkit-scrollbar { display: none; }
+
+/* ── Section header ─────────────────────────────────────── */
+.section-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--label-3);
+  margin: 0 0 7px 2px;
+}
