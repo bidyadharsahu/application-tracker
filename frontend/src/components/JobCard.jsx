@@ -13,23 +13,22 @@ import { toast } from "sonner";
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const { t, lang } = useI18n();
-  const isApplied    = !!job.applied;
-  const today        = new Date().toISOString().split("T")[0];
-  const isFuture     = job.start_date && job.start_date > today;
-  const allBlank     = !job.start_date && !job.exam_date && !job.last_date;
-  const isNotStarted = isFuture || allBlank;
+  const isApplied = !!job.applied;
+  const today     = new Date().toISOString().split("T")[0];
+  const isFuture  = job.start_date && job.start_date > today;
+  const allBlank  = !job.start_date && !job.exam_date && !job.last_date;
+  const isSoon    = isFuture || allBlank;
 
-  const [docsOpen,   setDocsOpen]   = useState(false);
-  const [docs,       setDocs]       = useState([]);
-  const [uploading,  setUploading]  = useState(false);
+  const [docsOpen,  setDocsOpen]  = useState(false);
+  const [docs,      setDocs]      = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const examDays     = job.exam_date && !isMonthOnly(job.exam_date)
-    ? Math.ceil((new Date(job.exam_date) - new Date()) / 86400000)
-    : null;
+    ? Math.ceil((new Date(job.exam_date) - new Date()) / 86400000) : null;
   const deadlineDays = job.last_date ? daysUntil(job.last_date) : null;
   const isUrgent     = !isApplied && (
     (deadlineDays !== null && deadlineDays <= 3 && deadlineDays >= 0) ||
-    (examDays     !== null && examDays     >= 0 && examDays     <= 5)
+    (examDays !== null && examDays >= 0 && examDays <= 5)
   );
 
   useEffect(() => {
@@ -54,10 +53,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   };
 
   const deleteDoc = async (doc) => {
-    const confirmMsg = lang === "or"
-      ? `"${doc.file_name}" ଡିଲିଟ କରିବେ?`
-      : `Delete "${doc.file_name}"?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!window.confirm(lang === "or" ? `"${doc.file_name}" ଡିଲିଟ କରିବେ?` : `Delete "${doc.file_name}"?`)) return;
     await supabase.storage.from("job-documents").remove([doc.file_path]);
     await supabase.from("job_documents").delete().eq("id", doc.id);
     setDocs(prev => prev.filter(d => d.id !== doc.id));
@@ -74,16 +70,11 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     toast.success(t("copied", { label: t(labelKey) }));
   };
 
-  const dotColor = isApplied    ? "var(--ios-green)"
-                 : isUrgent     ? "var(--ios-red)"
-                 : isNotStarted ? "var(--ios-purple)"
-                 :                "var(--ios-orange)";
-
-  const handleToggleClick = () => {
+  const handleToggle = () => {
     if (!onToggle) return;
-    const wasApplied = isApplied;
+    const was = isApplied;
     onToggle(job);
-    if (!wasApplied) {
+    if (!was) {
       toast.success(t("marked_applied_toast"), {
         action: { label: t("undo_btn"), onClick: () => onToggle(job) },
       });
@@ -95,68 +86,67 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     }
   };
 
-  // Exam date display: month-only gets special note label
-  const examDateValue = job.exam_date
-    ? isMonthOnly(job.exam_date)
-      ? getMonthName(job.exam_date)
-      : formatDate(job.exam_date)
+  const dotColor = isApplied ? "var(--green)" : isUrgent ? "var(--red)"
+                 : isSoon    ? "var(--purple)" : "var(--orange)";
+
+  const examVal = job.exam_date
+    ? isMonthOnly(job.exam_date) ? getMonthName(job.exam_date) : formatDate(job.exam_date)
     : t("tba");
 
-  const examDateSub = isMonthOnly(job.exam_date)
-    ? (lang === "or" ? "ମାସ ଅନୁমାନ — ତାରିଖ ଘୋଷଣା ବାକି" : "Month approx — exact date TBA")
+  const examSub = isMonthOnly(job.exam_date)
+    ? (lang === "or" ? "ମାସ ଅନୁମାନ — ତାରିଖ ବାକି" : "Month approx — exact TBA")
     : examDays !== null
-      ? examDays < 0  ? t("passed")
+      ? examDays < 0 ? t("passed")
       : examDays === 0 ? t("today")
       : examDays === 1 ? t("tomorrow")
       : t("days_away", { n: examDays })
       : null;
 
-  const examSubColor = isMonthOnly(job.exam_date) ? "var(--ios-purple)"
-    : examDays !== null && examDays <= 1 ? "var(--ios-red)"
+  const examSubColor = isMonthOnly(job.exam_date) ? "var(--purple)"
+    : examDays !== null && examDays <= 1 ? "var(--red)"
     : examDays !== null && examDays <= 7 ? "#B25900"
-    : "var(--label-3)";
+    : "var(--l3)";
 
   return (
-    <article data-testid={`job-card-${job.id}`} className="ios-card" style={{ overflow: "hidden" }}>
-      <div style={{ padding: "16px 16px 14px" }}>
+    <article className="ios-card" style={{ overflow: "hidden" }}>
+      <div style={{ padding: "15px 15px 13px" }}>
 
-        {/* Title row */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+        {/* ── Title row ── */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 9 }}>
+          {/* Status dot */}
           <div style={{
-            width: 8, height: 8, borderRadius: "50%",
-            background: dotColor, marginTop: 7, flexShrink: 0,
+            width: 8, height: 8, borderRadius: "50%", background: dotColor,
+            marginTop: 6, flexShrink: 0,
+            boxShadow: `0 0 0 3px ${dotColor}22`,
           }} />
-          <h3 data-testid={`job-title-${job.id}`} style={{
-            fontSize: 16, fontWeight: 700, color: "var(--label-1)",
+          <h3 style={{
+            fontSize: 15, fontWeight: 700, color: "var(--l1)",
             flex: 1, lineHeight: 1.35, letterSpacing: "-.01em",
           }}>
             {job.job_name}
           </h3>
-          <span
-            data-testid={`status-stamp-${job.id}`}
-            className={`status-pill ${
-              isApplied    ? "pill-applied" :
-              isUrgent     ? "pill-urgent"  :
-              isNotStarted ? "pill-notice"  : "pill-pending"
-            }`}
-            style={{ flexShrink: 0 }}
-          >
-            {isApplied    ? `✓ ${t("status_applied")}` :
-             isUrgent     ? t("status_urgent")          :
-             isNotStarted ? t("status_soon")            :
-                            t("status_pending")}
+          {/* Status pill */}
+          <span className={`status-pill ${
+            isApplied ? "pill-applied" : isUrgent ? "pill-urgent"
+            : isSoon  ? "pill-notice"  : "pill-pending"
+          }`} style={{ flexShrink: 0 }}>
+            {isApplied ? `✓ ${t("status_applied")}`
+             : isUrgent ? t("status_urgent")
+             : isSoon   ? t("status_soon")
+             : t("status_pending")}
           </span>
         </div>
 
-        {/* Tags */}
+        {/* ── Tags ── */}
         {job.tags && (
-          <div className="scroll-x" style={{ marginBottom: 10, paddingLeft: 18 }}>
+          <div className="scroll-x" style={{ marginBottom: 9, paddingLeft: 17 }}>
             {job.tags.split(",").map((tg, i) => tg.trim() && (
               <span key={i} style={{
                 display: "inline-flex", alignItems: "center", gap: 3,
-                background: "var(--tint-blue-bg)", color: "var(--ios-blue)",
+                background: "rgba(0,122,255,.10)", color: "var(--blue)",
+                border: ".5px solid rgba(0,122,255,.18)",
                 padding: "3px 9px", borderRadius: 99,
-                fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
+                fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
               }}>
                 <Tag size={9} />{tg.trim()}
               </span>
@@ -164,33 +154,17 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           </div>
         )}
 
-        {/* Auto-match badge */}
-        {job.source && job.source !== "manual" && (
-          <div style={{
-            background: "var(--tint-green-bg)", borderRadius: 10,
-            padding: "8px 12px", marginBottom: 10, marginLeft: 18,
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#1A8A3D" }}>
-              {lang === "or" ? "ସ୍ୱୟଂ ଖୋଜ" : "Auto-found"} · {job.match_score}%
-            </div>
-            {job.match_reason && (
-              <div style={{ fontSize: 12, color: "var(--label-3)", marginTop: 2 }}>
-                {job.match_reason}
-              </div>
-            )}
-          </div>
-        )}
+        <div style={{ paddingLeft: 17 }}>
 
-        <div style={{ paddingLeft: 18 }}>
-          {/* Date cells */}
+          {/* ── Date cells ── */}
           <div style={{
             display: "grid",
             gridTemplateColumns: isApplied ? "1fr" : "1fr 1fr",
-            gap: 8, marginBottom: 10,
+            gap: 7, marginBottom: 9,
           }}>
             {!isApplied && (
               <DateCell
-                icon={<CalendarDays size={13} />}
+                icon={<CalendarDays size={12} />}
                 label={t("last_date")}
                 value={job.last_date ? formatDate(job.last_date) : t("tba")}
                 sub={
@@ -198,50 +172,51 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                     ? deadlineDays === 0 ? t("today")
                     : deadlineDays === 1 ? t("tomorrow")
                     : t("days_left", { n: deadlineDays })
-                    : deadlineDays !== null && deadlineDays < 0
-                    ? t("overdue") : null
+                    : deadlineDays !== null && deadlineDays < 0 ? t("overdue") : null
                 }
-                subColor={deadlineDays !== null && deadlineDays <= 1 ? "var(--ios-red)" : "#B25900"}
-                testId={`job-last-date-${job.id}`}
+                subColor={deadlineDays !== null && deadlineDays <= 1 ? "var(--red)" : "#B25900"}
               />
             )}
             <DateCell
-              icon={<FileText size={13} />}
+              icon={<FileText size={12} />}
               label={t("exam_date")}
-              value={examDateValue}
-              sub={examDateSub}
+              value={examVal}
+              sub={examSub}
               subColor={examSubColor}
-              testId={`job-exam-date-${job.id}`}
             />
           </div>
 
-          {/* Countdown bar */}
+          {/* ── Countdown ── */}
           {!isApplied && job.last_date && (
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 9 }}>
               <Countdown targetDate={job.last_date} />
             </div>
           )}
 
-          {/* Notes */}
+          {/* ── Notes ── */}
           {job.notes && (
-            <div data-testid={`job-notes-${job.id}`} style={{
-              background: "var(--bg-tertiary)", borderRadius: 10,
-              padding: "10px 12px", marginBottom: 10,
-              fontSize: 14, color: "var(--label-2)", lineHeight: 1.55,
+            <div style={{
+              background: "rgba(120,120,128,.07)",
+              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+              border: ".5px solid rgba(255,255,255,.50)",
+              borderRadius: 10, padding: "10px 12px", marginBottom: 9,
+              fontSize: 14, color: "var(--l2)", lineHeight: 1.55,
             }}>
               {job.notes}
             </div>
           )}
 
-          {/* Login credentials */}
+          {/* ── Login credentials ── */}
           {(job.app_username || job.app_password) && (
             <div style={{
-              background: "var(--tint-blue-bg)", borderRadius: 10,
-              padding: "10px 12px", marginBottom: 10,
+              background: "rgba(0,122,255,.08)",
+              backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+              border: ".5px solid rgba(0,122,255,.16)",
+              borderRadius: 10, padding: "10px 12px", marginBottom: 9,
             }}>
               <div style={{
-                fontSize: 11, fontWeight: 700, color: "var(--ios-blue)",
-                textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 7,
+                fontSize: 10, fontWeight: 700, color: "var(--blue)",
+                textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 7,
               }}>
                 {t("login_label")}
               </div>
@@ -251,13 +226,15 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                     className="tg-press"
                     style={{
                       display: "flex", alignItems: "center", gap: 5,
-                      background: "#fff", border: "none", borderRadius: 8,
-                      padding: "7px 11px", fontSize: 14, fontWeight: 600,
-                      color: "var(--label-1)", cursor: "pointer",
+                      background: "rgba(255,255,255,.70)",
+                      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                      border: ".5px solid rgba(255,255,255,.80)",
+                      borderRadius: 8, padding: "7px 11px",
+                      fontSize: 13, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
                     }}>
-                    <User size={13} color="var(--ios-blue)" />
+                    <User size={12} color="var(--blue)" />
                     {job.app_username}
-                    <Copy size={11} color="var(--label-4)" />
+                    <Copy size={10} color="var(--l4)" />
                   </button>
                 )}
                 {job.app_password && (
@@ -265,37 +242,41 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                     className="tg-press"
                     style={{
                       display: "flex", alignItems: "center", gap: 5,
-                      background: "#fff", border: "none", borderRadius: 8,
-                      padding: "7px 11px", fontSize: 14, fontWeight: 600,
-                      color: "var(--label-1)", cursor: "pointer",
+                      background: "rgba(255,255,255,.70)",
+                      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                      border: ".5px solid rgba(255,255,255,.80)",
+                      borderRadius: 8, padding: "7px 11px",
+                      fontSize: 13, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
                     }}>
-                    <Lock size={13} color="var(--ios-blue)" />
+                    <Lock size={12} color="var(--blue)" />
                     {job.app_password}
-                    <Copy size={11} color="var(--label-4)" />
+                    <Copy size={10} color="var(--l4)" />
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          {/* Documents */}
-          <div style={{ marginBottom: 12 }}>
+          {/* ── Documents accordion ── */}
+          <div style={{ marginBottom: 10 }}>
             <button type="button" onClick={() => setDocsOpen(p => !p)}
               className="tg-press"
               style={{
-                display: "flex", alignItems: "center", gap: 8,
-                width: "100%", background: "var(--bg-tertiary)",
-                border: "none", borderRadius: 10,
-                padding: "10px 14px", fontSize: 14, fontWeight: 600,
-                color: "var(--label-2)", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 8, width: "100%",
+                background: "rgba(120,120,128,.08)",
+                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                border: ".5px solid rgba(255,255,255,.45)",
+                borderRadius: docsOpen ? "10px 10px 0 0" : 10,
+                padding: "10px 13px", fontSize: 14, fontWeight: 600,
+                color: "var(--l2)", cursor: "pointer", transition: "border-radius .15s",
               }}>
-              <Paperclip size={15} color="var(--label-3)" />
+              <Paperclip size={14} color="var(--l3)" />
               <span>{t("documents")}</span>
               {docs.length > 0 && (
                 <span style={{
-                  background: "var(--ios-blue)", color: "#fff",
+                  background: "var(--blue)", color: "#fff",
                   borderRadius: 99, padding: "0 7px",
-                  fontSize: 11, fontWeight: 700, marginLeft: 2,
+                  fontSize: 10, fontWeight: 700, marginLeft: 2,
                 }}>
                   {docs.length}
                 </span>
@@ -307,31 +288,37 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
             {docsOpen && (
               <div className="a-in" style={{
-                background: "var(--bg-tertiary)",
-                borderRadius: "0 0 10px 10px", padding: 12,
+                background: "rgba(120,120,128,.06)",
+                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                border: ".5px solid rgba(255,255,255,.40)",
+                borderTop: "none",
+                borderRadius: "0 0 10px 10px", padding: 11,
               }}>
-                <div className="scroll-x" style={{ marginBottom: docs.length > 0 ? 10 : 0 }}>
+                <div className="scroll-x" style={{ marginBottom: docs.length > 0 ? 9 : 0 }}>
                   {["admit_card", "hall_ticket", "result", "other"].map(type => (
                     <label key={type} className="tg-press" style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
-                      background: "#fff", borderRadius: 99, padding: "7px 13px",
-                      fontSize: 13, fontWeight: 600, color: "var(--label-2)",
-                      cursor: "pointer", flexShrink: 0, opacity: uploading ? .5 : 1,
+                      background: "rgba(255,255,255,.65)",
+                      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                      border: ".5px solid rgba(255,255,255,.70)",
+                      borderRadius: 99, padding: "6px 12px",
+                      fontSize: 12, fontWeight: 600, color: "var(--l2)",
+                      cursor: "pointer", flexShrink: 0,
+                      opacity: uploading ? .5 : 1,
                     }}>
                       {type.replace("_", " ")}
                       <input type="file" style={{ display: "none" }}
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        disabled={uploading}
+                        accept=".pdf,.jpg,.jpeg,.png" disabled={uploading}
                         onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], type)} />
                     </label>
                   ))}
                 </div>
                 {docs.map(doc => (
                   <div key={doc.id} style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    padding: "9px 0", borderTop: "0.5px solid var(--separator)",
+                    display: "flex", alignItems: "center", gap: 9,
+                    padding: "8px 0", borderTop: ".5px solid var(--sep)",
                   }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>
+                    <span style={{ fontSize: 17, flexShrink: 0 }}>
                       {doc.document_type === "admit_card" ? "🎫"
                        : doc.document_type === "hall_ticket" ? "🎟"
                        : doc.document_type === "result" ? "📊" : "📄"}
@@ -340,19 +327,16 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                       className="tg-press"
                       style={{
                         flex: 1, textAlign: "left", background: "none", border: "none",
-                        fontSize: 14, fontWeight: 600, color: "var(--ios-blue)",
+                        fontSize: 13, fontWeight: 600, color: "var(--blue)",
                         cursor: "pointer", overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0,
                       }}>
                       {doc.document_type?.replace("_", " ")} — {doc.file_name}
                     </button>
-                    <button type="button" onClick={() => deleteDoc(doc)}
-                      className="tg-press"
-                      style={{
-                        background: "none", border: "none", color: "var(--ios-red)",
-                        cursor: "pointer", padding: 4, display: "flex", flexShrink: 0,
-                      }}>
-                      <Trash2 size={14} />
+                    <button type="button" onClick={() => deleteDoc(doc)} className="tg-press"
+                      style={{ background: "none", border: "none", color: "var(--red)",
+                        cursor: "pointer", padding: 4, display: "flex", flexShrink: 0 }}>
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 ))}
@@ -360,81 +344,84 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             )}
           </div>
 
-          <div style={{ height: 0.5, background: "var(--separator)", marginBottom: 12 }} />
+          {/* Separator */}
+          <div style={{ height: .5, background: "var(--sep)", marginBottom: 11 }} />
 
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: 8 }}>
+          {/* ── Action buttons — iPhone 17 style ── */}
+          <div style={{ display: "flex", gap: 7 }}>
             {isFuture ? (
               <div style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                background: "var(--bg-tertiary)", borderRadius: 99,
-                padding: "11px", fontSize: 14, fontWeight: 600, color: "var(--label-3)",
+                background: "rgba(120,120,128,.08)",
+                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                borderRadius: 12, padding: "11px 8px",
+                fontSize: 13, fontWeight: 600, color: "var(--l3)",
+                border: ".5px solid rgba(255,255,255,.40)",
               }}>
                 {t("opens_on", { date: formatDate(job.start_date) })}
               </div>
             ) : isApplied ? (
               <a href={job.apply_link} target="_blank" rel="noopener noreferrer"
-                data-testid={`apply-link-${job.id}`}
                 className="btn btn-success-tinted tg-press"
                 style={{ flex: 1, textDecoration: "none" }}>
-                <CheckCircle2 size={16} strokeWidth={2.5} />
+                <CheckCircle2 size={15} strokeWidth={2.5} />
                 {t("applied_open_link")}
               </a>
             ) : (
               <a href={job.apply_link} target="_blank" rel="noopener noreferrer"
-                data-testid={`apply-link-${job.id}`}
                 className="btn btn-filled tg-press"
                 style={{ flex: 1, textDecoration: "none" }}>
                 {t("apply_now")}
-                <ExternalLink size={15} strokeWidth={2.5} />
+                <ExternalLink size={14} strokeWidth={2.5} />
               </a>
             )}
 
-            <button type="button" onClick={handleToggleClick}
-              data-testid={`toggle-applied-${job.id}`}
-              className="btn btn-gray tg-press"
-              style={{ flexShrink: 0 }}
-              title={isApplied ? t("undo_btn") : t("mark_btn")}>
-              {isApplied ? <RotateCcw size={16} /> : <Circle size={16} />}
+            <button type="button" onClick={handleToggle}
+              className="btn btn-gray tg-press" style={{ flexShrink: 0 }}>
+              {isApplied ? <RotateCcw size={15} /> : <Circle size={15} />}
               {isApplied ? t("undo_btn") : t("mark_btn")}
             </button>
 
             {admin && (
               <>
-                <button type="button" onClick={() => onEdit && onEdit(job)}
-                  data-testid={`edit-job-${job.id}`}
+                <button type="button" onClick={() => onEdit?.(job)}
                   className="btn btn-gray btn-icon tg-press">
-                  <Pencil size={16} />
+                  <Pencil size={15} />
                 </button>
-                <button type="button" onClick={() => onDelete && onDelete(job)}
-                  data-testid={`delete-job-${job.id}`}
+                <button type="button" onClick={() => onDelete?.(job)}
                   className="btn btn-danger-tinted btn-icon tg-press">
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
               </>
             )}
           </div>
+
         </div>
       </div>
     </article>
   );
 }
 
-function DateCell({ icon, label, value, sub, subColor, testId }) {
+function DateCell({ icon, label, value, sub, subColor }) {
   return (
-    <div style={{ background: "var(--bg-tertiary)", borderRadius: 10, padding: "10px 12px" }}>
+    <div style={{
+      background: "rgba(120,120,128,.08)",
+      backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+      border: ".5px solid rgba(255,255,255,.45)",
+      borderRadius: 10, padding: "9px 11px",
+    }}>
       <div style={{
-        display: "flex", alignItems: "center", gap: 4,
-        fontSize: 11, fontWeight: 600, color: "var(--label-4)",
-        textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 4,
+        display: "flex", alignItems: "center", gap: 3,
+        fontSize: 10, fontWeight: 700, color: "var(--l4)",
+        textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4,
       }}>
         {icon}{label}
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--label-1)" }} data-testid={testId}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--l1)" }}>
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 12, fontWeight: 700, color: subColor, marginTop: 2 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: subColor, marginTop: 2 }}>
           {sub}
         </div>
       )}
