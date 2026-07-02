@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import { Briefcase, CheckCircle2, Bell, Settings, Languages } from "lucide-react";
+import { Briefcase, CheckCircle2, Bell, Settings } from "lucide-react";
 import Landing from "./pages/Landing";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -10,45 +11,48 @@ import { supabase } from "./lib/supabase";
 import { I18nProvider, useI18n } from "./lib/i18n";
 import "./App.css";
 
-const RequireAuth = ({ children }) => isAuthed() ? children : <Navigate to="/admin/login" replace />;
+const RequireAuth = ({ children }) =>
+  isAuthed() ? children : <Navigate to="/admin/login" replace />;
 
 function TabBar({ urgentCount }) {
-  const location  = useLocation();
-  const navigate  = useNavigate();
-  const { t }     = useI18n();
-  const path      = location.pathname;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { t }    = useI18n();
+  const path     = location.pathname;
+
+  // Hide tab bar on admin screens
   if (path.startsWith("/admin")) return null;
 
   const tab = new URLSearchParams(location.search).get("tab");
 
   const tabs = [
-    { to: "/",             icon: Briefcase,    labelKey: "nav_home",    key: "home",    on: !tab },
-    { to: "/?tab=applied", icon: CheckCircle2, labelKey: "nav_applied", key: "applied", on: tab === "applied" },
-    { to: "/?tab=notices", icon: Bell,         labelKey: "nav_notices", key: "notices", on: tab === "notices" },
-    { to: "/admin/login",  icon: Settings,     labelKey: "nav_admin",   key: "admin",   on: false },
+    { to: "/",             icon: Briefcase,    key: "home",    labelKey: "nav_home",    on: !tab },
+    { to: "/?tab=applied", icon: CheckCircle2, key: "applied", labelKey: "nav_applied", on: tab === "applied" },
+    { to: "/?tab=notices", icon: Bell,         key: "notices", labelKey: "nav_notices", on: tab === "notices" },
+    { to: "/admin/login",  icon: Settings,     key: "admin",   labelKey: "nav_admin",   on: false },
   ];
 
   return (
     <nav className="tab-bar" role="navigation" aria-label="Main navigation">
-      {tabs.map(({ to, icon: Icon, labelKey, key, on }) => (
+      {tabs.map(({ to, icon: Icon, key, labelKey, on }) => (
         <button
           key={key}
           type="button"
-          className={"tab-item tg-press" + (on ? " active" : "")}
+          className={"tab-item" + (on ? " active" : "")}
           onClick={() => navigate(to)}
           aria-current={on ? "page" : undefined}
           aria-label={t(labelKey)}
         >
           <div className="tab-icon-wrap">
             <Icon
-              size={24}
-              strokeWidth={on ? 2.2 : 1.7}
+              size={23}
+              strokeWidth={on ? 2.2 : 1.6}
               color={on ? "var(--ios-blue)" : "var(--label-3)"}
             />
           </div>
           <span className="tab-label">{t(labelKey)}</span>
           {key === "home" && urgentCount > 0 && !on && (
-            <span className="tab-badge">{urgentCount}</span>
+            <span className="tab-badge">{urgentCount > 9 ? "9+" : urgentCount}</span>
           )}
         </button>
       ))}
@@ -74,9 +78,8 @@ function AppShell() {
       (applied || []).forEach(j => {
         const d = Math.ceil((new Date(j.exam_date) - today) / 86400000);
         if ([0, 1, 7].includes(d)) {
-          new Notification("Job Ledger", {
-            body: d === 0
-              ? `Exam TODAY: ${j.job_name}`
+          new Notification("Job Ledger — Exam Alert", {
+            body: d === 0 ? `Exam TODAY: ${j.job_name}`
               : d === 1 ? `Exam TOMORROW: ${j.job_name}`
               : `Exam in 7 days: ${j.job_name}`,
             icon: "/icon-192.png",
@@ -94,9 +97,8 @@ function AppShell() {
         const d = Math.ceil((new Date(j.last_date) - today) / 86400000);
         if (d <= 3 && d >= 0) urg++;
         if ([0, 1, 3].includes(d)) {
-          new Notification("Apply Deadline", {
-            body: d === 0
-              ? `Last day to apply: ${j.job_name}`
+          new Notification("Job Ledger — Apply Deadline", {
+            body: d === 0 ? `Last day to apply: ${j.job_name}`
               : `Apply in ${d} day${d !== 1 ? "s" : ""}: ${j.job_name}`,
             icon: "/icon-192.png",
             tag: `dl-${j.job_name}-${d}`,
@@ -109,12 +111,13 @@ function AppShell() {
   }, []);
 
   return (
+    /* .App is position:fixed per CSS — no height chain needed */
     <div className="App">
       <Routes>
-        <Route path="/"             element={<Landing setUrgentCount={setUrgentCount} />} />
-        <Route path="/admin/login"  element={<AdminLogin />} />
-        <Route path="/admin"        element={<RequireAuth><AdminDashboard /></RequireAuth>} />
-        <Route path="*"             element={<Navigate to="/" replace />} />
+        <Route path="/"            element={<Landing setUrgentCount={setUrgentCount} />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin"       element={<RequireAuth><AdminDashboard /></RequireAuth>} />
+        <Route path="*"            element={<Navigate to="/" replace />} />
       </Routes>
       <TabBar urgentCount={urgentCount} />
     </div>
@@ -131,15 +134,15 @@ export default function App() {
           richColors
           toastOptions={{
             style: {
-              background: "rgba(255,255,255,0.96)",
-              backdropFilter: "blur(20px)",
+              background: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(24px)",
               color: "#000",
-              border: "0.5px solid var(--separator)",
+              border: "0.5px solid rgba(255,255,255,0.7)",
               borderRadius: 14,
               fontFamily: "inherit",
               fontSize: 15,
               fontWeight: 600,
-              boxShadow: "0 8px 30px rgba(0,0,0,.16)",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
             },
           }}
         />
