@@ -2,11 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ══════════════════════════════════════════════════════════
-   JOB LEDGER — Telegram 2024 motion + WhatsApp-style doodle bg
-   Mobile-first. Every px tested on real Android/iOS viewport.
-══════════════════════════════════════════════════════════ */
-
 :root {
   --ios-blue:    #007AFF;
   --ios-green:   #34C759;
@@ -19,7 +14,6 @@
   --bg-primary:   #F0F2F5;
   --bg-secondary: #FFFFFF;
   --bg-tertiary:  #F0F2F5;
-  --bg-elevated:  #FFFFFF;
 
   --fill-1: rgba(120,120,128,0.20);
   --fill-2: rgba(120,120,128,0.16);
@@ -52,41 +46,43 @@
   --elev-3:   0 8px 30px rgba(0,0,0,0.13);
   --elev-nav: 0 -0.5px 0 rgba(0,0,0,0.10);
 
-  /* CRITICAL layout: tab bar + safe area bottom */
+  /* SCROLL FIX ROOT CAUSE:
+     Tab bar is 58px tall + safe-area-inset-bottom (home bar on notched phones).
+     Every scrollable region must pad by this exact value + breathing room. */
   --tabbar-h: 58px;
   --sat: env(safe-area-inset-top,    0px);
   --sab: env(safe-area-inset-bottom, 0px);
 
-  /* Telegram-exact easing */
   --tg-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --tg-out:    cubic-bezier(0.22,  1,     0.36, 1);
   --tg-swift:  cubic-bezier(0.4,   0,     0.2,  1);
   --ease-spring:   var(--tg-spring);
   --ease-out-soft: var(--tg-out);
-  --ease-swift:    var(--tg-swift);
 }
 
-/* ── Reset ──────────────────────────────────────────────── */
+/* ── Reset ────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  /* Let inputs work — only block horizontal pan */
   touch-action: pan-y;
   overscroll-behavior: none;
-  /* Prevent iOS font size inflation */
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
-
 html, body {
-  /* Use dvh so keyboard resize doesn't break layout */
+  height: 100%;
   height: 100dvh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── DOODLE BACKGROUND — WhatsApp / Telegram style ───────
+   Small job-themed line-art icons tiled seamlessly.
+   SVG encoded as a data URI so it works without any network
+   request and never breaks on mobile.
+───────────────────────────────────────────────────────── */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
                'Inter', system-ui, sans-serif;
@@ -94,96 +90,91 @@ body {
   line-height: 1.45;
   letter-spacing: -0.01em;
   color: var(--label-1);
-  /* Doodle background — WhatsApp/Telegram style */
-  background-color: #E8EBF0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23C5CAD6' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round' opacity='0.55'%3E%3C!-- Briefcase --%3E%3Crect x='18' y='28' width='22' height='16' rx='3'/%3E%3Cpath d='M22 28v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3'/%3E%3Cline x1='29' y1='36' x2='29' y2='36.5'/%3E%3C!-- Calendar --%3E%3Crect x='70' y='14' width='22' height='20' rx='3'/%3E%3Cline x1='70' y1='20' x2='92' y2='20'/%3E%3Cline x1='76' y1='14' x2='76' y2='10'/%3E%3Cline x1='86' y1='14' x2='86' y2='10'/%3E%3Ccircle cx='76' cy='27' r='1.2'/%3E%3Ccircle cx='81' cy='27' r='1.2'/%3E%3Ccircle cx='86' cy='27' r='1.2'/%3E%3C!-- Checkmark circle --%3E%3Ccircle cx='25' cy='72' r='10'/%3E%3Cpath d='M20 72l4 4 7-8'/%3E%3C!-- Bell --%3E%3Cpath d='M81 65 a8 8 0 0 1 16 0 v8 H81z'/%3E%3Cpath d='M85 73 a4 2 0 0 0 8 0'/%3E%3Cline x1='89' y1='57' x2='89' y2='55'/%3E%3C!-- Star --%3E%3Cpolygon points='29,96 31,103 38,103 33,107 35,114 29,110 23,114 25,107 20,103 27,103' transform='scale(0.55) translate(24,64)'/%3E%3C!-- Pencil --%3E%3Cpath d='M95 80 l8-8 5 5 -8 8z'/%3E%3Cpath d='M95 80 l-3 8 8-3z'/%3E%3C!-- Small dots --%3E%3Ccircle cx='50' cy='10' r='1.5'/%3E%3Ccircle cx='10' cy='50' r='1.5'/%3E%3Ccircle cx='110' cy='55' r='1.5'/%3E%3Ccircle cx='55' cy='110' r='1.5'/%3E%3Ccircle cx='5' cy='95' r='1'/%3E%3Ccircle cx='115' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  /* Warm grey base */
+  background-color: #DFE3EA;
+  /* Doodle tile — 140×140 grid, job-themed icons in soft blue-grey */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%23A8B4C8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' opacity='0.45'%3E%3C!-- Briefcase (top-left) --%3E%3Crect x='12' y='30' width='26' height='18' rx='3'/%3E%3Cpath d='M17 30v-4a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4'/%3E%3Cline x1='25' y1='39' x2='25' y2='39.8'/%3E%3C!-- Calendar (top-right) --%3E%3Crect x='96' y='12' width='28' height='24' rx='3'/%3E%3Cline x1='96' y1='20' x2='124' y2='20'/%3E%3Cline x1='103' y1='12' x2='103' y2='8'/%3E%3Cline x1='117' y1='12' x2='117' y2='8'/%3E%3Ccircle cx='104' cy='28' r='1.4'/%3E%3Ccircle cx='110' cy='28' r='1.4'/%3E%3Ccircle cx='116' cy='28' r='1.4'/%3E%3C!-- Tick circle (mid-left) --%3E%3Ccircle cx='20' cy='80' r='12'/%3E%3Cpath d='M14 80l5 5 8-10'/%3E%3C!-- Bell (mid-right) --%3E%3Cpath d='M106 64 a10 10 0 0 1 20 0v10h-20z'/%3E%3Cpath d='M110 74 a6 2 0 0 0 12 0'/%3E%3Cline x1='116' y1='54' x2='116' y2='52'/%3E%3C!-- Document lines (bottom-left) --%3E%3Crect x='8' y='104' width='22' height='28' rx='3'/%3E%3Cline x1='13' y1='113' x2='25' y2='113'/%3E%3Cline x1='13' y1='119' x2='25' y2='119'/%3E%3Cline x1='13' y1='125' x2='20' y2='125'/%3E%3C!-- Pencil (bottom-right) --%3E%3Cpath d='M112 108l10-10 7 7-10 10z'/%3E%3Cpath d='M112 108l-4 11 11-4z'/%3E%3C!-- Star (center) --%3E%3Cpolygon points='70,54 73,63 83,63 75,69 78,78 70,72 62,78 65,69 57,63 67,63'/%3E%3C!-- Decorative dots --%3E%3Ccircle cx='60' cy='12' r='2'/%3E%3Ccircle cx='130' cy='55' r='2'/%3E%3Ccircle cx='5'   cy='55' r='1.5'/%3E%3Ccircle cx='70'  cy='130' r='2'/%3E%3Ccircle cx='135' cy='110' r='1.5'/%3E%3Ccircle cx='45'  cy='96' r='1.5'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 120px 120px;
+  background-size: 140px 140px;
   overscroll-behavior: none;
 }
 
 #root {
+  height: 100%;
   height: 100dvh;
   overflow: hidden;
-  /* Glassmorphism layer over doodle bg */
   background: transparent;
 }
-
 .App {
+  height: 100%;
   height: 100dvh;
   display: flex;
   flex-direction: column;
   background: transparent;
-  position: relative;
 }
 
-/* ── App screen wrapper ──────────────────────────────────── */
+/* ── Screen wrapper ────────────────────────────────────── */
 .app-screen {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  /* DO NOT set overflow:hidden here — kills inner scroll */
-  min-height: 0;
   background: transparent;
+  /* overflow:hidden removed — it breaks inner scroll */
 }
 
-/* ══════════════════════════════════════════════════════════
-   SCROLL FIX — THE ACTUAL ROOT CAUSE
-   The content area must fill remaining height after the sticky
-   header, and have padding-bottom large enough to clear the
-   fixed tab bar + device safe area + breathing room.
-   Using calc() with dvh-aware values.
-══════════════════════════════════════════════════════════ */
+/* ── SCROLL REGION — the only fix needed for cut-off bottom content ──
+   padding-bottom = tab bar height + safe area bottom + breathing room.
+   min-height:0 on the flex child is MANDATORY — without it the child
+   expands to content height and overflow:auto never activates.
+─────────────────────────────────────────────────────────────────────── */
 .app-scroll {
   flex: 1;
-  min-height: 0;            /* CRITICAL: flex child must not overflow */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* Tab bar (58px) + safe area bottom + 20px breathing room */
-  padding-bottom: calc(var(--tabbar-h) + var(--sab) + 20px);
+  padding-bottom: calc(var(--tabbar-h) + var(--sab) + 24px);
 }
 
-/* ── Large title header ─────────────────────────────────── */
+/* ── Headers ───────────────────────────────────────────── */
 .nav-large-title {
+  flex-shrink: 0;
   padding: calc(10px + var(--sat)) 16px 8px;
-  background: rgba(240,242,245,0.92);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(223,227,234,0.90);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
   position: relative;
   z-index: 10;
-  flex-shrink: 0;
 }
 .nav-large-title .eyebrow {
   font-size: 12px; font-weight: 600;
-  color: var(--label-3); letter-spacing: 0.03em; margin-bottom: 1px;
+  color: var(--label-3); letter-spacing: 0.04em; margin-bottom: 1px;
 }
 .nav-large-title h1 {
   font-size: 30px; font-weight: 800;
-  letter-spacing: -0.025em;
-  color: var(--label-1); line-height: 1.15;
+  letter-spacing: -0.025em; color: var(--label-1); line-height: 1.15;
 }
 
-/* ── Inline sticky nav ──────────────────────────────────── */
 .nav-inline-title {
+  flex-shrink: 0;
   position: sticky; top: 0; z-index: 20;
-  background: rgba(240,242,245,0.94);
+  background: rgba(223,227,234,0.93);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 0.5px solid var(--separator);
   padding: calc(10px + var(--sat)) 14px 10px;
   display: flex; align-items: center; gap: 8px;
-  flex-shrink: 0;
 }
 .nav-inline-title h2 { font-size: 17px; font-weight: 700; color: var(--label-1); }
 
-/* ── Tab bar — fixed at bottom, proper height ───────────── */
+/* ── Tab bar ───────────────────────────────────────────── */
 .tab-bar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
   height: calc(var(--tabbar-h) + var(--sab));
   padding-bottom: var(--sab);
-  background: rgba(248,248,252,0.97);
+  background: rgba(240,242,245,0.97);
   backdrop-filter: blur(30px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
   border-top: 0.5px solid var(--separator);
@@ -198,28 +189,25 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   position: relative;
-  /* Min touch target 44px */
   min-height: 44px;
 }
 .tab-item .tab-icon-wrap {
   display: flex; align-items: center; justify-content: center;
-  height: 28px; width: 44px;
-  border-radius: 12px;
+  height: 28px; width: 44px; border-radius: 12px;
   transition: transform 0.15s var(--tg-spring), background 0.18s var(--tg-out);
 }
-.tab-item:active .tab-icon-wrap { transform: scale(0.78); }
+.tab-item:active .tab-icon-wrap { transform: scale(0.76); }
 .tab-item.active .tab-icon-wrap { background: rgba(0,122,255,0.12); }
 .tab-item .tab-label {
-  font-size: 10px; font-weight: 600;
-  color: var(--label-3); letter-spacing: 0.01em;
-  transition: color 0.18s var(--tg-out);
+  font-size: 10px; font-weight: 600; color: var(--label-3);
+  letter-spacing: 0.01em; transition: color 0.18s var(--tg-out);
 }
 .tab-item.active .tab-label { color: var(--ios-blue); }
 .tab-badge {
   position: absolute; top: 2px; right: calc(50% - 22px);
   min-width: 16px; height: 16px; padding: 0 4px;
   background: var(--ios-red); color: #fff;
-  border-radius: 99px; border: 1.5px solid rgba(248,248,252,0.97);
+  border-radius: 99px; border: 1.5px solid rgba(240,242,245,0.97);
   font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   animation: popIn .22s var(--tg-spring) both;
@@ -237,26 +225,36 @@ body {
   to   { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
-/* ── Cards ──────────────────────────────────────────────── */
+/* ── iPhone 17-style glassmorphism cards ───────────────── */
 .ios-card {
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
   border-radius: var(--radius-lg);
+  border: 0.5px solid rgba(255,255,255,0.7);
   box-shadow: var(--elev-1);
 }
 .ios-card-press {
   cursor: pointer;
   transition: transform 0.15s var(--tg-spring),
               box-shadow 0.15s var(--tg-out),
-              background 0.1s;
+              background 0.12s;
 }
 .ios-card-press:active {
   transform: scale(0.972);
   box-shadow: var(--elev-2);
-  background: rgba(0,0,0,0.02);
+  background: rgba(255,255,255,0.65);
 }
 
-/* ── Inset grouped list ─────────────────────────────────── */
-.ios-list { background: var(--bg-secondary); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--elev-1); }
+/* ── Inset list ────────────────────────────────────────── */
+.ios-list {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-radius: var(--radius-lg);
+  border: 0.5px solid rgba(255,255,255,0.7);
+  overflow: hidden; box-shadow: var(--elev-1);
+}
 .ios-row {
   display: flex; align-items: center; gap: 12px;
   padding: 13px 16px; min-height: 48px;
@@ -267,9 +265,12 @@ body {
 .ios-row-press { cursor: pointer; transition: background .1s; }
 .ios-row-press:active { background: var(--fill-4); }
 
-/* ── Stat tile ──────────────────────────────────────────── */
+/* ── Stat tile ─────────────────────────────────────────── */
 .stat-tile {
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 0.5px solid rgba(255,255,255,0.65);
   border-radius: var(--radius-lg);
   padding: 16px 8px 12px;
   text-align: center; cursor: pointer;
@@ -277,12 +278,11 @@ body {
   transition: transform 0.17s var(--tg-spring), box-shadow 0.17s var(--tg-out);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  position: relative;
 }
-.stat-tile:active { transform: scale(0.88); box-shadow: var(--elev-2); }
+.stat-tile:active { transform: scale(0.87); box-shadow: var(--elev-2); }
 .stat-tile.on { box-shadow: 0 0 0 2px var(--ios-blue), var(--elev-2); }
 
-/* ── Buttons ────────────────────────────────────────────── */
+/* ── Buttons ───────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   font-family: inherit; font-weight: 600; font-size: 16px;
@@ -293,96 +293,96 @@ body {
   white-space: nowrap;
   border-radius: var(--radius-md);
   min-height: 48px; padding: 0 18px;
-  /* Prevent double-tap zoom on mobile */
   -webkit-user-select: none; user-select: none;
 }
 .btn:active { transform: scale(0.93); opacity: 0.80; }
 .btn:disabled { opacity: 0.38; pointer-events: none; }
 
-.btn-filled         { background: var(--ios-blue);       color: #fff; }
-.btn-tinted         { background: var(--tint-blue-bg);   color: var(--ios-blue); }
-.btn-gray           { background: var(--fill-3);          color: var(--label-1); }
-.btn-plain          { background: transparent;            color: var(--ios-blue); padding: 0 8px; min-height: 36px; }
-.btn-danger-tinted  { background: var(--tint-red-bg);    color: var(--ios-red); }
-.btn-success-tinted { background: var(--tint-green-bg);  color: var(--ios-green); }
-
+.btn-filled         { background: var(--ios-blue);      color: #fff; }
+.btn-tinted         { background: var(--tint-blue-bg);  color: var(--ios-blue); }
+.btn-gray           { background: var(--fill-3);         color: var(--label-1); }
+.btn-plain          { background: transparent;           color: var(--ios-blue); padding: 0 8px; min-height: 36px; }
+.btn-danger-tinted  { background: var(--tint-red-bg);   color: var(--ios-red); }
+.btn-success-tinted { background: var(--tint-green-bg); color: var(--ios-green); }
 .btn-sm   { min-height: 36px; padding: 0 13px; font-size: 14px; border-radius: var(--radius-sm); }
 .btn-icon { width: 38px; height: 38px; padding: 0; border-radius: var(--radius-sm); min-height: 38px; }
 
-/* ── Status pill ────────────────────────────────────────── */
+/* ── Status pill ───────────────────────────────────────── */
 .status-pill {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
-  padding: 3px 9px; border-radius: var(--radius-pill);
-  white-space: nowrap;
+  padding: 3px 9px; border-radius: var(--radius-pill); white-space: nowrap;
 }
 .pill-pending { background: var(--tint-orange-bg); color: #B25900; }
 .pill-applied { background: var(--tint-green-bg);  color: #1A8A3D; }
 .pill-notice  { background: var(--tint-purple-bg); color: #8A38B5; }
 .pill-urgent  { background: var(--tint-red-bg);    color: #D6291E; }
 
-/* ── Inputs — stable on mobile, no keyboard jump ───────── */
+/* ── Inputs ────────────────────────────────────────────────────────
+   KEYBOARD POP BUG ROOT CAUSE: font-size < 16px causes iOS Safari
+   to auto-zoom the viewport on focus, which:
+     (a) scrolls the view unexpectedly
+     (b) re-triggers layout causing the keyboard to "re-open"
+   FIX: EVERY input MUST have font-size: 16px minimum.
+   Also: position:fixed on the sheet panel prevents scroll-jank.
+──────────────────────────────────────────────────────────────────── */
 .ios-input {
   width: 100%;
-  background: var(--bg-tertiary);
+  background: rgba(240,242,245,0.90);
   border: 1.5px solid transparent;
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 13px 14px;
   font-family: inherit;
-  font-size: 16px;          /* 16px prevents iOS auto-zoom on focus */
+  font-size: 16px;        /* ← CRITICAL: prevents iOS auto-zoom on focus */
   color: var(--label-1);
   outline: none;
   transition: border-color 0.16s var(--tg-out), background 0.14s;
   -webkit-appearance: none;
   min-height: 48px;
-  /* Prevent layout shift when keyboard opens */
+  /* Stabilise the element so focus doesn't cause layout reflow */
   position: relative;
+  z-index: 1;
 }
 .ios-input::placeholder { color: var(--label-4); }
 .ios-input:focus {
   border-color: var(--ios-blue);
-  background: var(--bg-secondary);
+  background: rgba(255,255,255,0.95);
   box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
 }
+textarea.ios-input { resize: vertical; min-height: 80px; }
+
 .ios-label {
   font-size: 13px; font-weight: 600;
   color: var(--label-2); margin-bottom: 5px; display: block;
 }
 
-/* ── Progress bar ───────────────────────────────────────── */
+/* ── Progress bar ──────────────────────────────────────── */
 .ios-progress-track { height: 5px; background: var(--fill-3); border-radius: 99px; overflow: hidden; }
 .ios-progress-fill  { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
 
 /* ══════════════════════════════════════════════════════════
-   TELEGRAM-GRADE ANIMATION SYSTEM
+   TELEGRAM-GRADE ANIMATIONS
 ══════════════════════════════════════════════════════════ */
-
 @keyframes springUp {
   0%   { opacity: 0; transform: translateY(18px) scale(0.96); }
-  55%  { opacity: 1; transform: translateY(-2px)  scale(1.005); }
+  55%  { opacity: 1; transform: translateY(-2px) scale(1.005); }
   78%  { transform: translateY(0.5px) scale(0.999); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes popIn {
-  0%   { opacity: 0; transform: scale(0.87); }
-  55%  { transform: scale(1.022); }
+  0%   { opacity: 0; transform: scale(0.86); }
+  55%  { transform: scale(1.024); }
   78%  { transform: scale(0.996); }
   100% { opacity: 1; transform: scale(1); }
 }
 @keyframes tabSwitch {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes slideDownOut {
-  from { transform: translateY(0);    opacity: 1; }
+  from { transform: translateY(0); opacity: 1; }
   to   { transform: translateY(16px); opacity: 0; }
 }
 @keyframes shimmer {
@@ -394,13 +394,11 @@ body {
   100% { box-shadow: 0 0 0 10px rgba(255,59,48,0); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes swipeDismissRight {
-  to { transform: translateX(130%); opacity: 0; }
-}
+@keyframes swipeDismissRight { to { transform: translateX(130%); opacity: 0; } }
 @keyframes langTogglePop {
   0%   { transform: scale(1); }
-  35%  { transform: scale(0.85) rotate(-3deg); }
-  65%  { transform: scale(1.07) rotate(1deg); }
+  35%  { transform: scale(0.84) rotate(-3deg); }
+  65%  { transform: scale(1.08) rotate(1deg); }
   100% { transform: scale(1) rotate(0); }
 }
 
@@ -408,8 +406,7 @@ body {
 .a-in  { animation: fadeIn    0.16s var(--tg-swift)  both; }
 .a-pop { animation: popIn     0.26s var(--tg-spring) both; }
 .a-tab { animation: tabSwitch 0.22s var(--tg-out)    both; }
-.a-exit { animation: slideDownOut 0.18s var(--tg-swift) both; }
-
+.a-exit{ animation: slideDownOut 0.18s var(--tg-swift) both; }
 .d1 { animation-delay: 0.02s; }
 .d2 { animation-delay: 0.04s; }
 .d3 { animation-delay: 0.06s; }
@@ -417,7 +414,6 @@ body {
 .d5 { animation-delay: 0.10s; }
 .d6 { animation-delay: 0.12s; }
 
-/* Every tappable thing gets spring press */
 .tg-press {
   transition: transform 0.13s var(--tg-spring), opacity 0.10s var(--tg-out);
   -webkit-tap-highlight-color: transparent;
@@ -426,7 +422,7 @@ body {
 .tg-press:active { transform: scale(0.93); opacity: 0.76; }
 .swiping-away { animation: swipeDismissRight 0.22s var(--tg-swift) both; }
 
-/* ── Skeleton ────────────────────────────────────────────── */
+/* ── Skeleton shimmer ──────────────────────────────────── */
 .ios-skel {
   background: linear-gradient(90deg, var(--fill-3) 25%, var(--fill-4) 50%, var(--fill-3) 75%);
   background-size: 200% auto;
@@ -434,7 +430,13 @@ body {
   border-radius: var(--radius-xs);
 }
 
-/* ── Bottom sheet / modal ────────────────────────────────── */
+/* ── Bottom sheet ──────────────────────────────────────────────────
+   KEYBOARD POP FIX:
+   The sheet panel must NOT scroll-into-view when an input is focused.
+   We use position:fixed + dvh-capped height so it stays anchored
+   while the keyboard pushes the viewport up.
+   The form content inside is independently scrollable.
+──────────────────────────────────────────────────────────────────── */
 .ios-sheet {
   position: fixed; inset: 0; z-index: 300;
   display: flex; align-items: flex-end;
@@ -448,16 +450,20 @@ body {
 }
 .ios-sheet-panel {
   position: relative; z-index: 1; width: 100%;
-  background: var(--bg-primary);
+  /* Glassy modal panel */
+  background: rgba(240,242,245,0.97);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-radius: 22px 22px 0 0;
-  /* KEYBOARD FIX: use max-height with dvh to stay above keyboard */
-  max-height: 90dvh;
+  border: 0.5px solid rgba(255,255,255,0.5);
+  /* dvh-aware max so keyboard can push it without cutting content */
+  max-height: 88dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   padding: 0 16px calc(20px + var(--sab));
   animation: slideUp 0.28s var(--tg-out) both;
-  box-shadow: 0 -6px 40px rgba(0,0,0,0.18);
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.20);
 }
 .ios-sheet-handle {
   width: 36px; height: 5px;
@@ -467,40 +473,41 @@ body {
   flex-shrink: 0;
 }
 
-/* ── Language toggle ─────────────────────────────────────── */
+/* ── Language switcher ─────────────────────────────────── */
 .lang-switch {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: inherit; font-weight: 700; font-size: 12px;
-  background: var(--fill-3); color: var(--label-1);
-  border: none; border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.60); color: var(--label-1);
+  border: 0.5px solid rgba(255,255,255,0.80);
+  border-radius: var(--radius-pill);
   padding: 6px 12px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: transform 0.13s var(--tg-spring), background 0.12s;
   -webkit-user-select: none; user-select: none;
   white-space: nowrap;
 }
-.lang-switch:active { transform: scale(0.84); background: var(--fill-2); }
+.lang-switch:active { transform: scale(0.84); background: rgba(255,255,255,0.40); }
 .lang-switching { animation: langTogglePop 0.34s var(--tg-spring) both; }
 
-/* ── Odia script ─────────────────────────────────────────── */
+/* ── Odia script needs more vertical breathing ─────────── */
 :lang(or), [data-lang="or"] { line-height: 1.65; }
 :lang(or) h1, [data-lang="or"] h1,
 :lang(or) h2, [data-lang="or"] h2 { line-height: 1.4; }
 
-/* ── Misc ────────────────────────────────────────────────── */
+/* ── Misc ──────────────────────────────────────────────── */
 :focus         { outline: none; }
 :focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 2px; border-radius: 4px; }
 ::selection    { background: rgba(0,122,255,.2); }
 ::-webkit-scrollbar { display: none; }
-scrollbar-width: none;
+* { scrollbar-width: none; }
 .scroll-x {
   display: flex; gap: 8px; overflow-x: auto;
   -ms-overflow-style: none; scrollbar-width: none;
 }
 .scroll-x::-webkit-scrollbar { display: none; }
-
-/* ── Section header ─────────────────────────────────────── */
 .section-eyebrow {
   font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; color: var(--label-3);
