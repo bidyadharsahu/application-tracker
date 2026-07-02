@@ -3,84 +3,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ════════════════════════════════════════════════════════════
-   CHAKIRI KHATA — iPhone 17 Pro UI + Telegram Motion
-   Root cause of scroll bug fixed: position:fixed shell
-   eliminates all dvh/flex height ambiguity on mobile browsers.
-════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════
+   CHAKIRI KHATA  ·  iPhone 17 Pro UI  ·  Telegram Motion
+   v4 — definitive scroll fix: no overflow:hidden on screen
+════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── System colors ── */
-  --ios-blue:   #007AFF;
-  --ios-green:  #34C759;
-  --ios-orange: #FF9500;
-  --ios-red:    #FF3B30;
-  --ios-purple: #AF52DE;
-  --ios-teal:   #30B0C7;
-  --ios-indigo: #5856D6;
+  /* iOS 18 system palette */
+  --blue:   #007AFF;  --green:  #34C759;  --orange: #FF9500;
+  --red:    #FF3B30;  --purple: #AF52DE;  --teal:   #30B0C7;
+  --indigo: #5856D6;
 
-  /* ── Fills (translucent) ── */
-  --fill-1: rgba(120,120,128,0.20);
-  --fill-2: rgba(120,120,128,0.16);
-  --fill-3: rgba(120,120,128,0.12);
-  --fill-4: rgba(120,120,128,0.08);
+  /* Translucent fills */
+  --f1: rgba(120,120,128,.20); --f2: rgba(120,120,128,.16);
+  --f3: rgba(120,120,128,.12); --f4: rgba(120,120,128,.08);
 
-  /* ── Labels ── */
-  --label-1: rgba(0,0,0,0.90);
-  --label-2: rgba(60,60,67,0.70);
-  --label-3: rgba(60,60,67,0.48);
-  --label-4: rgba(60,60,67,0.28);
+  /* Labels */
+  --l1: rgba(0,0,0,.90);   --l2: rgba(60,60,67,.70);
+  --l3: rgba(60,60,67,.48); --l4: rgba(60,60,67,.28);
 
-  /* ── Semantic backgrounds ── */
-  --bg-card:   rgba(255,255,255,0.78);
-  --bg-panel:  rgba(242,242,247,0.94);
-  --bg-input:  rgba(240,240,245,0.85);
-  --bg-tile:   rgba(255,255,255,0.74);
+  /* Tint backgrounds */
+  --tb: #E5EFFF; --tg: #E3F8EB; --to: #FFF3E0;
+  --tr: #FFE9E8; --tp: #F5EBFB;
 
-  /* ── Separators ── */
-  --sep:       rgba(60,60,67,0.16);
-  --sep-solid: #C6C6C8;
+  /* Separators */
+  --sep: rgba(60,60,67,.15); --sep2: #C6C6C8;
 
-  /* ── Status tints ── */
-  --tint-blue:   rgba(0,122,255,0.13);
-  --tint-green:  rgba(52,199,89,0.13);
-  --tint-orange: rgba(255,149,0,0.13);
-  --tint-red:    rgba(255,59,48,0.13);
-  --tint-purple: rgba(175,82,222,0.13);
+  /* Radii */
+  --rx: 8px; --rs: 10px; --rm: 14px;
+  --rl: 18px; --rx2: 22px; --rp: 999px;
 
-  --tint-blue-bg:   #E5EFFF;
-  --tint-green-bg:  #E3F8EB;
-  --tint-orange-bg: #FFF3E0;
-  --tint-red-bg:    #FFE9E8;
-  --tint-purple-bg: #F5EBFB;
+  /* Shadows */
+  --s1: 0 1px 4px rgba(0,0,0,.08),0 .5px 1px rgba(0,0,0,.04);
+  --s2: 0 4px 16px rgba(0,0,0,.10);
+  --s3: 0 10px 40px rgba(0,0,0,.14);
 
-  /* ── Radii ── */
-  --r-xs: 8px; --r-sm: 10px; --r-md: 14px;
-  --r-lg: 18px; --r-xl: 22px; --r-pill: 999px;
+  /* Safe areas */
+  --sat: env(safe-area-inset-top,0px);
+  --sab: env(safe-area-inset-bottom,0px);
 
-  /* ── Shadows ── */
-  --s1: 0 1px 4px rgba(0,0,0,0.08), 0 0.5px 1px rgba(0,0,0,0.04);
-  --s2: 0 4px 16px rgba(0,0,0,0.10);
-  --s3: 0 10px 36px rgba(0,0,0,0.14);
+  /* Tab bar — must match exactly */
+  --tab: 56px;
 
-  /* ── Safe areas ── */
-  --sat: env(safe-area-inset-top,    0px);
-  --sab: env(safe-area-inset-bottom, 0px);
-  --sal: env(safe-area-inset-left,   0px);
-  --sar: env(safe-area-inset-right,  0px);
-
-  /* ── Tab bar ── */
-  --tab-h: 56px;
-
-  /* ── Telegram exact easing ── */
-  --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --out:    cubic-bezier(0.22,  1,     0.36, 1);
-  --swift:  cubic-bezier(0.4,   0,     0.2,  1);
+  /* Telegram easing */
+  --sp: cubic-bezier(.175,.885,.32,1.275);
+  --ot: cubic-bezier(.22,1,.36,1);
+  --sw: cubic-bezier(.4,0,.2,1);
 }
 
-/* ── Reset ─────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+/* ── Global reset ───────────────────────────────────── */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -88,420 +60,384 @@ html {
   text-size-adjust: 100%;
   overscroll-behavior: none;
 }
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
-               "Inter", system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
-  color: var(--label-1);
-  overscroll-behavior: none;
+  font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+  font-size: 16px; line-height: 1.45; letter-spacing: -.01em;
+  color: var(--l1);
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 
-  /* ── WhatsApp / Telegram doodle tile background ─────────
-     Job-themed icons: briefcase, calendar, checkmark,
-     bell, document, pencil, star. 140×140 grid.
-  ── */
-  background-color: #DAE0EA;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%239AAABF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.42'%3E%3C!-- Briefcase --%3E%3Crect x='10' y='28' width='28' height='20' rx='3'/%3E%3Cpath d='M15 28v-4a3 3 0 013-3h10a3 3 0 013 3v4'/%3E%3Cline x1='24' y1='38' x2='24' y2='39'/%3E%3C!-- Calendar --%3E%3Crect x='96' y='10' width='30' height='26' rx='3'/%3E%3Cline x1='96' y1='20' x2='126' y2='20'/%3E%3Cline x1='104' y1='10' x2='104' y2='6'/%3E%3Cline x1='118' y1='10' x2='118' y2='6'/%3E%3Ccircle cx='105' cy='29' r='1.5'/%3E%3Ccircle cx='111' cy='29' r='1.5'/%3E%3Ccircle cx='117' cy='29' r='1.5'/%3E%3C!-- Checkmark circle --%3E%3Ccircle cx='18' cy='82' r='13'/%3E%3Cpath d='M12 82l5 6 9-11'/%3E%3C!-- Bell --%3E%3Cpath d='M104 65a11 11 0 0122 0v11h-22z'/%3E%3Cpath d='M108 76a7 3 0 0014 0'/%3E%3Cline x1='115' y1='54' x2='115' y2='51'/%3E%3C!-- Document --%3E%3Crect x='6' y='106' width='24' height='30' rx='3'/%3E%3Cline x1='11' y1='116' x2='25' y2='116'/%3E%3Cline x1='11' y1='122' x2='25' y2='122'/%3E%3Cline x1='11' y1='128' x2='19' y2='128'/%3E%3C!-- Pencil --%3E%3Cpath d='M110 110l11-11 8 8-11 11z'/%3E%3Cpath d='M110 110l-5 13 13-5z'/%3E%3C!-- Star --%3E%3Cpolygon points='70,52 73,62 84,62 75,68 78,78 70,72 62,78 65,68 56,62 67,62'/%3E%3C!-- Accent dots --%3E%3Ccircle cx='58' cy='10' r='2.2'/%3E%3Ccircle cx='132' cy='52' r='2'/%3E%3Ccircle cx='4'   cy='52' r='1.6'/%3E%3Ccircle cx='70'  cy='132' r='2.2'/%3E%3Ccircle cx='136' cy='112' r='1.6'/%3E%3Ccircle cx='44'  cy='98' r='1.6'/%3E%3Ccircle cx='98'  cy='84' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
+  /* WhatsApp / Telegram doodle tile background */
+  background-color: #D8DFE9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%239BAABB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.40'%3E%3Crect x='10' y='28' width='28' height='20' rx='3'/%3E%3Cpath d='M15 28v-4a3 3 0 013-3h10a3 3 0 013 3v4'/%3E%3Cline x1='24' y1='38' x2='24' y2='39'/%3E%3Crect x='96' y='10' width='30' height='26' rx='3'/%3E%3Cline x1='96' y1='20' x2='126' y2='20'/%3E%3Cline x1='104' y1='10' x2='104' y2='6'/%3E%3Cline x1='118' y1='10' x2='118' y2='6'/%3E%3Ccircle cx='105' cy='29' r='1.5'/%3E%3Ccircle cx='111' cy='29' r='1.5'/%3E%3Ccircle cx='117' cy='29' r='1.5'/%3E%3Ccircle cx='18' cy='82' r='13'/%3E%3Cpath d='M12 82l5 6 9-11'/%3E%3Cpath d='M104 65a11 11 0 0122 0v11h-22z'/%3E%3Cpath d='M108 76a7 3 0 0014 0'/%3E%3Cline x1='115' y1='54' x2='115' y2='51'/%3E%3Crect x='6' y='106' width='24' height='30' rx='3'/%3E%3Cline x1='11' y1='116' x2='25' y2='116'/%3E%3Cline x1='11' y1='122' x2='25' y2='122'/%3E%3Cline x1='11' y1='128' x2='19' y2='128'/%3E%3Cpath d='M110 110l11-11 8 8-11 11z'/%3E%3Cpath d='M110 110l-5 13 13-5z'/%3E%3Cpolygon points='70,52 73,62 84,62 75,68 78,78 70,72 62,78 65,68 56,62 67,62'/%3E%3Ccircle cx='58' cy='10' r='2.2'/%3E%3Ccircle cx='132' cy='52' r='2'/%3E%3Ccircle cx='4' cy='52' r='1.6'/%3E%3Ccircle cx='70' cy='132' r='2.2'/%3E%3Ccircle cx='136' cy='112' r='1.6'/%3E%3Ccircle cx='44' cy='98' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 140px 140px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   APP SHELL — position:fixed solves ALL mobile scroll bugs.
-   No dvh arithmetic, no flex height chain, no Safari quirks.
-   The shell is a fixed full-screen rectangle.
-   The tab bar is fixed at the bottom inside it.
-   The content is absolutely positioned between header + tabbar.
-══════════════════════════════════════════════════════════ */
-
-#root, .App {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: transparent;
+/* ══════════════════════════════════════════════════════
+   APP SHELL — position:fixed rectangle.
+   No height chains. No dvh math. Works on every mobile browser.
+══════════════════════════════════════════════════════ */
+#root,.App {
+  position: fixed; inset: 0;
+  overflow: hidden; background: transparent;
 }
 
-/* Every route renders one .app-screen which fills the fixed shell */
+/* Each route renders .app-screen — fills the fixed shell */
 .app-screen {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
   background: transparent;
+  /* ⚠️  NO overflow:hidden here — it would clip padding-bottom on .app-scroll */
 }
 
-/* ── THE SCROLL FIX ─────────────────────────────────────────
-   .app-scroll fills ALL remaining space between the sticky
-   header and the fixed tab bar using flex:1 + overflow-y:auto.
-   padding-bottom clears the tab bar + safe area + breathing room.
-   This is the ONLY scroll container in the app.
-────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════
+   THE SCROLL REGION — single scroll container per screen.
+
+   CRITICAL RULES (all three must be present):
+   1. flex:1          — expand to fill available height
+   2. min-height:0    — tell flex to allow shrinking below content
+   3. overflow-y:auto — activate scrolling
+   4. padding-bottom  — clear fixed tab bar + safe area + gap
+
+   Without min-height:0 the child expands to content size and
+   overflow never activates. Without padding-bottom the last
+   card's buttons hide behind the tab bar (the screenshot bug).
+══════════════════════════════════════════════════════ */
 .app-scroll {
   flex: 1;
-  min-height: 0;          /* CRITICAL flex rule — must be explicit */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* Tab bar (56px) + safe area bottom + 24px breathing room */
-  padding-bottom: calc(var(--tab-h) + var(--sab) + 24px);
+  /* 56px tab + safe-area-bottom + 32px extra so last card fully clears */
+  padding-bottom: calc(var(--tab) + var(--sab) + 32px);
 }
 
-/* ── iPhone 17-style large title header ─────────────────── */
+/* ── Large title (Home) ──────────────────────────── */
 .nav-large-title {
   flex-shrink: 0;
-  /* Dynamic island / notch padding */
   padding: calc(14px + var(--sat)) 16px 10px;
-  background: rgba(218,224,234,0.88);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 0.5px solid rgba(255,255,255,0.32);
-  position: relative;
-  z-index: 10;
+  background: linear-gradient(180deg,rgba(168,188,215,.97) 0%,rgba(210,218,230,.93) 100%);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border-bottom: .5px solid rgba(255,255,255,.35);
 }
 .nav-large-title .eyebrow {
-  font-size: 11px; font-weight: 700;
-  color: var(--label-3); letter-spacing: 0.06em;
-  text-transform: uppercase; margin-bottom: 2px;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--l3); margin-bottom: 2px;
 }
 .nav-large-title h1 {
   font-size: 32px; font-weight: 800;
-  letter-spacing: -0.03em; color: var(--label-1); line-height: 1.1;
+  letter-spacing: -.03em; color: var(--l1); line-height: 1.1;
 }
 
-/* ── Inline sticky header (tab screens) ─────────────────── */
+/* ── Inline sticky header (tab screens) ─────────── */
 .nav-inline-title {
   flex-shrink: 0;
   position: sticky; top: 0; z-index: 20;
-  background: rgba(218,224,234,0.92);
+  background: rgba(210,218,230,.93);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 0.5px solid var(--sep);
+  border-bottom: .5px solid var(--sep);
   padding: calc(10px + var(--sat)) 14px 10px;
   display: flex; align-items: center; gap: 8px;
 }
-.nav-inline-title h2 { font-size: 17px; font-weight: 700; color: var(--label-1); }
+.nav-inline-title h2 { font-size: 17px; font-weight: 700; color: var(--l1); }
 
-/* ── Tab bar ─────────────────────────────────────────────── */
+/* ── Tab bar ─────────────────────────────────────── */
 .tab-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  height: calc(var(--tab-h) + var(--sab));
+  position: fixed; bottom:0; left:0; right:0; z-index:100;
+  height: calc(var(--tab) + var(--sab));
   padding-bottom: var(--sab);
   display: flex;
-  background: rgba(218,224,234,0.96);
+  background: rgba(210,218,230,.97);
   backdrop-filter: blur(32px) saturate(200%);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border-top: 0.5px solid rgba(255,255,255,0.45);
+  border-top: .5px solid rgba(255,255,255,.50);
   box-shadow: 0 -1px 0 var(--sep);
 }
 .tab-item {
-  flex: 1;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 2px; border: none; background: transparent;
-  cursor: pointer; padding: 5px 0 3px;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  position: relative;
-  min-height: 44px; min-width: 44px;
-  -webkit-user-select: none; user-select: none;
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:2px; border:none; background:transparent; cursor:pointer;
+  padding:5px 0 3px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation; position:relative;
+  min-height:44px; min-width:44px;
+  -webkit-user-select:none; user-select:none;
 }
 .tab-icon-wrap {
-  display: flex; align-items: center; justify-content: center;
-  width: 46px; height: 28px; border-radius: 12px;
-  transition: transform 0.14s var(--spring), background 0.16s var(--out);
+  display:flex; align-items:center; justify-content:center;
+  width:46px; height:28px; border-radius:12px;
+  transition: transform .14s var(--sp), background .16s var(--ot);
 }
-.tab-item:active .tab-icon-wrap { transform: scale(0.76); }
-.tab-item.active .tab-icon-wrap { background: rgba(0,122,255,0.14); }
+.tab-item:active .tab-icon-wrap { transform:scale(.76); }
+.tab-item.active .tab-icon-wrap { background:rgba(0,122,255,.14); }
 .tab-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
-  color: var(--label-3);
-  transition: color 0.16s var(--out);
+  font-size:10px; font-weight:600; letter-spacing:.01em;
+  color:var(--l3); transition:color .16s var(--ot);
 }
-.tab-item.active .tab-label { color: var(--ios-blue); }
-/* Active dot — Telegram style */
+.tab-item.active .tab-label { color:var(--blue); }
 .tab-item.active::after {
-  content: '';
-  position: absolute; bottom: 3px; left: 50%;
-  transform: translateX(-50%);
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--ios-blue);
-  animation: dotPop 0.22s var(--spring) both;
+  content:''; position:absolute; bottom:3px; left:50%;
+  transform:translateX(-50%);
+  width:4px; height:4px; border-radius:50%;
+  background:var(--blue);
+  animation:dotPop .22s var(--sp) both;
 }
 .tab-badge {
-  position: absolute; top: 2px; right: calc(50% - 24px);
-  min-width: 16px; height: 16px; padding: 0 4px;
-  background: var(--ios-red); color: #fff;
-  border-radius: 99px; border: 1.5px solid rgba(218,224,234,0.96);
-  font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
+  position:absolute; top:2px; right:calc(50% - 24px);
+  min-width:16px; height:16px; padding:0 4px;
+  background:var(--red); color:#fff;
+  border-radius:99px; border:1.5px solid rgba(210,218,230,.97);
+  font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  animation:popIn .22s var(--sp) both;
 }
 
-/* ── Glassmorphism cards (iPhone 17 style) ──────────────── */
+/* ── iPhone 17 Pro glass cards ───────────────────── */
 .ios-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-radius: var(--r-lg);
-  border: 0.5px solid rgba(255,255,255,0.72);
+  background: rgba(255,255,255,.80);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: var(--rl);
+  border: .5px solid rgba(255,255,255,.78);
   box-shadow: var(--s1);
 }
 .ios-card-press {
-  cursor: pointer;
-  transition: transform 0.14s var(--spring),
-              box-shadow 0.14s var(--out),
-              background 0.10s;
+  cursor:pointer;
+  transition: transform .14s var(--sp), box-shadow .14s var(--ot), background .10s;
 }
 .ios-card-press:active {
-  transform: scale(0.972);
-  box-shadow: var(--s2);
-  background: rgba(255,255,255,0.60);
+  transform:scale(.972); box-shadow:var(--s2);
+  background:rgba(255,255,255,.62);
 }
 
-/* ── Stat tiles ─────────────────────────────────────────── */
+/* ── Stat tiles ──────────────────────────────────── */
 .stat-tile {
-  background: var(--bg-tile);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  border: 0.5px solid rgba(255,255,255,0.68);
-  border-radius: var(--r-lg);
-  padding: 15px 6px 12px;
-  text-align: center; cursor: pointer;
-  box-shadow: var(--s1);
-  transition: transform 0.16s var(--spring), box-shadow 0.16s var(--out);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  -webkit-user-select: none; user-select: none;
+  background: rgba(255,255,255,.76);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: .5px solid rgba(255,255,255,.70);
+  border-radius: var(--rl);
+  padding:15px 6px 12px; text-align:center; cursor:pointer;
+  box-shadow:var(--s1);
+  transition: transform .16s var(--sp), box-shadow .16s var(--ot);
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  -webkit-user-select:none; user-select:none;
 }
-.stat-tile:active { transform: scale(0.86); box-shadow: var(--s2); }
-.stat-tile.on { box-shadow: 0 0 0 2px var(--ios-blue), var(--s2); }
+.stat-tile:active { transform:scale(.86); box-shadow:var(--s2); }
+.stat-tile.on { box-shadow:0 0 0 2px var(--blue),var(--s2); }
 
-/* ── Inset list ─────────────────────────────────────────── */
+/* ── Inset list ──────────────────────────────────── */
 .ios-list {
-  background: var(--bg-card);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 0.5px solid rgba(255,255,255,0.72);
-  border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--s1);
+  background:rgba(255,255,255,.80);
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:.5px solid rgba(255,255,255,.75);
+  border-radius:var(--rl); overflow:hidden; box-shadow:var(--s1);
 }
 .ios-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 16px; min-height: 48px;
-  border-bottom: 0.5px solid var(--sep);
-  -webkit-tap-highlight-color: transparent;
+  display:flex; align-items:center; gap:12px;
+  padding:13px 16px; min-height:48px;
+  border-bottom:.5px solid var(--sep);
+  -webkit-tap-highlight-color:transparent;
 }
-.ios-row:last-child { border-bottom: none; }
-.ios-row-press { cursor: pointer; transition: background .1s; }
-.ios-row-press:active { background: var(--fill-4); }
+.ios-row:last-child { border-bottom:none; }
+.ios-row-press { cursor:pointer; transition:background .1s; }
+.ios-row-press:active { background:var(--f4); }
 
-/* ── Buttons ────────────────────────────────────────────── */
+/* ── Buttons — iPhone 17 style ───────────────────── */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  font-family: inherit; font-weight: 600; font-size: 16px;
-  border: none; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 0.13s var(--spring), opacity 0.10s var(--out);
-  white-space: nowrap;
-  border-radius: var(--r-md);
-  min-height: 48px; padding: 0 18px;
-  -webkit-user-select: none; user-select: none;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  font-family:inherit; font-weight:600; font-size:16px;
+  border:none; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  transition: transform .13s var(--sp), opacity .10s var(--ot);
+  white-space:nowrap; border-radius:var(--rm);
+  min-height:48px; padding:0 18px;
+  -webkit-user-select:none; user-select:none;
 }
-.btn:active { transform: scale(0.93); opacity: 0.80; }
-.btn:disabled { opacity: 0.38; pointer-events: none; }
-.btn-filled         { background: var(--ios-blue);      color: #fff; }
-.btn-tinted         { background: var(--tint-blue-bg);  color: var(--ios-blue); }
-.btn-gray           { background: rgba(255,255,255,0.54); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); color: var(--label-1); border: 0.5px solid rgba(255,255,255,0.7); }
-.btn-plain          { background: transparent; color: var(--ios-blue); padding: 0 8px; min-height: 36px; }
-.btn-danger-tinted  { background: var(--tint-red-bg);   color: var(--ios-red); }
-.btn-success-tinted { background: var(--tint-green-bg); color: var(--ios-green); }
-.btn-sm   { min-height: 36px; padding: 0 13px; font-size: 14px; border-radius: var(--r-sm); }
-.btn-icon { width: 38px; height: 38px; min-height: 38px; padding: 0; border-radius: var(--r-sm); }
+.btn:active { transform:scale(.93); opacity:.80; }
+.btn:disabled { opacity:.38; pointer-events:none; }
 
-/* ── Status pill ────────────────────────────────────────── */
+/* Glass tint buttons */
+.btn-filled {
+  background:var(--blue); color:#fff;
+  box-shadow: 0 2px 8px rgba(0,122,255,.30);
+}
+.btn-tinted {
+  background:rgba(0,122,255,.12);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  color:var(--blue); border:.5px solid rgba(0,122,255,.18);
+}
+.btn-gray {
+  background:rgba(255,255,255,.58);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  color:var(--l1); border:.5px solid rgba(255,255,255,.80);
+}
+.btn-plain { background:transparent; color:var(--blue); padding:0 8px; min-height:36px; }
+.btn-danger-tinted {
+  background:rgba(255,59,48,.12);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  color:var(--red); border:.5px solid rgba(255,59,48,.18);
+}
+.btn-success-tinted {
+  background:rgba(52,199,89,.12);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  color:var(--green); border:.5px solid rgba(52,199,89,.20);
+}
+.btn-sm { min-height:36px; padding:0 13px; font-size:14px; border-radius:var(--rs); }
+.btn-icon { width:38px; height:38px; min-height:38px; padding:0; border-radius:var(--rs); }
+
+/* ── Status pill ─────────────────────────────────── */
 .status-pill {
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
-  padding: 3px 9px; border-radius: var(--r-pill); white-space: nowrap;
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:11px; font-weight:700; letter-spacing:.01em;
+  padding:3px 9px; border-radius:var(--rp); white-space:nowrap;
 }
-.pill-pending { background: var(--tint-orange-bg); color: #B25900; }
-.pill-applied { background: var(--tint-green-bg);  color: #1A8A3D; }
-.pill-notice  { background: var(--tint-purple-bg); color: #8A38B5; }
-.pill-urgent  { background: var(--tint-red-bg);    color: #D6291E; }
+.pill-pending { background:var(--to); color:#B25900; }
+.pill-applied { background:var(--tg); color:#1A8A3D; }
+.pill-notice  { background:var(--tp); color:#8A38B5; }
+.pill-urgent  { background:var(--tr); color:#D6291E; }
 
-/* ── Inputs — 16px prevents iOS auto-zoom keyboard bug ──── */
+/* ── Inputs — 16px required (prevents iOS zoom = keyboard pop bug) */
 .ios-input {
-  width: 100%;
-  background: var(--bg-input);
-  border: 1.5px solid transparent;
-  border-radius: var(--r-md);
-  padding: 13px 14px;
-  font-family: inherit;
-  font-size: 16px;   /* MUST stay 16px — prevents iOS viewport zoom on focus */
-  color: var(--label-1);
-  outline: none;
-  -webkit-appearance: none;
-  min-height: 48px;
-  transition: border-color 0.16s var(--out), background 0.14s, box-shadow 0.16s var(--out);
+  width:100%;
+  background:rgba(240,242,246,.88);
+  border:1.5px solid transparent;
+  border-radius:var(--rm); padding:13px 14px;
+  font-family:inherit; font-size:16px; color:var(--l1);
+  outline:none; -webkit-appearance:none; min-height:48px;
+  transition: border-color .16s var(--ot), background .14s, box-shadow .16s var(--ot);
 }
-.ios-input::placeholder { color: var(--label-4); }
+.ios-input::placeholder { color:var(--l4); }
 .ios-input:focus {
-  border-color: var(--ios-blue);
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 0 0 3px rgba(0,122,255,0.11);
+  border-color:var(--blue);
+  background:rgba(255,255,255,.94);
+  box-shadow:0 0 0 3px rgba(0,122,255,.11);
 }
-textarea.ios-input { resize: vertical; min-height: 80px; }
-.ios-label {
-  font-size: 13px; font-weight: 600;
-  color: var(--label-2); margin-bottom: 5px; display: block;
-}
+textarea.ios-input { resize:vertical; min-height:80px; }
+.ios-label { font-size:13px; font-weight:600; color:var(--l2); margin-bottom:5px; display:block; }
 
-/* ── Progress bar ───────────────────────────────────────── */
-.ios-progress-track { height: 5px; background: var(--fill-3); border-radius: 99px; overflow: hidden; }
-.ios-progress-fill  { height: 100%; border-radius: 99px; transition: width .8s cubic-bezier(.34,1.2,.64,1); }
+/* ── Progress ────────────────────────────────────── */
+.ios-progress-track { height:5px; background:var(--f3); border-radius:99px; overflow:hidden; }
+.ios-progress-fill { height:100%; border-radius:99px; transition:width .8s cubic-bezier(.34,1.2,.64,1); }
 
-/* ── Bottom sheet / modal ────────────────────────────────── */
-.ios-sheet { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; }
+/* ── Bottom sheet ────────────────────────────────── */
+.ios-sheet { position:fixed; inset:0; z-index:300; display:flex; align-items:flex-end; }
 .ios-sheet-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.44);
-  animation: fadeIn 0.22s ease both;
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  position:absolute; inset:0; background:rgba(0,0,0,.44);
+  animation:fadeIn .22s ease both;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
 }
 .ios-sheet-panel {
-  position: relative; z-index: 1; width: 100%;
-  background: rgba(228,232,240,0.97);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border-radius: 22px 22px 0 0;
-  border: 0.5px solid rgba(255,255,255,0.5);
-  max-height: 88dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  padding: 0 16px calc(20px + var(--sab));
-  animation: slideUp 0.28s var(--out) both;
-  box-shadow: 0 -8px 40px rgba(0,0,0,0.22);
+  position:relative; z-index:1; width:100%;
+  background:rgba(220,226,236,.97);
+  backdrop-filter:blur(36px) saturate(220%);
+  -webkit-backdrop-filter:blur(36px) saturate(220%);
+  border-radius:22px 22px 0 0;
+  border:.5px solid rgba(255,255,255,.55);
+  max-height:88dvh; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  padding:0 16px calc(20px + var(--sab));
+  animation:slideUp .28s var(--ot) both;
+  box-shadow:0 -8px 40px rgba(0,0,0,.22);
 }
 .ios-sheet-handle {
-  width: 36px; height: 5px;
-  background: var(--sep-solid); border-radius: 99px;
-  margin: 10px auto 14px; flex-shrink: 0;
+  width:36px; height:5px; background:var(--sep2);
+  border-radius:99px; margin:10px auto 14px; flex-shrink:0;
 }
 
-/* ── Language switcher ──────────────────────────────────── */
+/* ── Language toggle ─────────────────────────────── */
 .lang-switch {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-family: inherit; font-weight: 700; font-size: 12px;
-  background: rgba(255,255,255,0.55);
-  border: 0.5px solid rgba(255,255,255,0.78);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  color: var(--label-1); border-radius: var(--r-pill);
-  padding: 6px 12px; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  transition: transform 0.13s var(--spring), background 0.12s;
-  -webkit-user-select: none; user-select: none;
-  white-space: nowrap;
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:inherit; font-weight:700; font-size:12px;
+  background:rgba(255,255,255,.55);
+  border:.5px solid rgba(255,255,255,.80);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  color:var(--l1); border-radius:var(--rp);
+  padding:6px 12px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  transition:transform .13s var(--sp), background .12s;
+  -webkit-user-select:none; user-select:none; white-space:nowrap;
 }
-.lang-switch:active { transform: scale(0.84); }
-.lang-switching { animation: langPop 0.34s var(--spring) both; }
+.lang-switch:active { transform:scale(.84); }
+.lang-switching { animation:langPop .34s var(--sp) both; }
 
-/* ══════════════════════════════════════════════════════════
-   TELEGRAM-GRADE ANIMATION SYSTEM
-══════════════════════════════════════════════════════════ */
+/* ── Skeleton ────────────────────────────────────── */
+.ios-skel {
+  background:linear-gradient(90deg,var(--f3) 25%,var(--f4) 50%,var(--f3) 75%);
+  background-size:200% auto;
+  animation:shimmer 1.4s linear infinite;
+  border-radius:6px;
+}
 
+/* ══════════════════════════════════════════════════
+   TELEGRAM-GRADE ANIMATIONS
+══════════════════════════════════════════════════ */
 @keyframes springUp {
-  0%   { opacity: 0; transform: translateY(20px) scale(0.96); }
-  55%  { opacity: 1; transform: translateY(-2px) scale(1.006); }
-  78%  { transform: translateY(0.5px) scale(0.999); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0%   { opacity:0; transform:translateY(20px) scale(.96); }
+  55%  { opacity:1; transform:translateY(-2px) scale(1.006); }
+  78%  { transform:translateY(.5px) scale(.999); }
+  100% { opacity:1; transform:translateY(0) scale(1); }
 }
 @keyframes popIn {
-  0%   { opacity: 0; transform: scale(0.86); }
-  55%  { transform: scale(1.026); }
-  78%  { transform: scale(0.996); }
-  100% { opacity: 1; transform: scale(1); }
+  0%   { opacity:0; transform:scale(.86); }
+  55%  { transform:scale(1.026); }
+  78%  { transform:scale(.996); }
+  100% { opacity:1; transform:scale(1); }
 }
 @keyframes tabSwitch {
-  from { opacity: 0; transform: translateY(10px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity:0; transform:translateY(10px) scale(.97); }
+  to   { opacity:1; transform:translateY(0)    scale(1); }
 }
-@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp  { from { transform: translateY(100%); } to { transform: translateY(0); } }
-@keyframes slideOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(16px); opacity: 0; } }
-@keyframes shimmer  { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-@keyframes spin     { to  { transform: rotate(360deg); } }
-@keyframes dotPop   {
-  from { transform: translateX(-50%) scale(0); opacity: 0; }
-  to   { transform: translateX(-50%) scale(1); opacity: 1; }
-}
-@keyframes pulseRing {
-  0%   { box-shadow: 0 0 0 0    rgba(255,59,48,.55); }
-  100% { box-shadow: 0 0 0 12px rgba(255,59,48,0); }
-}
-@keyframes swipeRight { to { transform: translateX(130%); opacity: 0; } }
-@keyframes langPop {
-  0%   { transform: scale(1); }
-  35%  { transform: scale(0.84) rotate(-3deg); }
-  65%  { transform: scale(1.08) rotate(1deg); }
-  100% { transform: scale(1) rotate(0); }
-}
+@keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+@keyframes slideUp  { from { transform:translateY(100%); } to { transform:translateY(0); } }
+@keyframes slideOut { from { transform:translateY(0); opacity:1; } to { transform:translateY(16px); opacity:0; } }
+@keyframes shimmer  { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+@keyframes spin     { to { transform:rotate(360deg); } }
+@keyframes dotPop   { from{transform:translateX(-50%) scale(0);opacity:0;} to{transform:translateX(-50%) scale(1);opacity:1;} }
+@keyframes pulseRing{ 0%{box-shadow:0 0 0 0 rgba(255,59,48,.55);} 100%{box-shadow:0 0 0 12px rgba(255,59,48,0);} }
+@keyframes swipeRight { to { transform:translateX(130%); opacity:0; } }
+@keyframes langPop  { 0%{transform:scale(1);} 35%{transform:scale(.84) rotate(-3deg);} 65%{transform:scale(1.08) rotate(1deg);} 100%{transform:scale(1) rotate(0);} }
 
-/* ── Animation helpers ──────────────────────────────────── */
-.a-up  { animation: springUp  0.28s var(--spring) both; }
-.a-in  { animation: fadeIn    0.16s var(--swift)  both; }
-.a-pop { animation: popIn     0.26s var(--spring) both; }
-.a-tab { animation: tabSwitch 0.22s var(--out)    both; }
-.a-out { animation: slideOut  0.18s var(--swift)  both; }
+.a-up  { animation:springUp  .28s var(--sp) both; }
+.a-in  { animation:fadeIn    .16s var(--sw) both; }
+.a-pop { animation:popIn     .26s var(--sp) both; }
+.a-tab { animation:tabSwitch .22s var(--ot) both; }
+.a-out { animation:slideOut  .18s var(--sw) both; }
 
-.d1 { animation-delay: 0.02s; }
-.d2 { animation-delay: 0.04s; }
-.d3 { animation-delay: 0.06s; }
-.d4 { animation-delay: 0.08s; }
-.d5 { animation-delay: 0.10s; }
-.d6 { animation-delay: 0.12s; }
+.d1{animation-delay:.02s;} .d2{animation-delay:.04s;} .d3{animation-delay:.06s;}
+.d4{animation-delay:.08s;} .d5{animation-delay:.10s;} .d6{animation-delay:.12s;}
 
-/* ── Tappable press feedback ────────────────────────────── */
 .tg-press {
-  transition: transform 0.13s var(--spring), opacity 0.10s var(--out);
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none; user-select: none;
+  transition:transform .13s var(--sp), opacity .10s var(--ot);
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none; user-select:none;
 }
-.tg-press:active { transform: scale(0.93); opacity: 0.76; }
-.swiping-away { animation: swipeRight 0.22s var(--swift) both; }
+.tg-press:active { transform:scale(.93); opacity:.76; }
+.swiping-away { animation:swipeRight .22s var(--sw) both; }
 
-/* ── Skeleton shimmer ───────────────────────────────────── */
-.ios-skel {
-  background: linear-gradient(90deg, var(--fill-3) 25%, var(--fill-4) 50%, var(--fill-3) 75%);
-  background-size: 200% auto;
-  animation: shimmer 1.4s linear infinite;
-  border-radius: 6px;
-}
-
-/* ── Odia script ─────────────────────────────────────────── */
-:lang(or), [data-lang="or"] { line-height: 1.65; }
+/* ── Odia script ─────────────────────────────────── */
+:lang(or),[data-lang="or"] { line-height:1.65; }
 :lang(or) h1,[data-lang="or"] h1,
-:lang(or) h2,[data-lang="or"] h2 { line-height: 1.4; }
+:lang(or) h2,[data-lang="or"] h2 { line-height:1.4; }
 
-/* ── Misc ────────────────────────────────────────────────── */
-:focus         { outline: none; }
-:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 2px; border-radius: 4px; }
-::selection    { background: rgba(0,122,255,.2); }
-::-webkit-scrollbar { display: none; }
-* { scrollbar-width: none; }
-.scroll-x {
-  display: flex; gap: 8px; overflow-x: auto;
-  -ms-overflow-style: none; scrollbar-width: none;
-}
-.scroll-x::-webkit-scrollbar { display: none; }
+/* ── Misc ────────────────────────────────────────── */
+:focus { outline:none; }
+:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
+::selection { background:rgba(0,122,255,.2); }
+::-webkit-scrollbar { display:none; }
+* { scrollbar-width:none; }
+.scroll-x { display:flex; gap:8px; overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none; }
+.scroll-x::-webkit-scrollbar { display:none; }
 .section-eyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
-  text-transform: uppercase; color: var(--label-3); margin: 0 0 7px 2px;
+  font-size:11px; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--l3); margin:0 0 7px 2px;
 }
