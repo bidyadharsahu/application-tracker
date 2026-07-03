@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   ExternalLink, CalendarDays, FileText, CheckCircle2, Circle,
@@ -10,6 +9,10 @@ import Countdown from "./Countdown";
 import { supabase } from "../lib/supabase";
 import { useI18n } from "../lib/i18n";
 import { toast } from "sonner";
+
+// ISSUE 2 FIX: use the canonical CSS variable names defined in index.css
+// --blue, --green, --red, --purple, --orange, --l1..l4 are the real names.
+// --ios-blue / --label-3 aliases are added to index.css so App.js also works.
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const { t, lang } = useI18n();
@@ -46,14 +49,14 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
       await supabase.from("job_documents").insert({
         job_id: job.id, file_name: file.name, file_path: path, document_type: type,
       });
-      toast.success(t("document_saved", { type: type.replace("_", " ") }));
+      toast.success(t("document_saved", { type: t("doc_" + type) }));
       const { data } = await supabase.from("job_documents").select("*").eq("job_id", job.id);
       setDocs(data || []);
     } finally { setUploading(false); }
   };
 
   const deleteDoc = async (doc) => {
-    if (!window.confirm(lang === "or" ? `"${doc.file_name}" ଡିଲିଟ କରିବେ?` : `Delete "${doc.file_name}"?`)) return;
+    if (!window.confirm(t("doc_delete_confirm", { name: doc.file_name }))) return;
     await supabase.storage.from("job-documents").remove([doc.file_path]);
     await supabase.from("job_documents").delete().eq("id", doc.id);
     setDocs(prev => prev.filter(d => d.id !== doc.id));
@@ -86,6 +89,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     }
   };
 
+  // ISSUE 2 FIX: use canonical var names (--blue, --red, --purple, --orange, --green)
   const dotColor = isApplied ? "var(--green)" : isUrgent ? "var(--red)"
                  : isSoon    ? "var(--purple)" : "var(--orange)";
 
@@ -107,13 +111,21 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     : examDays !== null && examDays <= 7 ? "#B25900"
     : "var(--l3)";
 
+  // Document type keys mapped to i18n
+  const DOC_TYPES = [
+    { key: "admit_card",  i18n: "doc_admit_card" },
+    { key: "hall_ticket", i18n: "doc_hall_ticket" },
+    { key: "result",      i18n: "doc_result" },
+    { key: "other",       i18n: "doc_other" },
+  ];
+
   return (
     <article className="ios-card" style={{ overflow: "hidden" }}>
       <div style={{ padding: "15px 15px 13px" }}>
 
         {/* ── Title row ── */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 9 }}>
-          {/* Status dot */}
+          {/* Status dot — ISSUE 2: canonical var names */}
           <div style={{
             width: 8, height: 8, borderRadius: "50%", background: dotColor,
             marginTop: 6, flexShrink: 0,
@@ -164,7 +176,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           }}>
             {!isApplied && (
               <DateCell
-                icon={<CalendarDays size={12} />}
+                icon={<CalendarDays size={12} color="var(--l4)" />}
                 label={t("last_date")}
                 value={job.last_date ? formatDate(job.last_date) : t("tba")}
                 sub={
@@ -178,7 +190,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
               />
             )}
             <DateCell
-              icon={<FileText size={12} />}
+              icon={<FileText size={12} color="var(--l4)" />}
               label={t("exam_date")}
               value={examVal}
               sub={examSub}
@@ -294,9 +306,10 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                 borderTop: "none",
                 borderRadius: "0 0 10px 10px", padding: 11,
               }}>
+                {/* ISSUE 6 FIX: document type labels use i18n keys */}
                 <div className="scroll-x" style={{ marginBottom: docs.length > 0 ? 9 : 0 }}>
-                  {["admit_card", "hall_ticket", "result", "other"].map(type => (
-                    <label key={type} className="tg-press" style={{
+                  {DOC_TYPES.map(({ key, i18n }) => (
+                    <label key={key} className="tg-press" style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
                       background: "rgba(255,255,255,.65)",
                       backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
@@ -306,10 +319,10 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                       cursor: "pointer", flexShrink: 0,
                       opacity: uploading ? .5 : 1,
                     }}>
-                      {type.replace("_", " ")}
+                      {t(i18n)}
                       <input type="file" style={{ display: "none" }}
                         accept=".pdf,.jpg,.jpeg,.png" disabled={uploading}
-                        onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], type)} />
+                        onChange={e => e.target.files[0] && uploadDoc(e.target.files[0], key)} />
                     </label>
                   ))}
                 </div>
@@ -331,7 +344,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                         cursor: "pointer", overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0,
                       }}>
-                      {doc.document_type?.replace("_", " ")} — {doc.file_name}
+                      {t("doc_" + doc.document_type) || doc.document_type?.replace("_", " ")} — {doc.file_name}
                     </button>
                     <button type="button" onClick={() => deleteDoc(doc)} className="tg-press"
                       style={{ background: "none", border: "none", color: "var(--red)",
@@ -347,7 +360,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           {/* Separator */}
           <div style={{ height: .5, background: "var(--sep)", marginBottom: 11 }} />
 
-          {/* ── Action buttons — iPhone 17 style ── */}
+          {/* ── Action buttons ── */}
           <div style={{ display: "flex", gap: 7 }}>
             {isFuture ? (
               <div style={{
