@@ -1,11 +1,10 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ════════════════════════════════════════════════════════
    CHAKIRI KHATA  ·  iPhone 17 Pro UI  ·  Telegram Motion
-   v4 — definitive scroll fix: no overflow:hidden on screen
+   v5 — all 6 bugs fixed: focus, icons, scroll, dates, animation, i18n
 ════════════════════════════════════════════════════════ */
 
 :root {
@@ -14,15 +13,39 @@
   --red:    #FF3B30;  --purple: #AF52DE;  --teal:   #30B0C7;
   --indigo: #5856D6;
 
+  /* ALIASES — used in App.js TabBar and AdminDashboard */
+  --ios-blue:   #007AFF;
+  --ios-green:  #34C759;
+  --ios-red:    #FF3B30;
+  --ios-orange: #FF9500;
+
+  /* Tint backgrounds — used in Landing.jsx */
+  --tint-blue-bg:   #E5EFFF;
+  --tint-green-bg:  #E3F8EB;
+  --tint-red-bg:    #FFE9E8;
+  --tint-orange-bg: #FFF3E0;
+
   /* Translucent fills */
   --f1: rgba(120,120,128,.20); --f2: rgba(120,120,128,.16);
   --f3: rgba(120,120,128,.12); --f4: rgba(120,120,128,.08);
 
+  /* Fill aliases used in AdminDashboard */
+  --fill-1: rgba(120,120,128,.20);
+  --fill-2: rgba(120,120,128,.16);
+  --fill-3: rgba(120,120,128,.12);
+  --fill-4: rgba(120,120,128,.08);
+
   /* Labels */
-  --l1: rgba(0,0,0,.90);   --l2: rgba(60,60,67,.70);
+  --l1: rgba(0,0,0,.90);    --l2: rgba(60,60,67,.70);
   --l3: rgba(60,60,67,.48); --l4: rgba(60,60,67,.28);
 
-  /* Tint backgrounds */
+  /* Label aliases used in AdminDashboard and App.js */
+  --label-1: rgba(0,0,0,.90);
+  --label-2: rgba(60,60,67,.70);
+  --label-3: rgba(60,60,67,.48);
+  --label-4: rgba(60,60,67,.28);
+
+  /* Tint backgrounds (short names used by Landing) */
   --tb: #E5EFFF; --tg: #E3F8EB; --to: #FFF3E0;
   --tr: #FFE9E8; --tp: #F5EBFB;
 
@@ -45,10 +68,11 @@
   /* Tab bar — must match exactly */
   --tab: 56px;
 
-  /* Telegram easing */
-  --sp: cubic-bezier(.175,.885,.32,1.275);
-  --ot: cubic-bezier(.22,1,.36,1);
-  --sw: cubic-bezier(.4,0,.2,1);
+  /* Easing aliases */
+  --sp:     cubic-bezier(.175,.885,.32,1.275);
+  --ot:     cubic-bezier(.22,1,.36,1);
+  --sw:     cubic-bezier(.4,0,.2,1);
+  --tg-out: cubic-bezier(.22,1,.36,1);
 }
 
 /* ── Global reset ───────────────────────────────────── */
@@ -93,16 +117,7 @@ body {
 
 /* ══════════════════════════════════════════════════════
    THE SCROLL REGION — single scroll container per screen.
-
-   CRITICAL RULES (all three must be present):
-   1. flex:1          — expand to fill available height
-   2. min-height:0    — tell flex to allow shrinking below content
-   3. overflow-y:auto — activate scrolling
-   4. padding-bottom  — clear fixed tab bar + safe area + gap
-
-   Without min-height:0 the child expands to content size and
-   overflow never activates. Without padding-bottom the last
-   card's buttons hide behind the tab bar (the screenshot bug).
+   CRITICAL: all three rules + padding-bottom must be present.
 ══════════════════════════════════════════════════════ */
 .app-scroll {
   flex: 1;
@@ -111,8 +126,11 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* 56px tab + safe-area-bottom + 32px extra so last card fully clears */
-  padding-bottom: calc(var(--tab) + var(--sab) + 32px);
+  /* 56px tab + safe-area-bottom + 40px extra so last card fully clears */
+  padding-bottom: calc(var(--tab) + var(--sab) + 40px);
+  /* GPU layer for smooth scrolling */
+  transform: translateZ(0);
+  will-change: scroll-position;
 }
 
 /* ── Large title (Home) ──────────────────────────── */
@@ -157,6 +175,9 @@ body {
   -webkit-backdrop-filter: blur(32px) saturate(200%);
   border-top: .5px solid rgba(255,255,255,.50);
   box-shadow: 0 -1px 0 var(--sep);
+  /* GPU composite layer — no layout reflow during animations */
+  transform: translateZ(0);
+  will-change: transform;
 }
 .tab-item {
   flex:1; display:flex; flex-direction:column;
@@ -171,9 +192,12 @@ body {
 .tab-icon-wrap {
   display:flex; align-items:center; justify-content:center;
   width:46px; height:28px; border-radius:12px;
+  /* GPU layer so icon color transitions don't cause repaints */
+  transform: translateZ(0);
+  will-change: transform, background;
   transition: transform .14s var(--sp), background .16s var(--ot);
 }
-.tab-item:active .tab-icon-wrap { transform:scale(.76); }
+.tab-item:active .tab-icon-wrap { transform:scale(.76) translateZ(0); }
 .tab-item.active .tab-icon-wrap { background:rgba(0,122,255,.14); }
 .tab-label {
   font-size:10px; font-weight:600; letter-spacing:.01em;
@@ -205,13 +229,16 @@ body {
   border-radius: var(--rl);
   border: .5px solid rgba(255,255,255,.78);
   box-shadow: var(--s1);
+  /* GPU layer prevents backdrop-filter repaints on scroll */
+  transform: translateZ(0);
 }
 .ios-card-press {
   cursor:pointer;
   transition: transform .14s var(--sp), box-shadow .14s var(--ot), background .10s;
+  will-change: transform;
 }
 .ios-card-press:active {
-  transform:scale(.972); box-shadow:var(--s2);
+  transform:scale(.972) translateZ(0); box-shadow:var(--s2);
   background:rgba(255,255,255,.62);
 }
 
@@ -224,12 +251,14 @@ body {
   border-radius: var(--rl);
   padding:15px 6px 12px; text-align:center; cursor:pointer;
   box-shadow:var(--s1);
+  transform: translateZ(0);
+  will-change: transform;
   transition: transform .16s var(--sp), box-shadow .16s var(--ot);
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
   -webkit-user-select:none; user-select:none;
 }
-.stat-tile:active { transform:scale(.86); box-shadow:var(--s2); }
+.stat-tile:active { transform:scale(.86) translateZ(0); box-shadow:var(--s2); }
 .stat-tile.on { box-shadow:0 0 0 2px var(--blue),var(--s2); }
 
 /* ── Inset list ──────────────────────────────────── */
@@ -256,12 +285,14 @@ body {
   font-family:inherit; font-weight:600; font-size:16px;
   border:none; cursor:pointer;
   -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  transform: translateZ(0);
+  will-change: transform;
   transition: transform .13s var(--sp), opacity .10s var(--ot);
   white-space:nowrap; border-radius:var(--rm);
   min-height:48px; padding:0 18px;
   -webkit-user-select:none; user-select:none;
 }
-.btn:active { transform:scale(.93); opacity:.80; }
+.btn:active { transform:scale(.93) translateZ(0); opacity:.80; }
 .btn:disabled { opacity:.38; pointer-events:none; }
 
 /* Glass tint buttons */
@@ -304,7 +335,7 @@ body {
 .pill-notice  { background:var(--tp); color:#8A38B5; }
 .pill-urgent  { background:var(--tr); color:#D6291E; }
 
-/* ── Inputs — 16px required (prevents iOS zoom = keyboard pop bug) */
+/* ── Inputs — 16px prevents iOS auto-zoom / focus-loss ── */
 .ios-input {
   width:100%;
   background:rgba(240,242,246,.88);
@@ -312,6 +343,7 @@ body {
   border-radius:var(--rm); padding:13px 14px;
   font-family:inherit; font-size:16px; color:var(--l1);
   outline:none; -webkit-appearance:none; min-height:48px;
+  /* CRITICAL: no transform/will-change on inputs — causes focus loss on iOS */
   transition: border-color .16s var(--ot), background .14s, box-shadow .16s var(--ot);
 }
 .ios-input::placeholder { color:var(--l4); }
@@ -347,6 +379,8 @@ textarea.ios-input { resize:vertical; min-height:80px; }
   padding:0 16px calc(20px + var(--sab));
   animation:slideUp .28s var(--ot) both;
   box-shadow:0 -8px 40px rgba(0,0,0,.22);
+  /* GPU layer for sheet animation */
+  will-change: transform;
 }
 .ios-sheet-handle {
   width:36px; height:5px; background:var(--sep2);
@@ -364,10 +398,12 @@ textarea.ios-input { resize:vertical; min-height:80px; }
   padding:6px 12px; cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
+  transform: translateZ(0);
+  will-change: transform;
   transition:transform .13s var(--sp), background .12s;
   -webkit-user-select:none; user-select:none; white-space:nowrap;
 }
-.lang-switch:active { transform:scale(.84); }
+.lang-switch:active { transform:scale(.84) translateZ(0); }
 .lang-switching { animation:langPop .34s var(--sp) both; }
 
 /* ── Skeleton ────────────────────────────────────── */
@@ -376,52 +412,56 @@ textarea.ios-input { resize:vertical; min-height:80px; }
   background-size:200% auto;
   animation:shimmer 1.4s linear infinite;
   border-radius:6px;
+  transform: translateZ(0);
+  will-change: background-position;
 }
 
 /* ══════════════════════════════════════════════════
-   TELEGRAM-GRADE ANIMATIONS
+   TELEGRAM-GRADE ANIMATIONS — GPU accelerated
 ══════════════════════════════════════════════════ */
 @keyframes springUp {
-  0%   { opacity:0; transform:translateY(20px) scale(.96); }
-  55%  { opacity:1; transform:translateY(-2px) scale(1.006); }
-  78%  { transform:translateY(.5px) scale(.999); }
-  100% { opacity:1; transform:translateY(0) scale(1); }
+  0%   { opacity:0; transform:translateY(20px) scale(.96) translateZ(0); }
+  55%  { opacity:1; transform:translateY(-2px) scale(1.006) translateZ(0); }
+  78%  { transform:translateY(.5px) scale(.999) translateZ(0); }
+  100% { opacity:1; transform:translateY(0) scale(1) translateZ(0); }
 }
 @keyframes popIn {
-  0%   { opacity:0; transform:scale(.86); }
-  55%  { transform:scale(1.026); }
-  78%  { transform:scale(.996); }
-  100% { opacity:1; transform:scale(1); }
+  0%   { opacity:0; transform:scale(.86) translateZ(0); }
+  55%  { transform:scale(1.026) translateZ(0); }
+  78%  { transform:scale(.996) translateZ(0); }
+  100% { opacity:1; transform:scale(1) translateZ(0); }
 }
 @keyframes tabSwitch {
-  from { opacity:0; transform:translateY(10px) scale(.97); }
-  to   { opacity:1; transform:translateY(0)    scale(1); }
+  from { opacity:0; transform:translateY(10px) scale(.97) translateZ(0); }
+  to   { opacity:1; transform:translateY(0) scale(1) translateZ(0); }
 }
 @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
-@keyframes slideUp  { from { transform:translateY(100%); } to { transform:translateY(0); } }
-@keyframes slideOut { from { transform:translateY(0); opacity:1; } to { transform:translateY(16px); opacity:0; } }
+@keyframes slideUp  { from { transform:translateY(100%) translateZ(0); } to { transform:translateY(0) translateZ(0); } }
+@keyframes slideOut { from { transform:translateY(0) translateZ(0); opacity:1; } to { transform:translateY(16px) translateZ(0); opacity:0; } }
 @keyframes shimmer  { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
 @keyframes spin     { to { transform:rotate(360deg); } }
-@keyframes dotPop   { from{transform:translateX(-50%) scale(0);opacity:0;} to{transform:translateX(-50%) scale(1);opacity:1;} }
+@keyframes dotPop   { from{transform:translateX(-50%) scale(0) translateZ(0);opacity:0;} to{transform:translateX(-50%) scale(1) translateZ(0);opacity:1;} }
 @keyframes pulseRing{ 0%{box-shadow:0 0 0 0 rgba(255,59,48,.55);} 100%{box-shadow:0 0 0 12px rgba(255,59,48,0);} }
-@keyframes swipeRight { to { transform:translateX(130%); opacity:0; } }
-@keyframes langPop  { 0%{transform:scale(1);} 35%{transform:scale(.84) rotate(-3deg);} 65%{transform:scale(1.08) rotate(1deg);} 100%{transform:scale(1) rotate(0);} }
+@keyframes swipeRight { to { transform:translateX(130%) translateZ(0); opacity:0; } }
+@keyframes langPop  { 0%{transform:scale(1) translateZ(0);} 35%{transform:scale(.84) rotate(-3deg) translateZ(0);} 65%{transform:scale(1.08) rotate(1deg) translateZ(0);} 100%{transform:scale(1) rotate(0) translateZ(0);} }
 
-.a-up  { animation:springUp  .28s var(--sp) both; }
-.a-in  { animation:fadeIn    .16s var(--sw) both; }
-.a-pop { animation:popIn     .26s var(--sp) both; }
-.a-tab { animation:tabSwitch .22s var(--ot) both; }
-.a-out { animation:slideOut  .18s var(--sw) both; }
+.a-up  { animation:springUp  .28s var(--sp) both; will-change:transform,opacity; }
+.a-in  { animation:fadeIn    .16s var(--sw) both; will-change:opacity; }
+.a-pop { animation:popIn     .26s var(--sp) both; will-change:transform,opacity; }
+.a-tab { animation:tabSwitch .22s var(--ot) both; will-change:transform,opacity; }
+.a-out { animation:slideOut  .18s var(--sw) both; will-change:transform,opacity; }
 
 .d1{animation-delay:.02s;} .d2{animation-delay:.04s;} .d3{animation-delay:.06s;}
 .d4{animation-delay:.08s;} .d5{animation-delay:.10s;} .d6{animation-delay:.12s;}
 
 .tg-press {
+  transform: translateZ(0);
+  will-change: transform;
   transition:transform .13s var(--sp), opacity .10s var(--ot);
   -webkit-tap-highlight-color:transparent;
   -webkit-user-select:none; user-select:none;
 }
-.tg-press:active { transform:scale(.93); opacity:.76; }
+.tg-press:active { transform:scale(.93) translateZ(0); opacity:.76; }
 .swiping-away { animation:swipeRight .22s var(--sw) both; }
 
 /* ── Odia script ─────────────────────────────────── */
