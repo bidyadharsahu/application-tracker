@@ -1,31 +1,43 @@
 {
-  "short_name": "Job Ledger",
-  "name": "The Job Ledger",
+  "short_name": "ଚାକିରି ଖାତା",
+  "name": "Job Ledger — ଚାକିରି ଖାତା",
   "icons": [
     {
       "src": "favicon.svg",
       "type": "image/svg+xml",
-      "sizes": "192x192 512x512 any",
-      "purpose": "any maskable"
+      "sizes": "any",
+      "purpose": "any"
     },
     {
       "src": "icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
     },
     {
       "src": "icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#2C2A26",
-  "background_color": "#F4F1EA",
-  "description": "Simple vintage-paper themed job application tracker."
+  "theme_color": "#006EFF",
+  "background_color": "#D4DCE8",
+  "description": "Track every govt job application — Odia & English"
 }
