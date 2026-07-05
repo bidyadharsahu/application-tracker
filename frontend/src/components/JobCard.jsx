@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ExternalLink, CalendarDays, FileText, CheckCircle2, Circle,
   Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip,
@@ -9,10 +9,6 @@ import Countdown from "./Countdown";
 import { supabase } from "../lib/supabase";
 import { useI18n } from "../lib/i18n";
 import { toast } from "sonner";
-
-// ISSUE 2 FIX: use the canonical CSS variable names defined in index.css
-// --blue, --green, --red, --purple, --orange, --l1..l4 are the real names.
-// --ios-blue / --label-3 aliases are added to index.css so App.js also works.
 
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const { t, lang } = useI18n();
@@ -34,11 +30,13 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     (examDays !== null && examDays >= 0 && examDays <= 5)
   );
 
-  useEffect(() => {
-    if (!docsOpen) return;
-    supabase.from("job_documents").select("*").eq("job_id", job.id)
-      .then(({ data }) => setDocs(data || []));
-  }, [docsOpen, job.id]);
+  const loadDocs = useCallback(async () => {
+    const { data } = await supabase
+      .from("job_documents").select("*").eq("job_id", job.id);
+    setDocs(data || []);
+  }, [job.id]);
+
+  useEffect(() => { if (docsOpen) loadDocs(); }, [docsOpen, loadDocs]);
 
   const uploadDoc = async (file, type) => {
     setUploading(true);
@@ -50,8 +48,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         job_id: job.id, file_name: file.name, file_path: path, document_type: type,
       });
       toast.success(t("document_saved", { type: t("doc_" + type) }));
-      const { data } = await supabase.from("job_documents").select("*").eq("job_id", job.id);
-      setDocs(data || []);
+      loadDocs();
     } finally { setUploading(false); }
   };
 
@@ -73,7 +70,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     toast.success(t("copied", { label: t(labelKey) }));
   };
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (!onToggle) return;
     const was = isApplied;
     onToggle(job);
@@ -87,9 +84,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
         action: { label: t("undo_btn"), onClick: () => onToggle(job) },
       });
     }
-  };
+  }, [onToggle, job, isApplied, t]);
 
-  // ISSUE 2 FIX: use canonical var names (--blue, --red, --purple, --orange, --green)
   const dotColor = isApplied ? "var(--green)" : isUrgent ? "var(--red)"
                  : isSoon    ? "var(--purple)" : "var(--orange)";
 
@@ -111,7 +107,6 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     : examDays !== null && examDays <= 7 ? "#B25900"
     : "var(--l3)";
 
-  // Document type keys mapped to i18n
   const DOC_TYPES = [
     { key: "admit_card",  i18n: "doc_admit_card" },
     { key: "hall_ticket", i18n: "doc_hall_ticket" },
@@ -120,16 +115,17 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   ];
 
   return (
-    <article className="ios-card" style={{ overflow: "hidden" }}>
-      <div style={{ padding: "15px 15px 13px" }}>
+    /* CRITICAL: NO overflow:hidden on the card — it clips the button row at the bottom.
+       Border-radius still works without overflow:hidden on modern browsers. */
+    <article className="ios-card" style={{ overflow: "visible" }}>
+      <div style={{ padding: "15px 15px 14px", borderRadius: "inherit" }}>
 
         {/* ── Title row ── */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 9 }}>
-          {/* Status dot — ISSUE 2: canonical var names */}
           <div style={{
             width: 8, height: 8, borderRadius: "50%", background: dotColor,
             marginTop: 6, flexShrink: 0,
-            boxShadow: `0 0 0 3px ${dotColor}22`,
+            boxShadow: `0 0 0 3px ${dotColor}28`,
           }} />
           <h3 style={{
             fontSize: 15, fontWeight: 700, color: "var(--l1)",
@@ -137,7 +133,6 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           }}>
             {job.job_name}
           </h3>
-          {/* Status pill */}
           <span className={`status-pill ${
             isApplied ? "pill-applied" : isUrgent ? "pill-urgent"
             : isSoon  ? "pill-notice"  : "pill-pending"
@@ -155,8 +150,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             {job.tags.split(",").map((tg, i) => tg.trim() && (
               <span key={i} style={{
                 display: "inline-flex", alignItems: "center", gap: 3,
-                background: "rgba(0,122,255,.10)", color: "var(--blue)",
-                border: ".5px solid rgba(0,122,255,.18)",
+                background: "rgba(0,122,255,.09)", color: "var(--blue)",
+                border: ".5px solid rgba(0,122,255,.16)",
                 padding: "3px 9px", borderRadius: 99,
                 fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
               }}>
@@ -209,7 +204,6 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           {job.notes && (
             <div style={{
               background: "rgba(120,120,128,.07)",
-              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
               border: ".5px solid rgba(255,255,255,.50)",
               borderRadius: 10, padding: "10px 12px", marginBottom: 9,
               fontSize: 14, color: "var(--l2)", lineHeight: 1.55,
@@ -221,9 +215,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           {/* ── Login credentials ── */}
           {(job.app_username || job.app_password) && (
             <div style={{
-              background: "rgba(0,122,255,.08)",
-              backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
-              border: ".5px solid rgba(0,122,255,.16)",
+              background: "rgba(0,122,255,.07)",
+              border: ".5px solid rgba(0,122,255,.14)",
               borderRadius: 10, padding: "10px 12px", marginBottom: 9,
             }}>
               <div style={{
@@ -238,9 +231,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                     className="tg-press"
                     style={{
                       display: "flex", alignItems: "center", gap: 5,
-                      background: "rgba(255,255,255,.70)",
-                      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                      border: ".5px solid rgba(255,255,255,.80)",
+                      background: "rgba(255,255,255,.72)",
+                      border: ".5px solid rgba(255,255,255,.82)",
                       borderRadius: 8, padding: "7px 11px",
                       fontSize: 13, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
                     }}>
@@ -254,9 +246,8 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                     className="tg-press"
                     style={{
                       display: "flex", alignItems: "center", gap: 5,
-                      background: "rgba(255,255,255,.70)",
-                      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                      border: ".5px solid rgba(255,255,255,.80)",
+                      background: "rgba(255,255,255,.72)",
+                      border: ".5px solid rgba(255,255,255,.82)",
                       borderRadius: 8, padding: "7px 11px",
                       fontSize: 13, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
                     }}>
@@ -270,13 +261,12 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           )}
 
           {/* ── Documents accordion ── */}
-          <div style={{ marginBottom: 10 }}>
+          <div style={{ marginBottom: 11 }}>
             <button type="button" onClick={() => setDocsOpen(p => !p)}
               className="tg-press"
               style={{
                 display: "flex", alignItems: "center", gap: 8, width: "100%",
-                background: "rgba(120,120,128,.08)",
-                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                background: "rgba(120,120,128,.07)",
                 border: ".5px solid rgba(255,255,255,.45)",
                 borderRadius: docsOpen ? "10px 10px 0 0" : 10,
                 padding: "10px 13px", fontSize: 14, fontWeight: 600,
@@ -300,20 +290,16 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 
             {docsOpen && (
               <div className="a-in" style={{
-                background: "rgba(120,120,128,.06)",
-                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                background: "rgba(120,120,128,.05)",
                 border: ".5px solid rgba(255,255,255,.40)",
-                borderTop: "none",
-                borderRadius: "0 0 10px 10px", padding: 11,
+                borderTop: "none", borderRadius: "0 0 10px 10px", padding: 11,
               }}>
-                {/* ISSUE 6 FIX: document type labels use i18n keys */}
                 <div className="scroll-x" style={{ marginBottom: docs.length > 0 ? 9 : 0 }}>
                   {DOC_TYPES.map(({ key, i18n }) => (
                     <label key={key} className="tg-press" style={{
                       display: "inline-flex", alignItems: "center", gap: 5,
-                      background: "rgba(255,255,255,.65)",
-                      backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                      border: ".5px solid rgba(255,255,255,.70)",
+                      background: "rgba(255,255,255,.68)",
+                      border: ".5px solid rgba(255,255,255,.72)",
                       borderRadius: 99, padding: "6px 12px",
                       fontSize: 12, fontWeight: 600, color: "var(--l2)",
                       cursor: "pointer", flexShrink: 0,
@@ -344,7 +330,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                         cursor: "pointer", overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0,
                       }}>
-                      {t("doc_" + doc.document_type) || doc.document_type?.replace("_", " ")} — {doc.file_name}
+                      {t("doc_" + doc.document_type)} — {doc.file_name}
                     </button>
                     <button type="button" onClick={() => deleteDoc(doc)} className="tg-press"
                       style={{ background: "none", border: "none", color: "var(--red)",
@@ -357,16 +343,15 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             )}
           </div>
 
-          {/* Separator */}
+          {/* ── Separator ── */}
           <div style={{ height: .5, background: "var(--sep)", marginBottom: 11 }} />
 
-          {/* ── Action buttons ── */}
+          {/* ── Action buttons — always fully visible, no clipping ── */}
           <div style={{ display: "flex", gap: 7 }}>
             {isFuture ? (
               <div style={{
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(120,120,128,.08)",
-                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                background: "rgba(120,120,128,.07)",
                 borderRadius: 12, padding: "11px 8px",
                 fontSize: 13, fontWeight: 600, color: "var(--l3)",
                 border: ".5px solid rgba(255,255,255,.40)",
@@ -390,7 +375,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             )}
 
             <button type="button" onClick={handleToggle}
-              className="btn btn-gray tg-press" style={{ flexShrink: 0 }}>
+              className="btn btn-gray tg-press" style={{ flexShrink: 0, minWidth: 80 }}>
               {isApplied ? <RotateCcw size={15} /> : <Circle size={15} />}
               {isApplied ? t("undo_btn") : t("mark_btn")}
             </button>
@@ -418,8 +403,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
 function DateCell({ icon, label, value, sub, subColor }) {
   return (
     <div style={{
-      background: "rgba(120,120,128,.08)",
-      backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+      background: "rgba(120,120,128,.07)",
       border: ".5px solid rgba(255,255,255,.45)",
       borderRadius: 10, padding: "9px 11px",
     }}>
@@ -430,9 +414,7 @@ function DateCell({ icon, label, value, sub, subColor }) {
       }}>
         {icon}{label}
       </div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--l1)" }}>
-        {value}
-      </div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--l1)" }}>{value}</div>
       {sub && (
         <div style={{ fontSize: 11, fontWeight: 700, color: subColor, marginTop: 2 }}>
           {sub}
