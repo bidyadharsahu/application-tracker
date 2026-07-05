@@ -164,10 +164,10 @@ export default function Landing({ setUrgentCount }) {
                 <AlertTriangle size={17} color="var(--ios-red)" />
               </div>
               <div style={{ flex:1 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"var(--label-1)" }}>
+                <div style={{ fontSize:18, fontWeight:700, color:"var(--label-1)" }}>
                   {t("deadlines_closing", { n: urgent.length })}
                 </div>
-                <div style={{ fontSize:12, color:"var(--label-3)", marginTop:1 }}>
+                <div style={{ fontSize:15, color:"var(--label-3)", marginTop:1 }}>
                   {t("tap_review_pending")}
                 </div>
               </div>
@@ -185,13 +185,13 @@ export default function Landing({ setUrgentCount }) {
                 <Calendar size={17} color="var(--ios-blue)" />
               </div>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"var(--ios-blue)", textTransform:"uppercase", letterSpacing:".06em" }}>
+                <div style={{ fontSize:12, fontWeight:700, color:"var(--ios-blue)", textTransform:"uppercase", letterSpacing:".06em" }}>
                   {t("next_exam")}
                 </div>
-                <div style={{ fontSize:14, fontWeight:700, color:"var(--label-1)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                <div style={{ fontSize:18, fontWeight:700, color:"var(--label-1)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                   {nextExam.job_name}
                 </div>
-                <div style={{ fontSize:12, color:"var(--label-3)", marginTop:1 }}>
+                <div style={{ fontSize:15, color:"var(--label-3)", marginTop:1 }}>
                   {examIn(nextExam.exam_date)} · {formatDate(nextExam.exam_date)}
                 </div>
               </div>
@@ -209,10 +209,10 @@ export default function Landing({ setUrgentCount }) {
                 <CheckCircle2 size={17} color="var(--ios-green)" />
               </div>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:"var(--ios-green)", textTransform:"uppercase", letterSpacing:".06em" }}>
+                <div style={{ fontSize:12, fontWeight:700, color:"var(--ios-green)", textTransform:"uppercase", letterSpacing:".06em" }}>
                   {t("last_applied")}
                 </div>
-                <div style={{ fontSize:14, fontWeight:700, color:"var(--label-1)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                <div style={{ fontSize:18, fontWeight:700, color:"var(--label-1)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                   {recentlyApplied.job_name}
                 </div>
               </div>
@@ -230,11 +230,11 @@ export default function Landing({ setUrgentCount }) {
             ].map(({ k, labelKey, emoji, fg }, i) => (
               <button key={k} type="button" onClick={() => goTab(k)}
                 className={"stat-tile tg-press a-up d" + (i+3)}>
-                <div style={{ fontSize:26, marginBottom:6 }}>{emoji}</div>
-                <div style={{ fontSize:26, fontWeight:800, color:"var(--label-1)", lineHeight:1, marginBottom:3 }}>
+                <div style={{ fontSize:32, marginBottom:6 }}>{emoji}</div>
+                <div style={{ fontSize:32, fontWeight:800, color:"var(--label-1)", lineHeight:1, marginBottom:3 }}>
                   {loading ? "—" : counts[k]}
                 </div>
-                <div style={{ fontSize:11, fontWeight:700, color:fg }}>
+                <div style={{ fontSize:14, fontWeight:700, color:fg }}>
                   {t(labelKey)}
                 </div>
               </button>
@@ -260,7 +260,7 @@ export default function Landing({ setUrgentCount }) {
           <h2 style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
             {t(cfg.labelKey)}
           </h2>
-          {cfg.subKey && <p style={{ fontSize:11, color:"var(--label-3)", marginTop:1 }}>{t(cfg.subKey)}</p>}
+          {cfg.subKey && <p style={{ fontSize:14, color:"var(--label-3)", marginTop:1 }}>{t(cfg.subKey)}</p>}
         </div>
         <LangBtn />
         <button type="button"
@@ -269,7 +269,7 @@ export default function Landing({ setUrgentCount }) {
           aria-label={showSearch ? "Close search" : "Search"}>
           {showSearch ? <X size={17} /> : <Search size={17} />}
         </button>
-        <div style={{ fontSize:12, fontWeight:700, color:"var(--label-2)",
+        <div style={{ fontSize:15, fontWeight:700, color:"var(--label-2)",
           background:"var(--fill-3)", padding:"4px 10px", borderRadius:99, flexShrink:0 }}>
           {list.length}
         </div>
@@ -280,7 +280,7 @@ export default function Landing({ setUrgentCount }) {
           <Search size={15} style={{ position:"absolute", left:28, top:"50%", transform:"translateY(-50%)", color:"var(--label-4)", pointerEvents:"none" }} />
           <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
             placeholder={t("search_placeholder", { label: t(cfg.labelKey).toLowerCase() })}
-            className="ios-input" style={{ paddingLeft:38, fontSize:16 }} />
+            className="ios-input" style={{ paddingLeft:38, fontSize:18 }} />
           {query && (
             <button onClick={() => setQuery("")}
               style={{ position:"absolute", right:24, top:"50%", transform:"translateY(-50%)",
@@ -314,7 +314,7 @@ function LiveClock({ lang }) {
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
   const loc = lang === "or" ? "or-IN" : "en-IN";
   return (
-    <p style={{ fontSize:13, color:"var(--label-3)", marginTop:5, fontWeight:500 }}>
+    <p style={{ fontSize:16, color:"var(--label-3)", marginTop:5, fontWeight:500 }}>
       {now.toLocaleDateString(loc, { weekday:"short", day:"numeric", month:"short" })}
       {" · "}
       <span style={{ fontVariantNumeric:"tabular-nums" }}>
@@ -342,11 +342,11 @@ function EmptyState({ query, tab, t }) {
   const emoji = query ? "🔍" : tab === "applied" ? "📭" : tab === "pending" ? "🎉" : "📬";
   return (
     <div className="ios-card a-pop" style={{ padding:"46px 18px", textAlign:"center" }}>
-      <div style={{ fontSize:42, marginBottom:12 }}>{emoji}</div>
-      <h3 style={{ fontSize:16, fontWeight:700, color:"var(--label-1)", marginBottom:5 }}>
+      <div style={{ fontSize:52, marginBottom:12 }}>{emoji}</div>
+      <h3 style={{ fontSize:20, fontWeight:700, color:"var(--label-1)", marginBottom:5 }}>
         {query ? t("no_results") : t("no_jobs_in_tab", { tab: t("status_"+tab).toLowerCase() })}
       </h3>
-      <p style={{ fontSize:13, color:"var(--label-3)", lineHeight:1.55 }}>
+      <p style={{ fontSize:16, color:"var(--label-3)", lineHeight:1.55 }}>
         {query ? t("try_different_keywords")
           : tab === "applied" ? t("mark_applied_to_see")
           : t("add_from_admin")}

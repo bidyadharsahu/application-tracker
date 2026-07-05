@@ -128,7 +128,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
             boxShadow: `0 0 0 3px ${dotColor}28`,
           }} />
           <h3 style={{
-            fontSize: 15, fontWeight: 700, color: "var(--l1)",
+            fontSize: 18, fontWeight: 700, color: "var(--l1)",
             flex: 1, lineHeight: 1.35, letterSpacing: "-.01em",
           }}>
             {job.job_name}
@@ -153,7 +153,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                 background: "rgba(0,122,255,.09)", color: "var(--blue)",
                 border: ".5px solid rgba(0,122,255,.16)",
                 padding: "3px 9px", borderRadius: 99,
-                fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
+                fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0,
               }}>
                 <Tag size={9} />{tg.trim()}
               </span>
@@ -206,7 +206,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
               background: "rgba(120,120,128,.07)",
               border: ".5px solid rgba(255,255,255,.50)",
               borderRadius: 10, padding: "10px 12px", marginBottom: 9,
-              fontSize: 14, color: "var(--l2)", lineHeight: 1.55,
+              fontSize: 16, color: "var(--l2)", lineHeight: 1.55,
             }}>
               {job.notes}
             </div>
@@ -220,7 +220,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
               borderRadius: 10, padding: "10px 12px", marginBottom: 9,
             }}>
               <div style={{
-                fontSize: 10, fontWeight: 700, color: "var(--blue)",
+                fontSize: 13, fontWeight: 700, color: "var(--blue)",
                 textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 7,
               }}>
                 {t("login_label")}
@@ -234,7 +234,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                       background: "rgba(255,255,255,.72)",
                       border: ".5px solid rgba(255,255,255,.82)",
                       borderRadius: 8, padding: "7px 11px",
-                      fontSize: 13, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
+                      fontSize: 16, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
                     }}>
                     <User size={12} color="var(--blue)" />
                     {job.app_username}
@@ -249,7 +249,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                       background: "rgba(255,255,255,.72)",
                       border: ".5px solid rgba(255,255,255,.82)",
                       borderRadius: 8, padding: "7px 11px",
-                      fontSize: 13, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
+                      fontSize: 16, fontWeight: 600, color: "var(--l1)", cursor: "pointer",
                     }}>
                     <Lock size={12} color="var(--blue)" />
                     {job.app_password}
@@ -269,7 +269,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                 background: "rgba(120,120,128,.07)",
                 border: ".5px solid rgba(255,255,255,.45)",
                 borderRadius: docsOpen ? "10px 10px 0 0" : 10,
-                padding: "10px 13px", fontSize: 14, fontWeight: 600,
+                padding: "10px 13px", fontSize: 16, fontWeight: 600,
                 color: "var(--l2)", cursor: "pointer", transition: "border-radius .15s",
               }}>
               <Paperclip size={14} color="var(--l3)" />
@@ -278,7 +278,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                 <span style={{
                   background: "var(--blue)", color: "#fff",
                   borderRadius: 99, padding: "0 7px",
-                  fontSize: 10, fontWeight: 700, marginLeft: 2,
+                  fontSize: 13, fontWeight: 700, marginLeft: 2,
                 }}>
                   {docs.length}
                 </span>
@@ -301,7 +301,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                       background: "rgba(255,255,255,.68)",
                       border: ".5px solid rgba(255,255,255,.72)",
                       borderRadius: 99, padding: "6px 12px",
-                      fontSize: 12, fontWeight: 600, color: "var(--l2)",
+                      fontSize: 15, fontWeight: 600, color: "var(--l2)",
                       cursor: "pointer", flexShrink: 0,
                       opacity: uploading ? .5 : 1,
                     }}>
@@ -317,7 +317,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                     display: "flex", alignItems: "center", gap: 9,
                     padding: "8px 0", borderTop: ".5px solid var(--sep)",
                   }}>
-                    <span style={{ fontSize: 17, flexShrink: 0 }}>
+                    <span style={{ fontSize: 22, flexShrink: 0 }}>
                       {doc.document_type === "admit_card" ? "🎫"
                        : doc.document_type === "hall_ticket" ? "🎟"
                        : doc.document_type === "result" ? "📊" : "📄"}
@@ -326,7 +326,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                       className="tg-press"
                       style={{
                         flex: 1, textAlign: "left", background: "none", border: "none",
-                        fontSize: 13, fontWeight: 600, color: "var(--blue)",
+                        fontSize: 16, fontWeight: 600, color: "var(--blue)",
                         cursor: "pointer", overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap", padding: 0,
                       }}>
@@ -353,7 +353,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                 flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
                 background: "rgba(120,120,128,.07)",
                 borderRadius: 12, padding: "11px 8px",
-                fontSize: 13, fontWeight: 600, color: "var(--l3)",
+                fontSize: 16, fontWeight: 600, color: "var(--l3)",
                 border: ".5px solid rgba(255,255,255,.40)",
               }}>
                 {t("opens_on", { date: formatDate(job.start_date) })}
@@ -409,14 +409,14 @@ function DateCell({ icon, label, value, sub, subColor }) {
     }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 3,
-        fontSize: 10, fontWeight: 700, color: "var(--l4)",
+        fontSize: 13, fontWeight: 700, color: "var(--l4)",
         textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 4,
       }}>
         {icon}{label}
       </div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--l1)" }}>{value}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--l1)" }}>{value}</div>
       {sub && (
-        <div style={{ fontSize: 11, fontWeight: 700, color: subColor, marginTop: 2 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: subColor, marginTop: 2 }}>
           {sub}
         </div>
       )}

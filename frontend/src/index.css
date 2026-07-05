@@ -61,7 +61,7 @@ html {
 }
 body {
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
-  font-size:16px; line-height:1.45; letter-spacing:-.01em;
+  font-size:18px; line-height:1.45; letter-spacing:-.01em;
   color:var(--l1);
   -webkit-font-smoothing:antialiased;
   overscroll-behavior:none;
@@ -126,11 +126,11 @@ body {
   border-bottom:.5px solid rgba(255,255,255,.38);
 }
 .nav-large-title .eyebrow {
-  font-size:11px; font-weight:700; letter-spacing:.06em;
+  font-size:14px; font-weight:700; letter-spacing:.06em;
   text-transform:uppercase; color:var(--l3); margin-bottom:3px;
 }
 .nav-large-title h1 {
-  font-size:32px; font-weight:800;
+  font-size:36px; font-weight:800;
   letter-spacing:-.03em; color:var(--l1); line-height:1.1;
 }
 
@@ -144,7 +144,7 @@ body {
   padding:calc(10px + var(--sat)) 14px 10px;
   display:flex; align-items:center; gap:8px;
 }
-.nav-inline-title h2 { font-size:17px; font-weight:700; color:var(--l1); }
+.nav-inline-title h2 { font-size:20px; font-weight:700; color:var(--l1); }
 
 /* ── Tab bar ─────────────────────────────────────── */
 .tab-bar {
@@ -178,7 +178,7 @@ body {
 .tab-item:active .tab-icon-wrap { transform:scale(.76); }
 .tab-item.active .tab-icon-wrap { background:rgba(0,122,255,.13); }
 .tab-label {
-  font-size:10px; font-weight:600; letter-spacing:.01em;
+  font-size:12px; font-weight:600; letter-spacing:.01em;
   color:var(--l3); transition:color .16s var(--ot);
 }
 .tab-item.active .tab-label { color:var(--blue); }
@@ -194,7 +194,7 @@ body {
   min-width:16px; height:16px; padding:0 4px;
   background:var(--red); color:#fff;
   border-radius:99px; border:1.5px solid rgba(208,218,232,.97);
-  font-size:10px; font-weight:700;
+  font-size:12px; font-weight:700;
   display:flex; align-items:center; justify-content:center;
   animation:popIn .22s var(--sp) both;
 }
@@ -258,7 +258,7 @@ body {
 /* ── Buttons ─────────────────────────────────────── */
 .btn {
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
-  font-family:inherit; font-weight:600; font-size:16px;
+  font-family:inherit; font-weight:600; font-size:18px;
   border:none; cursor:pointer;
   -webkit-tap-highlight-color:transparent; touch-action:manipulation;
   transition:transform .13s var(--sp), opacity .10s var(--ot);
@@ -275,13 +275,13 @@ body {
 .btn-plain    { background:transparent; color:var(--blue); padding:0 8px; min-height:36px; }
 .btn-danger-tinted  { background:rgba(255,59,48,.11); color:var(--red); border:.5px solid rgba(255,59,48,.16); }
 .btn-success-tinted { background:rgba(52,199,89,.11); color:var(--green); border:.5px solid rgba(52,199,89,.18); }
-.btn-sm   { min-height:36px; padding:0 13px; font-size:14px; border-radius:var(--rs); }
+.btn-sm   { min-height:36px; padding:0 13px; font-size:16px; border-radius:var(--rs); }
 .btn-icon { width:38px; height:38px; min-height:38px; padding:0; border-radius:var(--rs); }
 
 /* ── Status pills ────────────────────────────────── */
 .status-pill {
   display:inline-flex; align-items:center; gap:3px;
-  font-size:11px; font-weight:700; letter-spacing:.01em;
+  font-size:13px; font-weight:700; letter-spacing:.01em;
   padding:3px 9px; border-radius:var(--rp); white-space:nowrap;
 }
 .pill-pending { background:var(--to); color:#B25900; }
@@ -295,7 +295,7 @@ body {
   background:rgba(238,241,246,.90);
   border:1.5px solid transparent;
   border-radius:var(--rm); padding:13px 14px;
-  font-family:inherit; font-size:16px; color:var(--l1);
+  font-family:inherit; font-size:18px; color:var(--l1);
   outline:none; -webkit-appearance:none; min-height:48px;
   transition:border-color .16s var(--ot), background .14s, box-shadow .16s var(--ot);
 }
@@ -306,7 +306,7 @@ body {
   box-shadow:0 0 0 3px rgba(0,122,255,.10);
 }
 textarea.ios-input { resize:vertical; min-height:80px; }
-.ios-label { font-size:13px; font-weight:600; color:var(--l2); margin-bottom:5px; display:block; }
+.ios-label { font-size:16px; font-weight:600; color:var(--l2); margin-bottom:5px; display:block; }
 
 /* ── Progress ────────────────────────────────────── */
 .ios-progress-track { height:5px; background:var(--f3); border-radius:99px; overflow:hidden; }
@@ -342,7 +342,7 @@ textarea.ios-input { resize:vertical; min-height:80px; }
 /* ── Language toggle ─────────────────────────────── */
 .lang-switch {
   display:inline-flex; align-items:center; gap:5px;
-  font-family:inherit; font-weight:700; font-size:12px;
+  font-family:inherit; font-weight:700; font-size:14px;
   background:rgba(255,255,255,.56);
   border:.5px solid rgba(255,255,255,.82);
   color:var(--l1); border-radius:var(--rp);
@@ -431,6 +431,6 @@ textarea.ios-input { resize:vertical; min-height:80px; }
 }
 .scroll-x::-webkit-scrollbar { display:none; }
 .section-eyebrow {
-  font-size:11px; font-weight:700; letter-spacing:.05em;
+  font-size:14px; font-weight:700; letter-spacing:.05em;
   text-transform:uppercase; color:var(--l3); margin:0 0 7px 2px;
 }

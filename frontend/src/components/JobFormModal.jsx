@@ -4,6 +4,10 @@ import { toast } from "sonner";
 import { parseFlexDate, toDisplayDate } from "../lib/utils-date";
 import { useI18n } from "../lib/i18n";
 
+const F = ({ label, children }) => (
+  <div><label className="ios-label">{label}</label>{children}</div>
+);
+
 export default function JobFormModal({ open, onClose, onSave, initial, prefill }) {
   const { t } = useI18n();
   const [form, setForm] = useState({
@@ -79,13 +83,11 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
     } finally { setSaving(false); }
   };
 
-  const F = ({ label, children }) => (
-    <div><label className="ios-label">{label}</label>{children}</div>
-  );
+
 
   // 16px = no iOS zoom. autoComplete="off" prevents ghost dropdown covering field.
   const inputProps = {
-    style: { fontSize: 16 },
+    style: { fontSize: 18 },
     autoComplete: "off",
     autoCorrect: "off",
     autoCapitalize: "sentences",
@@ -105,10 +107,10 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
           <div>
-            <div style={{ fontSize: 19, fontWeight: 800, color: "var(--label-1)" }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--label-1)" }}>
               {initial ? t("edit_job") : t("new_job_form_title")}
             </div>
-            <div style={{ fontSize: 12, color: "var(--label-3)", marginTop: 2 }}>
+            <div style={{ fontSize: 15, color: "var(--label-3)", marginTop: 2 }}>
               {t("fill_details_below")}
             </div>
           </div>
@@ -161,7 +163,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
               data-testid="job-form-exam-date"
               inputMode="text"
             />
-            <p style={{ fontSize: 11, color: "var(--label-4)", marginTop: 4, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: "var(--label-4)", marginTop: 4, lineHeight: 1.5 }}>
               💡 {t("exam_date_hint")}
             </p>
           </F>
@@ -177,7 +179,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
 
           <F label={t("apply_link_label")}>
             <input className="ios-input"
-              style={{ fontSize: 16 }}
+              style={{ fontSize: 18 }}
               value={form.apply_link}
               onChange={e => set("apply_link", e.target.value)}
               placeholder="https://…"
@@ -207,7 +209,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
           </div>
 
           <F label={t("notes_label")}>
-            <textarea className="ios-input" style={{ fontSize: 16, resize: "vertical", minHeight: 72 }}
+            <textarea className="ios-input" style={{ fontSize: 18, resize: "vertical", minHeight: 72 }}
               value={form.notes}
               onChange={e => set("notes", e.target.value)}
               placeholder={t("notes_placeholder")}
