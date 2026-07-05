@@ -1,13 +1,11 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Plus, Sparkles, LogOut, ArrowLeft, RefreshCw } from "lucide-react";
+import { Plus, LogOut, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import api, { clearToken } from "../lib/api";
 import { sortJobs } from "../lib/utils-date";
 import JobCard from "../components/JobCard";
 import JobFormModal from "../components/JobFormModal";
-import SmartPasteModal from "../components/SmartPasteModal";
 import { useI18n } from "../lib/i18n";
 
 export default function AdminDashboard() {
@@ -15,9 +13,7 @@ export default function AdminDashboard() {
   const [jobs,       setJobs]       = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [formOpen,   setFormOpen]   = useState(false);
-  const [pasteOpen,  setPasteOpen]  = useState(false);
   const [editingJob, setEditingJob] = useState(null);
-  const [prefill,    setPrefill]    = useState(null);
   const [tab,        setTab]        = useState("all");
   const nav   = useNavigate();
   const today = new Date().toISOString().split("T")[0];
@@ -67,7 +63,7 @@ export default function AdminDashboard() {
         await api.createJob(payload);
         toast.success(t("job_added_toast"));
       }
-      setFormOpen(false); setEditingJob(null); setPrefill(null); load();
+      setFormOpen(false); setEditingJob(null); load();
     } catch (e) {
       toast.error(e?.response?.data?.detail || t("save_failed"));
     }
@@ -96,10 +92,11 @@ export default function AdminDashboard() {
 
   return (
     <div style={{
-      height: "100dvh", background: "transparent",
-      display: "flex", flexDirection: "column", overflow: "hidden",
+      position: "absolute", inset: 0,
+      display: "flex", flexDirection: "column",
+      background: "transparent", overflow: "hidden",
     }}>
-      {/* Sticky header */}
+      {/* ── Sticky header ── */}
       <div className="nav-inline-title" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
         {/* Top row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -112,13 +109,8 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
-            {/* Language toggle */}
-            <button
-              type="button"
-              onClick={toggleLang}
-              className="lang-switch tg-press"
-              aria-label={lang === "en" ? "Switch to Odia" : "Switch to English"}
-            >
+            <button type="button" onClick={toggleLang} className="lang-switch tg-press"
+              aria-label={lang === "en" ? "Switch to Odia" : "Switch to English"}>
               {lang === "en" ? "ଓଡ଼ିଆ" : "English"}
             </button>
             <Link to="/" className="btn btn-gray btn-icon tg-press">
@@ -127,49 +119,31 @@ export default function AdminDashboard() {
             <button type="button" onClick={load} className="btn btn-gray btn-icon tg-press">
               <RefreshCw size={15} />
             </button>
-            <button
-              type="button"
-              onClick={() => { clearToken(); toast.success(t("deleted_toast")); nav("/"); }}
-              className="btn btn-danger-tinted btn-icon tg-press"
-            >
+            <button type="button"
+              onClick={() => { clearToken(); nav("/"); }}
+              className="btn btn-danger-tinted btn-icon tg-press">
               <LogOut size={15} />
             </button>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            type="button"
-            onClick={() => { setEditingJob(null); setPrefill(null); setFormOpen(true); }}
-            className="btn btn-filled tg-press"
-            data-testid="new-job-btn"
-            style={{ flex: 1 }}
-          >
-            <Plus size={16} /> {t("new_job")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPasteOpen(true)}
-            className="btn btn-tinted tg-press"
-            data-testid="smart-paste-btn"
-            style={{ flex: 1 }}
-          >
-            <Sparkles size={16} /> {t("smart_paste")}
-          </button>
-        </div>
+        {/* New job button — full width, no Smart Paste */}
+        <button
+          type="button"
+          onClick={() => { setEditingJob(null); setFormOpen(true); }}
+          className="btn btn-filled tg-press"
+          data-testid="new-job-btn"
+          style={{ width: "100%" }}>
+          <Plus size={16} /> {t("new_job")}
+        </button>
 
-        {/* Segmented tab control */}
+        {/* Segmented tab */}
         <div style={{
           display: "flex", background: "var(--fill-3)",
           borderRadius: 12, padding: 3, gap: 3,
         }}>
           {TABS.map(({ k, l }) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setTab(k)}
-              className="tg-press"
+            <button key={k} type="button" onClick={() => setTab(k)} className="tg-press"
               style={{
                 flex: 1, padding: "7px 2px", borderRadius: 9,
                 border: "none", cursor: "pointer",
@@ -179,8 +153,7 @@ export default function AdminDashboard() {
                 fontSize: 12,
                 boxShadow: tab === k ? "0 1px 3px rgba(0,0,0,.10)" : "none",
                 transition: "all .18s var(--tg-out)",
-              }}
-            >
+              }}>
               {l}
               <span style={{
                 fontSize: 10, marginLeft: 3,
@@ -194,8 +167,11 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Scrollable content — padding-bottom handles safe area; no fixed tab bar in admin */}
-      <div className="app-scroll" style={{ padding: "12px 14px 0", paddingBottom: "calc(24px + var(--sab))" }}>
+      {/* ── Scroll area — no tab bar in admin, so padding-bottom = sab + 24 only ── */}
+      <div className="app-scroll" style={{
+        padding: "12px 14px 0",
+        paddingBottom: "calc(24px + var(--sab))",
+      }}>
         {loading ? (
           <>
             {[0, 1, 2].map(i => (
@@ -212,21 +188,17 @@ export default function AdminDashboard() {
               {t("no_jobs_here")}
             </div>
             <div style={{ fontSize: 13, color: "var(--label-3)" }}>
-              {t("add_via_new_or_paste")}
+              {lang === "or" ? "ଉପରে 'ନୂଆ ଆବେଦନ' ଦ୍ୱାରା ଯୋଡ଼ନ୍ତୁ" : "Tap 'New Job' above to add one"}
             </div>
           </div>
         ) : (
           <div data-testid="admin-jobs-grid">
             {visible.map((job, i) => (
-              <div
-                key={job.id}
-                className="a-up"
-                style={{ animationDelay: Math.min(i * 0.03, 0.15) + "s", marginBottom: 10 }}
-              >
+              <div key={job.id} className="a-up"
+                style={{ animationDelay: Math.min(i * 0.025, 0.12) + "s", marginBottom: 10 }}>
                 <JobCard
-                  job={job}
-                  admin
-                  onEdit={j => { setEditingJob(j); setPrefill(null); setFormOpen(true); }}
+                  job={job} admin
+                  onEdit={j => { setEditingJob(j); setFormOpen(true); }}
                   onDelete={del}
                   onToggle={toggle}
                 />
@@ -238,18 +210,10 @@ export default function AdminDashboard() {
 
       <JobFormModal
         open={formOpen}
-        onClose={() => { setFormOpen(false); setEditingJob(null); setPrefill(null); }}
+        onClose={() => { setFormOpen(false); setEditingJob(null); }}
         onSave={save}
         initial={editingJob}
-        prefill={prefill}
-      />
-      <SmartPasteModal
-        open={pasteOpen}
-        onClose={() => setPasteOpen(false)}
-        onParsed={data => {
-          setPasteOpen(false); setEditingJob(null);
-          setPrefill(data); setFormOpen(true);
-        }}
+        prefill={null}
       />
     </div>
   );
