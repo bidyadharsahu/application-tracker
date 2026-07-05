@@ -31,10 +31,10 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
     setTimeout(() => panelRef.current?.scrollTo?.(0, 0), 50);
   }, [open, initial, prefill]);
 
-  if (!open) return null;
-
   // ISSUE 1 FIX: useCallback-stable setter so child inputs never re-mount
   const set = useCallback((k, v) => setForm(f => ({ ...f, [k]: v })), []);
+
+  if (!open) return null;
 
   const save = async () => {
     if (!form.job_name.trim()) { toast.error(t("job_name_required")); return; }
