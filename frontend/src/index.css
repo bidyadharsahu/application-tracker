@@ -3,181 +3,162 @@
 @tailwind utilities;
 
 /* ════════════════════════════════════════════════════════
-   CHAKIRI KHATA  ·  iPhone 17 Pro UI  ·  Telegram Motion
-   v5 — all 6 bugs fixed: focus, icons, scroll, dates, animation, i18n
+   CHAKIRI KHATA  ·  v6
+   Root fixes: scroll clipping, animation perf, no camera SVG
 ════════════════════════════════════════════════════════ */
 
 :root {
-  /* iOS 18 system palette */
-  --blue:   #007AFF;  --green:  #34C759;  --orange: #FF9500;
-  --red:    #FF3B30;  --purple: #AF52DE;  --teal:   #30B0C7;
+  --blue:   #007AFF; --green:  #34C759; --orange: #FF9500;
+  --red:    #FF3B30; --purple: #AF52DE; --teal:   #30B0C7;
   --indigo: #5856D6;
 
-  /* ALIASES — used in App.js TabBar and AdminDashboard */
-  --ios-blue:   #007AFF;
-  --ios-green:  #34C759;
-  --ios-red:    #FF3B30;
-  --ios-orange: #FF9500;
+  --ios-blue:   #007AFF; --ios-green:  #34C759;
+  --ios-red:    #FF3B30; --ios-orange: #FF9500;
 
-  /* Tint backgrounds — used in Landing.jsx */
-  --tint-blue-bg:   #E5EFFF;
-  --tint-green-bg:  #E3F8EB;
-  --tint-red-bg:    #FFE9E8;
-  --tint-orange-bg: #FFF3E0;
+  --tint-blue-bg:   #E5EFFF; --tint-green-bg: #E3F8EB;
+  --tint-red-bg:    #FFE9E8; --tint-orange-bg:#FFF3E0;
 
-  /* Translucent fills */
-  --f1: rgba(120,120,128,.20); --f2: rgba(120,120,128,.16);
-  --f3: rgba(120,120,128,.12); --f4: rgba(120,120,128,.08);
+  --f1:rgba(120,120,128,.20); --f2:rgba(120,120,128,.16);
+  --f3:rgba(120,120,128,.12); --f4:rgba(120,120,128,.08);
+  --fill-1:rgba(120,120,128,.20); --fill-2:rgba(120,120,128,.16);
+  --fill-3:rgba(120,120,128,.12); --fill-4:rgba(120,120,128,.08);
 
-  /* Fill aliases used in AdminDashboard */
-  --fill-1: rgba(120,120,128,.20);
-  --fill-2: rgba(120,120,128,.16);
-  --fill-3: rgba(120,120,128,.12);
-  --fill-4: rgba(120,120,128,.08);
+  --l1:rgba(0,0,0,.90);     --l2:rgba(60,60,67,.70);
+  --l3:rgba(60,60,67,.48);  --l4:rgba(60,60,67,.28);
+  --label-1:rgba(0,0,0,.90);    --label-2:rgba(60,60,67,.70);
+  --label-3:rgba(60,60,67,.48); --label-4:rgba(60,60,67,.28);
 
-  /* Labels */
-  --l1: rgba(0,0,0,.90);    --l2: rgba(60,60,67,.70);
-  --l3: rgba(60,60,67,.48); --l4: rgba(60,60,67,.28);
+  --tb:#E5EFFF; --tg:#E3F8EB; --to:#FFF3E0; --tr:#FFE9E8; --tp:#F5EBFB;
 
-  /* Label aliases used in AdminDashboard and App.js */
-  --label-1: rgba(0,0,0,.90);
-  --label-2: rgba(60,60,67,.70);
-  --label-3: rgba(60,60,67,.48);
-  --label-4: rgba(60,60,67,.28);
+  --sep:rgba(60,60,67,.15); --sep2:#C6C6C8;
 
-  /* Tint backgrounds (short names used by Landing) */
-  --tb: #E5EFFF; --tg: #E3F8EB; --to: #FFF3E0;
-  --tr: #FFE9E8; --tp: #F5EBFB;
+  --rx:8px; --rs:10px; --rm:14px; --rl:18px; --rx2:22px; --rp:999px;
 
-  /* Separators */
-  --sep: rgba(60,60,67,.15); --sep2: #C6C6C8;
+  --s1:0 1px 4px rgba(0,0,0,.08),0 .5px 1px rgba(0,0,0,.04);
+  --s2:0 4px 16px rgba(0,0,0,.10);
+  --s3:0 10px 40px rgba(0,0,0,.14);
 
-  /* Radii */
-  --rx: 8px; --rs: 10px; --rm: 14px;
-  --rl: 18px; --rx2: 22px; --rp: 999px;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
 
-  /* Shadows */
-  --s1: 0 1px 4px rgba(0,0,0,.08),0 .5px 1px rgba(0,0,0,.04);
-  --s2: 0 4px 16px rgba(0,0,0,.10);
-  --s3: 0 10px 40px rgba(0,0,0,.14);
+  /* Tab bar height — single source of truth */
+  --tab:56px;
 
-  /* Safe areas */
-  --sat: env(safe-area-inset-top,0px);
-  --sab: env(safe-area-inset-bottom,0px);
-
-  /* Tab bar — must match exactly */
-  --tab: 56px;
-
-  /* Easing aliases */
-  --sp:     cubic-bezier(.175,.885,.32,1.275);
-  --ot:     cubic-bezier(.22,1,.36,1);
-  --sw:     cubic-bezier(.4,0,.2,1);
-  --tg-out: cubic-bezier(.22,1,.36,1);
+  --sp:cubic-bezier(.175,.885,.32,1.275);
+  --ot:cubic-bezier(.22,1,.36,1);
+  --sw:cubic-bezier(.4,0,.2,1);
+  --tg-out:cubic-bezier(.22,1,.36,1);
 }
 
-/* ── Global reset ───────────────────────────────────── */
+/* ── Reset ───────────────────────────────────────── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  overscroll-behavior: none;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  overscroll-behavior:none;
 }
 body {
-  font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
-  font-size: 16px; line-height: 1.45; letter-spacing: -.01em;
-  color: var(--l1);
-  -webkit-font-smoothing: antialiased;
-  overscroll-behavior: none;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+  font-size:16px; line-height:1.45; letter-spacing:-.01em;
+  color:var(--l1);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
 
-  /* WhatsApp / Telegram doodle tile background */
-  background-color: #D8DFE9;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%239BAABB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.40'%3E%3Crect x='10' y='28' width='28' height='20' rx='3'/%3E%3Cpath d='M15 28v-4a3 3 0 013-3h10a3 3 0 013 3v4'/%3E%3Cline x1='24' y1='38' x2='24' y2='39'/%3E%3Crect x='96' y='10' width='30' height='26' rx='3'/%3E%3Cline x1='96' y1='20' x2='126' y2='20'/%3E%3Cline x1='104' y1='10' x2='104' y2='6'/%3E%3Cline x1='118' y1='10' x2='118' y2='6'/%3E%3Ccircle cx='105' cy='29' r='1.5'/%3E%3Ccircle cx='111' cy='29' r='1.5'/%3E%3Ccircle cx='117' cy='29' r='1.5'/%3E%3Ccircle cx='18' cy='82' r='13'/%3E%3Cpath d='M12 82l5 6 9-11'/%3E%3Cpath d='M104 65a11 11 0 0122 0v11h-22z'/%3E%3Cpath d='M108 76a7 3 0 0014 0'/%3E%3Cline x1='115' y1='54' x2='115' y2='51'/%3E%3Crect x='6' y='106' width='24' height='30' rx='3'/%3E%3Cline x1='11' y1='116' x2='25' y2='116'/%3E%3Cline x1='11' y1='122' x2='25' y2='122'/%3E%3Cline x1='11' y1='128' x2='19' y2='128'/%3E%3Cpath d='M110 110l11-11 8 8-11 11z'/%3E%3Cpath d='M110 110l-5 13 13-5z'/%3E%3Cpolygon points='70,52 73,62 84,62 75,68 78,78 70,72 62,78 65,68 56,62 67,62'/%3E%3Ccircle cx='58' cy='10' r='2.2'/%3E%3Ccircle cx='132' cy='52' r='2'/%3E%3Ccircle cx='4' cy='52' r='1.6'/%3E%3Ccircle cx='70' cy='132' r='2.2'/%3E%3Ccircle cx='136' cy='112' r='1.6'/%3E%3Ccircle cx='44' cy='98' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 140px 140px;
+  /* Doodle background — camera replaced with bell icon */
+  background-color:#D4DCE8;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cg fill='none' stroke='%238FA4BC' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' opacity='0.32'%3E%3Crect x='10' y='28' width='28' height='20' rx='3'/%3E%3Cpath d='M15 28v-4a3 3 0 013-3h10a3 3 0 013 3v4'/%3E%3Cline x1='24' y1='38' x2='24' y2='39'/%3E%3Crect x='96' y='10' width='30' height='26' rx='3'/%3E%3Cline x1='96' y1='20' x2='126' y2='20'/%3E%3Cline x1='104' y1='10' x2='104' y2='6'/%3E%3Cline x1='118' y1='10' x2='118' y2='6'/%3E%3Ccircle cx='18' cy='82' r='13'/%3E%3Cpath d='M12 82l5 6 9-11'/%3E%3Cpath d='M115 56a9 9 0 00-9 9v7l-2 3h22l-2-3v-7a9 9 0 00-9-9z'/%3E%3Cline x1='115' y1='52' x2='115' y2='55'/%3E%3Cpath d='M111 75a4 4 0 008 0'/%3E%3Crect x='6' y='106' width='24' height='30' rx='3'/%3E%3Cline x1='11' y1='116' x2='25' y2='116'/%3E%3Cline x1='11' y1='122' x2='25' y2='122'/%3E%3Cline x1='11' y1='128' x2='19' y2='128'/%3E%3Cpath d='M110 110l11-11 8 8-11 11z'/%3E%3Cpath d='M110 110l-5 13 13-5z'/%3E%3Cpolygon points='70,52 73,62 84,62 75,68 78,78 70,72 62,78 65,68 56,62 67,62'/%3E%3Ccircle cx='58' cy='10' r='2'/%3E%3Ccircle cx='132' cy='52' r='1.8'/%3E%3Ccircle cx='4' cy='52' r='1.4'/%3E%3Ccircle cx='70' cy='132' r='2'/%3E%3Ccircle cx='136' cy='112' r='1.4'/%3E%3Ccircle cx='44' cy='98' r='1.4'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:repeat;
+  background-size:140px 140px;
 }
 
-/* ══════════════════════════════════════════════════════
-   APP SHELL — position:fixed rectangle.
-   No height chains. No dvh math. Works on every mobile browser.
-══════════════════════════════════════════════════════ */
-#root,.App {
-  position: fixed; inset: 0;
-  overflow: hidden; background: transparent;
+/* ══════════════════════════════════════════════════
+   APP SHELL
+   #root / .App = fixed, fills viewport, clips nothing
+   .app-screen = absolute, fills shell, flex column
+   .app-scroll = flex:1 scroll, pb clears tab bar
+══════════════════════════════════════════════════ */
+#root, .App {
+  position:fixed; inset:0;
+  /* CRITICAL: overflow:hidden on root must NOT clip .app-scroll's pb.
+     Root clips only what escapes the fixed rect (modals use position:fixed
+     themselves so they're fine). The scroll pb is inside .app-scroll which
+     is inside the fixed rect — so this is safe. */
+  overflow:hidden;
+  background:transparent;
 }
 
-/* Each route renders .app-screen — fills the fixed shell */
 .app-screen {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  background: transparent;
-  /* ⚠️  NO overflow:hidden here — it would clip padding-bottom on .app-scroll */
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  background:transparent;
+  overflow:hidden; /* needed so header doesn't scroll */
 }
 
-/* ══════════════════════════════════════════════════════
-   THE SCROLL REGION — single scroll container per screen.
-   CRITICAL: all three rules + padding-bottom must be present.
-══════════════════════════════════════════════════════ */
+/* ── THE scroll container ────────────────────────
+   padding-bottom = tab height + safe area + generous buffer.
+   This is the ONE place that keeps the last card clear.
+   96px = 56px tab + up to 34px safe-area + 6px spare.
+   We use a fixed 96px fallback then add sab on top.
+─────────────────────────────────────────────────── */
 .app-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  /* 56px tab + safe-area-bottom + 40px extra so last card fully clears */
-  padding-bottom: calc(var(--tab) + var(--sab) + 40px);
-  /* GPU layer for smooth scrolling */
-  transform: translateZ(0);
-  will-change: scroll-position;
+  flex:1;
+  min-height:0;         /* flex child must have this or won't shrink */
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+
+  /* 56 tab + sab + 56 generous buffer = last card always clear */
+  padding-bottom:calc(var(--tab) + var(--sab) + 56px);
+
+  /* NO transform/will-change here — causes scroll jank on Android */
 }
 
-/* ── Large title (Home) ──────────────────────────── */
+/* ── Large title ─────────────────────────────────── */
 .nav-large-title {
-  flex-shrink: 0;
-  padding: calc(14px + var(--sat)) 16px 10px;
-  background: linear-gradient(180deg,rgba(168,188,215,.97) 0%,rgba(210,218,230,.93) 100%);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border-bottom: .5px solid rgba(255,255,255,.35);
+  flex-shrink:0;
+  padding:calc(14px + var(--sat)) 16px 12px;
+  background:linear-gradient(180deg,rgba(172,192,218,.97) 0%,rgba(212,220,232,.92) 100%);
+  backdrop-filter:blur(32px) saturate(200%);
+  -webkit-backdrop-filter:blur(32px) saturate(200%);
+  border-bottom:.5px solid rgba(255,255,255,.38);
 }
 .nav-large-title .eyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--l3); margin-bottom: 2px;
+  font-size:11px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--l3); margin-bottom:3px;
 }
 .nav-large-title h1 {
-  font-size: 32px; font-weight: 800;
-  letter-spacing: -.03em; color: var(--l1); line-height: 1.1;
+  font-size:32px; font-weight:800;
+  letter-spacing:-.03em; color:var(--l1); line-height:1.1;
 }
 
-/* ── Inline sticky header (tab screens) ─────────── */
+/* ── Inline header ───────────────────────────────── */
 .nav-inline-title {
-  flex-shrink: 0;
-  position: sticky; top: 0; z-index: 20;
-  background: rgba(210,218,230,.93);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: .5px solid var(--sep);
-  padding: calc(10px + var(--sat)) 14px 10px;
-  display: flex; align-items: center; gap: 8px;
+  flex-shrink:0;
+  background:rgba(208,218,232,.94);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border-bottom:.5px solid var(--sep);
+  padding:calc(10px + var(--sat)) 14px 10px;
+  display:flex; align-items:center; gap:8px;
 }
-.nav-inline-title h2 { font-size: 17px; font-weight: 700; color: var(--l1); }
+.nav-inline-title h2 { font-size:17px; font-weight:700; color:var(--l1); }
 
 /* ── Tab bar ─────────────────────────────────────── */
 .tab-bar {
-  position: fixed; bottom:0; left:0; right:0; z-index:100;
-  height: calc(var(--tab) + var(--sab));
-  padding-bottom: var(--sab);
-  display: flex;
-  background: rgba(210,218,230,.97);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border-top: .5px solid rgba(255,255,255,.50);
-  box-shadow: 0 -1px 0 var(--sep);
-  /* GPU composite layer — no layout reflow during animations */
-  transform: translateZ(0);
-  will-change: transform;
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  height:calc(var(--tab) + var(--sab));
+  padding-bottom:var(--sab);
+  display:flex;
+  background:rgba(208,218,232,.97);
+  backdrop-filter:blur(32px) saturate(200%);
+  -webkit-backdrop-filter:blur(32px) saturate(200%);
+  border-top:.5px solid rgba(255,255,255,.52);
+  box-shadow:0 -1px 0 var(--sep);
+  /* Compositing layer — keep on its own GPU tile */
+  transform:translateZ(0);
 }
 .tab-item {
   flex:1; display:flex; flex-direction:column;
@@ -192,13 +173,10 @@ body {
 .tab-icon-wrap {
   display:flex; align-items:center; justify-content:center;
   width:46px; height:28px; border-radius:12px;
-  /* GPU layer so icon color transitions don't cause repaints */
-  transform: translateZ(0);
-  will-change: transform, background;
-  transition: transform .14s var(--sp), background .16s var(--ot);
+  transition:transform .14s var(--sp), background .16s var(--ot);
 }
-.tab-item:active .tab-icon-wrap { transform:scale(.76) translateZ(0); }
-.tab-item.active .tab-icon-wrap { background:rgba(0,122,255,.14); }
+.tab-item:active .tab-icon-wrap { transform:scale(.76); }
+.tab-item.active .tab-icon-wrap { background:rgba(0,122,255,.13); }
 .tab-label {
   font-size:10px; font-weight:600; letter-spacing:.01em;
   color:var(--l3); transition:color .16s var(--ot);
@@ -215,57 +193,55 @@ body {
   position:absolute; top:2px; right:calc(50% - 24px);
   min-width:16px; height:16px; padding:0 4px;
   background:var(--red); color:#fff;
-  border-radius:99px; border:1.5px solid rgba(210,218,230,.97);
+  border-radius:99px; border:1.5px solid rgba(208,218,232,.97);
   font-size:10px; font-weight:700;
   display:flex; align-items:center; justify-content:center;
   animation:popIn .22s var(--sp) both;
 }
 
-/* ── iPhone 17 Pro glass cards ───────────────────── */
+/* ── Cards ───────────────────────────────────────── */
 .ios-card {
-  background: rgba(255,255,255,.80);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-radius: var(--rl);
-  border: .5px solid rgba(255,255,255,.78);
-  box-shadow: var(--s1);
-  /* GPU layer prevents backdrop-filter repaints on scroll */
-  transform: translateZ(0);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(20px) saturate(170%);
+  -webkit-backdrop-filter:blur(20px) saturate(170%);
+  border-radius:var(--rl);
+  border:.5px solid rgba(255,255,255,.80);
+  box-shadow:var(--s1);
+  /* NO will-change here — static cards don't need GPU promotion.
+     Only .a-up (during animation) promotes temporarily. */
 }
 .ios-card-press {
   cursor:pointer;
-  transition: transform .14s var(--sp), box-shadow .14s var(--ot), background .10s;
-  will-change: transform;
+  transition:transform .14s var(--sp), box-shadow .14s var(--ot), background .10s;
 }
 .ios-card-press:active {
-  transform:scale(.972) translateZ(0); box-shadow:var(--s2);
-  background:rgba(255,255,255,.62);
+  transform:scale(.972);
+  box-shadow:var(--s2);
+  background:rgba(255,255,255,.65);
 }
 
 /* ── Stat tiles ──────────────────────────────────── */
 .stat-tile {
-  background: rgba(255,255,255,.76);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: .5px solid rgba(255,255,255,.70);
-  border-radius: var(--rl);
+  background:rgba(255,255,255,.78);
+  backdrop-filter:blur(16px) saturate(155%);
+  -webkit-backdrop-filter:blur(16px) saturate(155%);
+  border:.5px solid rgba(255,255,255,.72);
+  border-radius:var(--rl);
   padding:15px 6px 12px; text-align:center; cursor:pointer;
   box-shadow:var(--s1);
-  transform: translateZ(0);
-  will-change: transform;
-  transition: transform .16s var(--sp), box-shadow .16s var(--ot);
+  transition:transform .16s var(--sp), box-shadow .16s var(--ot);
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
   -webkit-user-select:none; user-select:none;
 }
-.stat-tile:active { transform:scale(.86) translateZ(0); box-shadow:var(--s2); }
+.stat-tile:active { transform:scale(.86); box-shadow:var(--s2); }
 .stat-tile.on { box-shadow:0 0 0 2px var(--blue),var(--s2); }
 
-/* ── Inset list ──────────────────────────────────── */
+/* ── List rows ───────────────────────────────────── */
 .ios-list {
-  background:rgba(255,255,255,.80);
-  backdrop-filter:blur(20px) saturate(160%);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(18px) saturate(155%);
+  -webkit-backdrop-filter:blur(18px) saturate(155%);
   border:.5px solid rgba(255,255,255,.75);
   border-radius:var(--rl); overflow:hidden; box-shadow:var(--s1);
 }
@@ -279,52 +255,30 @@ body {
 .ios-row-press { cursor:pointer; transition:background .1s; }
 .ios-row-press:active { background:var(--f4); }
 
-/* ── Buttons — iPhone 17 style ───────────────────── */
+/* ── Buttons ─────────────────────────────────────── */
 .btn {
   display:inline-flex; align-items:center; justify-content:center; gap:6px;
   font-family:inherit; font-weight:600; font-size:16px;
   border:none; cursor:pointer;
   -webkit-tap-highlight-color:transparent; touch-action:manipulation;
-  transform: translateZ(0);
-  will-change: transform;
-  transition: transform .13s var(--sp), opacity .10s var(--ot);
+  transition:transform .13s var(--sp), opacity .10s var(--ot);
   white-space:nowrap; border-radius:var(--rm);
   min-height:48px; padding:0 18px;
   -webkit-user-select:none; user-select:none;
 }
-.btn:active { transform:scale(.93) translateZ(0); opacity:.80; }
+.btn:active { transform:scale(.93); opacity:.80; }
 .btn:disabled { opacity:.38; pointer-events:none; }
 
-/* Glass tint buttons */
-.btn-filled {
-  background:var(--blue); color:#fff;
-  box-shadow: 0 2px 8px rgba(0,122,255,.30);
-}
-.btn-tinted {
-  background:rgba(0,122,255,.12);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  color:var(--blue); border:.5px solid rgba(0,122,255,.18);
-}
-.btn-gray {
-  background:rgba(255,255,255,.58);
-  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-  color:var(--l1); border:.5px solid rgba(255,255,255,.80);
-}
-.btn-plain { background:transparent; color:var(--blue); padding:0 8px; min-height:36px; }
-.btn-danger-tinted {
-  background:rgba(255,59,48,.12);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  color:var(--red); border:.5px solid rgba(255,59,48,.18);
-}
-.btn-success-tinted {
-  background:rgba(52,199,89,.12);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  color:var(--green); border:.5px solid rgba(52,199,89,.20);
-}
-.btn-sm { min-height:36px; padding:0 13px; font-size:14px; border-radius:var(--rs); }
+.btn-filled   { background:var(--blue); color:#fff; box-shadow:0 2px 8px rgba(0,122,255,.28); }
+.btn-tinted   { background:rgba(0,122,255,.11); color:var(--blue); border:.5px solid rgba(0,122,255,.16); }
+.btn-gray     { background:rgba(255,255,255,.60); color:var(--l1); border:.5px solid rgba(255,255,255,.82); }
+.btn-plain    { background:transparent; color:var(--blue); padding:0 8px; min-height:36px; }
+.btn-danger-tinted  { background:rgba(255,59,48,.11); color:var(--red); border:.5px solid rgba(255,59,48,.16); }
+.btn-success-tinted { background:rgba(52,199,89,.11); color:var(--green); border:.5px solid rgba(52,199,89,.18); }
+.btn-sm   { min-height:36px; padding:0 13px; font-size:14px; border-radius:var(--rs); }
 .btn-icon { width:38px; height:38px; min-height:38px; padding:0; border-radius:var(--rs); }
 
-/* ── Status pill ─────────────────────────────────── */
+/* ── Status pills ────────────────────────────────── */
 .status-pill {
   display:inline-flex; align-items:center; gap:3px;
   font-size:11px; font-weight:700; letter-spacing:.01em;
@@ -335,52 +289,50 @@ body {
 .pill-notice  { background:var(--tp); color:#8A38B5; }
 .pill-urgent  { background:var(--tr); color:#D6291E; }
 
-/* ── Inputs — 16px prevents iOS auto-zoom / focus-loss ── */
+/* ── Inputs ──────────────────────────────────────── */
 .ios-input {
   width:100%;
-  background:rgba(240,242,246,.88);
+  background:rgba(238,241,246,.90);
   border:1.5px solid transparent;
   border-radius:var(--rm); padding:13px 14px;
   font-family:inherit; font-size:16px; color:var(--l1);
   outline:none; -webkit-appearance:none; min-height:48px;
-  /* CRITICAL: no transform/will-change on inputs — causes focus loss on iOS */
-  transition: border-color .16s var(--ot), background .14s, box-shadow .16s var(--ot);
+  transition:border-color .16s var(--ot), background .14s, box-shadow .16s var(--ot);
 }
 .ios-input::placeholder { color:var(--l4); }
 .ios-input:focus {
   border-color:var(--blue);
-  background:rgba(255,255,255,.94);
-  box-shadow:0 0 0 3px rgba(0,122,255,.11);
+  background:rgba(255,255,255,.95);
+  box-shadow:0 0 0 3px rgba(0,122,255,.10);
 }
 textarea.ios-input { resize:vertical; min-height:80px; }
 .ios-label { font-size:13px; font-weight:600; color:var(--l2); margin-bottom:5px; display:block; }
 
 /* ── Progress ────────────────────────────────────── */
 .ios-progress-track { height:5px; background:var(--f3); border-radius:99px; overflow:hidden; }
-.ios-progress-fill { height:100%; border-radius:99px; transition:width .8s cubic-bezier(.34,1.2,.64,1); }
+.ios-progress-fill  { height:100%; border-radius:99px; transition:width .8s cubic-bezier(.34,1.2,.64,1); }
 
 /* ── Bottom sheet ────────────────────────────────── */
 .ios-sheet { position:fixed; inset:0; z-index:300; display:flex; align-items:flex-end; }
 .ios-sheet-backdrop {
-  position:absolute; inset:0; background:rgba(0,0,0,.44);
-  animation:fadeIn .22s ease both;
-  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  position:absolute; inset:0; background:rgba(0,0,0,.42);
+  animation:fadeIn .20s ease both;
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
 }
 .ios-sheet-panel {
   position:relative; z-index:1; width:100%;
-  background:rgba(220,226,236,.97);
+  background:rgba(218,226,236,.97);
   backdrop-filter:blur(36px) saturate(220%);
   -webkit-backdrop-filter:blur(36px) saturate(220%);
   border-radius:22px 22px 0 0;
-  border:.5px solid rgba(255,255,255,.55);
+  border:.5px solid rgba(255,255,255,.58);
   max-height:88dvh; overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior-y:contain;
   padding:0 16px calc(20px + var(--sab));
-  animation:slideUp .28s var(--ot) both;
-  box-shadow:0 -8px 40px rgba(0,0,0,.22);
-  /* GPU layer for sheet animation */
-  will-change: transform;
+  animation:slideUp .26s var(--ot) both;
+  box-shadow:0 -6px 36px rgba(0,0,0,.20);
+  will-change:transform; /* only during slide-up animation */
 }
 .ios-sheet-handle {
   width:36px; height:5px; background:var(--sep2);
@@ -391,78 +343,76 @@ textarea.ios-input { resize:vertical; min-height:80px; }
 .lang-switch {
   display:inline-flex; align-items:center; gap:5px;
   font-family:inherit; font-weight:700; font-size:12px;
-  background:rgba(255,255,255,.55);
-  border:.5px solid rgba(255,255,255,.80);
-  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  background:rgba(255,255,255,.56);
+  border:.5px solid rgba(255,255,255,.82);
   color:var(--l1); border-radius:var(--rp);
   padding:6px 12px; cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
-  transform: translateZ(0);
-  will-change: transform;
   transition:transform .13s var(--sp), background .12s;
   -webkit-user-select:none; user-select:none; white-space:nowrap;
 }
-.lang-switch:active { transform:scale(.84) translateZ(0); }
+.lang-switch:active { transform:scale(.84); }
 .lang-switching { animation:langPop .34s var(--sp) both; }
 
 /* ── Skeleton ────────────────────────────────────── */
 .ios-skel {
   background:linear-gradient(90deg,var(--f3) 25%,var(--f4) 50%,var(--f3) 75%);
   background-size:200% auto;
-  animation:shimmer 1.4s linear infinite;
+  animation:shimmer 1.5s linear infinite;
   border-radius:6px;
-  transform: translateZ(0);
-  will-change: background-position;
 }
 
 /* ══════════════════════════════════════════════════
-   TELEGRAM-GRADE ANIMATIONS — GPU accelerated
+   ANIMATIONS
+   Key principle: animations use transform+opacity only.
+   will-change is set ONLY on .a-* classes (during animation)
+   and removed on static elements to avoid excess GPU layers.
 ══════════════════════════════════════════════════ */
 @keyframes springUp {
-  0%   { opacity:0; transform:translateY(20px) scale(.96) translateZ(0); }
-  55%  { opacity:1; transform:translateY(-2px) scale(1.006) translateZ(0); }
-  78%  { transform:translateY(.5px) scale(.999) translateZ(0); }
-  100% { opacity:1; transform:translateY(0) scale(1) translateZ(0); }
+  0%   { opacity:0; transform:translateY(18px) scale(.96); }
+  55%  { opacity:1; transform:translateY(-2px) scale(1.005); }
+  78%  { transform:translateY(.5px) scale(.999); }
+  100% { opacity:1; transform:translateY(0) scale(1); }
 }
 @keyframes popIn {
-  0%   { opacity:0; transform:scale(.86) translateZ(0); }
-  55%  { transform:scale(1.026) translateZ(0); }
-  78%  { transform:scale(.996) translateZ(0); }
-  100% { opacity:1; transform:scale(1) translateZ(0); }
+  0%   { opacity:0; transform:scale(.84); }
+  55%  { transform:scale(1.024); }
+  78%  { transform:scale(.997); }
+  100% { opacity:1; transform:scale(1); }
 }
 @keyframes tabSwitch {
-  from { opacity:0; transform:translateY(10px) scale(.97) translateZ(0); }
-  to   { opacity:1; transform:translateY(0) scale(1) translateZ(0); }
+  from { opacity:0; transform:translateY(8px) scale(.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
 }
-@keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
-@keyframes slideUp  { from { transform:translateY(100%) translateZ(0); } to { transform:translateY(0) translateZ(0); } }
-@keyframes slideOut { from { transform:translateY(0) translateZ(0); opacity:1; } to { transform:translateY(16px) translateZ(0); opacity:0; } }
-@keyframes shimmer  { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
-@keyframes spin     { to { transform:rotate(360deg); } }
-@keyframes dotPop   { from{transform:translateX(-50%) scale(0) translateZ(0);opacity:0;} to{transform:translateX(-50%) scale(1) translateZ(0);opacity:1;} }
-@keyframes pulseRing{ 0%{box-shadow:0 0 0 0 rgba(255,59,48,.55);} 100%{box-shadow:0 0 0 12px rgba(255,59,48,0);} }
-@keyframes swipeRight { to { transform:translateX(130%) translateZ(0); opacity:0; } }
-@keyframes langPop  { 0%{transform:scale(1) translateZ(0);} 35%{transform:scale(.84) rotate(-3deg) translateZ(0);} 65%{transform:scale(1.08) rotate(1deg) translateZ(0);} 100%{transform:scale(1) rotate(0) translateZ(0);} }
+@keyframes fadeIn    { from{opacity:0;} to{opacity:1;} }
+@keyframes slideUp   { from{transform:translateY(100%);} to{transform:translateY(0);} }
+@keyframes slideOut  { from{transform:translateY(0);opacity:1;} to{transform:translateY(14px);opacity:0;} }
+@keyframes shimmer   { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+@keyframes spin      { to{transform:rotate(360deg);} }
+@keyframes dotPop    { from{transform:translateX(-50%) scale(0);opacity:0;} to{transform:translateX(-50%) scale(1);opacity:1;} }
+@keyframes pulseRing { 0%{box-shadow:0 0 0 0 rgba(255,59,48,.50);} 100%{box-shadow:0 0 0 11px rgba(255,59,48,0);} }
+@keyframes swipeRight{ to{transform:translateX(120%);opacity:0;} }
+@keyframes langPop   { 0%{transform:scale(1);} 35%{transform:scale(.84) rotate(-3deg);} 65%{transform:scale(1.08) rotate(1deg);} 100%{transform:scale(1) rotate(0);} }
 
-.a-up  { animation:springUp  .28s var(--sp) both; will-change:transform,opacity; }
-.a-in  { animation:fadeIn    .16s var(--sw) both; will-change:opacity; }
-.a-pop { animation:popIn     .26s var(--sp) both; will-change:transform,opacity; }
-.a-tab { animation:tabSwitch .22s var(--ot) both; will-change:transform,opacity; }
-.a-out { animation:slideOut  .18s var(--sw) both; will-change:transform,opacity; }
+/* animation helpers — will-change active only while animating */
+.a-up  { animation:springUp  .26s var(--sp) both; will-change:transform,opacity; }
+.a-in  { animation:fadeIn    .15s var(--sw) both; will-change:opacity; }
+.a-pop { animation:popIn     .24s var(--sp) both; will-change:transform,opacity; }
+.a-tab { animation:tabSwitch .20s var(--ot) both; will-change:transform,opacity; }
+.a-out { animation:slideOut  .16s var(--sw) both; will-change:transform,opacity; }
 
-.d1{animation-delay:.02s;} .d2{animation-delay:.04s;} .d3{animation-delay:.06s;}
-.d4{animation-delay:.08s;} .d5{animation-delay:.10s;} .d6{animation-delay:.12s;}
+.d1{animation-delay:.025s;} .d2{animation-delay:.05s;} .d3{animation-delay:.075s;}
+.d4{animation-delay:.10s;}  .d5{animation-delay:.125s;} .d6{animation-delay:.15s;}
 
+/* tg-press: tap feedback only — no permanent GPU layer */
 .tg-press {
-  transform: translateZ(0);
-  will-change: transform;
-  transition:transform .13s var(--sp), opacity .10s var(--ot);
+  transition:transform .12s var(--sp), opacity .09s var(--ot);
   -webkit-tap-highlight-color:transparent;
   -webkit-user-select:none; user-select:none;
 }
-.tg-press:active { transform:scale(.93) translateZ(0); opacity:.76; }
-.swiping-away { animation:swipeRight .22s var(--sw) both; }
+.tg-press:active { transform:scale(.92); opacity:.74; }
+.swiping-away { animation:swipeRight .20s var(--sw) both; }
 
 /* ── Odia script ─────────────────────────────────── */
 :lang(or),[data-lang="or"] { line-height:1.65; }
@@ -470,12 +420,15 @@ textarea.ios-input { resize:vertical; min-height:80px; }
 :lang(or) h2,[data-lang="or"] h2 { line-height:1.4; }
 
 /* ── Misc ────────────────────────────────────────── */
-:focus { outline:none; }
-:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
-::selection { background:rgba(0,122,255,.2); }
+:focus          { outline:none; }
+:focus-visible  { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
+::selection     { background:rgba(0,122,255,.18); }
 ::-webkit-scrollbar { display:none; }
-* { scrollbar-width:none; }
-.scroll-x { display:flex; gap:8px; overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none; }
+*               { scrollbar-width:none; }
+.scroll-x {
+  display:flex; gap:8px; overflow-x:auto;
+  -ms-overflow-style:none; scrollbar-width:none;
+}
 .scroll-x::-webkit-scrollbar { display:none; }
 .section-eyebrow {
   font-size:11px; font-weight:700; letter-spacing:.05em;
