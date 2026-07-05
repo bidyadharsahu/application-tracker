@@ -1,6 +1,6 @@
 {
-  "short_name": "ଚାକିରି ଖାତା",
-  "name": "Job Ledger — ଚାକିରି ଖାତା",
+  "short_name": "App Tracker",
+  "name": "Application Tracker",
   "icons": [
     {
       "src": "favicon.svg",
@@ -39,5 +39,5 @@
   "orientation": "portrait-primary",
   "theme_color": "#006EFF",
   "background_color": "#D4DCE8",
-  "description": "Track every govt job application — Odia & English"
+  "description": "Track every job application"
 }

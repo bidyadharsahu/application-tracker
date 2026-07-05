@@ -150,7 +150,7 @@ export default function Landing({ setUrgentCount }) {
 
       {/* Scroll region */}
       <div className="app-scroll">
-        <div style={{ padding: "10px 14px 0" }}>
+        <div style={{ paddingTop: 10, paddingLeft: 14, paddingRight: 14 }}>
           <DeadlineAlert jobs={jobs} />
 
           {/* Urgent banner */}
@@ -292,7 +292,7 @@ export default function Landing({ setUrgentCount }) {
       )}
 
       {/* ── THE ONLY SCROLL CONTAINER ── */}
-      <div className="app-scroll" style={{ padding:"10px 14px 0" }}>
+      <div className="app-scroll" style={{ paddingTop: 10, paddingLeft: 14, paddingRight: 14 }}>
         {loading
           ? <SkeletonCards />
           : list.length === 0
