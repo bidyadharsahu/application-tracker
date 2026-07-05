@@ -52,14 +52,7 @@ export default function AdminLogin() {
         paddingTop: "calc(50px + var(--sat))",
         paddingBottom: 0, position: "relative", flexShrink: 0,
       }}>
-        {/* Dynamic Island decoration */}
-        <div style={{
-          position: "absolute", top: "calc(12px + var(--sat))", left: "50%",
-          transform: "translateX(-50%)",
-          width: 120, height: 34, borderRadius: 20,
-          background: "rgba(0,0,0,0.80)",
-          backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
-        }} />
+
         {/* App icon */}
         <div style={{
           width: 76, height: 76, borderRadius: 24,
