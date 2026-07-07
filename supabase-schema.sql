@@ -154,9 +154,7 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   IF OLD.applied IS DISTINCT FROM NEW.applied THEN
     INSERT INTO public.job_status_log (job_id, old_status, new_status)
-    VALUES (NEW.id,
-            CASE WHEN OLD.applied THEN 'applied' ELSE 'pending' END,
-            CASE WHEN NEW.applied THEN 'applied' ELSE 'pending' END);
+    VALUES (NEW.id, OLD.applied, NEW.applied);
   END IF;
   RETURN NEW;
 END;
