@@ -115,14 +115,20 @@ async function updateJob(id, payload) {
   return normalizeJob(data);
 }
 
+// Single UPDATE — caller passes currentApplied so we skip the SELECT round-trip.
+// The SELECT was failing on RLS for anon/public users, causing "Update failed".
 async function toggleApplied(id, currentApplied) {
-  // Single UPDATE — no SELECT round-trip that can fail on RLS anon reads.
-  // Caller passes the current applied state so we can flip it without a read.
   const newApplied = !currentApplied;
   const { data, error } = await supabase
     .from("jobs")
-    .update({ applied: newApplied, applied_at: newApplied ? nowIso() : null, updated_at: nowIso() })
-    .eq("id", id).select().single();
+    .update({
+      applied: newApplied,
+      applied_at: newApplied ? nowIso() : null,
+      updated_at: nowIso(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
   if (error) throwApi(error);
   return normalizeJob(data);
 }
@@ -144,7 +150,6 @@ async function deleteJob(id) {
 async function deleteExpiredUnappliedJobs() {
   const today = new Date().toISOString().split("T")[0];
 
-  // First fetch them so we can archive
   const { data: expired, error: fetchErr } = await supabase
     .from("jobs")
     .select("*")
@@ -155,7 +160,6 @@ async function deleteExpiredUnappliedJobs() {
   if (fetchErr) { console.error("Cleanup fetch error:", fetchErr); return; }
   if (!expired || expired.length === 0) return;
 
-  // Insert into archived_jobs (if table exists — non-fatal if not)
   await supabase.from("archived_jobs").insert(
     expired.map((j) => ({
       original_id: j.id,
@@ -171,7 +175,6 @@ async function deleteExpiredUnappliedJobs() {
     }))
   );
 
-  // Delete from live table
   const { error } = await supabase
     .from("jobs")
     .delete()
