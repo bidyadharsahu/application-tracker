@@ -434,3 +434,28 @@ textarea.ios-input { resize:vertical; min-height:80px; }
   font-size:14px; font-weight:700; letter-spacing:.05em;
   text-transform:uppercase; color:var(--l3); margin:0 0 7px 2px;
 }
+
+@media (min-width: 768px) {
+  .App {
+    display: flex;
+    flex-direction: column;
+  }
+  .app-screen {
+    position: relative;
+    inset: auto;
+    flex: 1;
+  }
+  .tab-bar {
+    position: relative;
+    bottom: auto;
+    order: -1;
+    border-top: none;
+    border-bottom: .5px solid rgba(255,255,255,.52);
+    box-shadow: 0 1px 0 var(--sep);
+    padding-bottom: 0;
+    height: var(--tab);
+  }
+  .app-scroll {
+    padding-bottom: 56px;
+  }
+}

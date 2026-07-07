@@ -60,8 +60,7 @@ export default function Landing({ setUrgentCount }) {
     setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? flipped : j)));
     try {
       // Pass current applied value so api layer needs no SELECT round-trip
-      const u = await api.toggleApplied(job.id, job.applied);
-      setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
+      await api.toggleApplied(job.id, job.applied);
     } catch {
       // Revert optimistic update on failure
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? job : j)));

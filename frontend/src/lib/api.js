@@ -119,18 +119,17 @@ async function updateJob(id, payload) {
 // The SELECT was failing on RLS for anon/public users, causing "Update failed".
 async function toggleApplied(id, currentApplied) {
   const newApplied = !currentApplied;
-  const { data, error } = await supabase
+  const newAppliedAt = newApplied ? nowIso() : null;
+  const { error } = await supabase
     .from("jobs")
     .update({
       applied: newApplied,
-      applied_at: newApplied ? nowIso() : null,
+      applied_at: newAppliedAt,
       updated_at: nowIso(),
     })
-    .eq("id", id)
-    .select()
-    .single();
+    .eq("id", id);
   if (error) throwApi(error);
-  return normalizeJob(data);
+  return { id, applied: newApplied, applied_at: newAppliedAt };
 }
 
 async function markNotified(id) {
