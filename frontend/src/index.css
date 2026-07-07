@@ -453,7 +453,34 @@ textarea.ios-input { resize:vertical; min-height:80px; }
     border-bottom: .5px solid rgba(255,255,255,.52);
     box-shadow: 0 1px 0 var(--sep);
     padding-bottom: 0;
-    height: var(--tab);
+    height: 64px;
+    justify-content: flex-start;
+    padding: 0 24px;
+    gap: 16px;
+  }
+  .tab-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 8px;
+    min-height: 40px;
+    min-width: auto;
+    padding: 8px 16px;
+    border-radius: 12px;
+  }
+  .tab-icon-wrap {
+    width: auto;
+    height: auto;
+    background: transparent !important;
+    transform: none !important;
+  }
+  .tab-item.active {
+    background: rgba(0, 122, 255, 0.1);
+  }
+  .tab-item.active::after {
+    display: none;
+  }
+  .tab-label {
+    font-size: 15px;
   }
   .app-scroll {
     padding-bottom: 56px;
