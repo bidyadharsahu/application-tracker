@@ -9,6 +9,7 @@ import api from "../lib/api";
 import { sortJobs, daysUntil, formatDate } from "../lib/utils-date";
 import JobCard from "../components/JobCard";
 import DeadlineAlert from "../components/DeadlineAlert";
+import TabBar from "../components/TabBar";
 import { useI18n } from "../lib/i18n";
 import { toast } from "sonner";
 
@@ -19,7 +20,7 @@ const getStatus = (j, today) => {
   return (future || blank) ? "notices" : "pending";
 };
 
-export default function Landing({ setUrgentCount }) {
+export default function Landing() {
   const { t, lang, toggleLang } = useI18n();
   const [jobs,       setJobs]       = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -51,7 +52,6 @@ export default function Landing({ setUrgentCount }) {
       const d = daysUntil(j.last_date);
       return d !== null && d <= 3 && d >= 0;
     }).length;
-    setUrgentCount?.(urg);
   }, [jobs, today]);
 
   const handleToggle = async (job) => {
@@ -61,10 +61,11 @@ export default function Landing({ setUrgentCount }) {
     try {
       // Pass current applied value so api layer needs no SELECT round-trip
       await api.toggleApplied(job.id, job.applied);
-    } catch {
+    } catch (e) {
       // Revert optimistic update on failure
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? job : j)));
-      toast.error(t("update_failed"));
+      console.error("Update failed:", e);
+      toast.error(e?.message || t("update_failed"));
     }
   };
 
@@ -154,6 +155,8 @@ export default function Landing({ setUrgentCount }) {
         </div>
         <LiveClock lang={lang} />
       </header>
+
+      <TabBar urgentCount={urgent.length} />
 
       {/* Scroll region */}
       <div className="app-scroll">
@@ -297,6 +300,8 @@ export default function Landing({ setUrgentCount }) {
           )}
         </div>
       )}
+
+      <TabBar urgentCount={urgent.length} />
 
       {/* ── THE ONLY SCROLL CONTAINER ── */}
       <div className="app-scroll" style={{ paddingTop: 10, paddingLeft: 14, paddingRight: 14 }}>

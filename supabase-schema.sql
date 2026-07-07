@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS public.job_status_log (
 
 -- Auto-log status changes
 CREATE OR REPLACE FUNCTION public.log_job_status_change()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   IF OLD.applied IS DISTINCT FROM NEW.applied THEN
     INSERT INTO public.job_status_log (job_id, old_status, new_status)

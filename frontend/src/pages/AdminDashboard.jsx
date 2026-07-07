@@ -89,9 +89,10 @@ export default function AdminDashboard() {
     setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? flipped : j)));
     try {
       await api.toggleApplied(job.id, job.applied);
-    } catch {
+    } catch (e) {
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? job : j)));
-      toast.error(t("update_failed"));
+      console.error("Update failed:", e);
+      toast.error(e?.message || t("update_failed"));
     }
   };
 
