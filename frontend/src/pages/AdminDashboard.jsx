@@ -78,16 +78,19 @@ export default function AdminDashboard() {
     catch { toast.error(t("delete_failed")); }
   };
 
+  // Optimistic toggle — flip UI instantly, confirm from server, revert on error.
+  // Passes job.applied to api so it skips the SELECT round-trip (fixes RLS error).
   const toggle = async (job) => {
-    // Optimistic update — flip locally first so UI is instant
-    const flipped = { ...job, applied: !job.applied, applied_at: !job.applied ? new Date().toISOString() : null };
+    const flipped = {
+      ...job,
+      applied: !job.applied,
+      applied_at: !job.applied ? new Date().toISOString() : null,
+    };
     setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? flipped : j)));
     try {
-      // Pass current applied value so api needs no SELECT round-trip (avoids RLS failure)
       const u = await api.toggleApplied(job.id, job.applied);
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
     } catch {
-      // Revert on failure
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? job : j)));
       toast.error(t("update_failed"));
     }
@@ -137,7 +140,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* New job button — full width, no Smart Paste */}
+        {/* New job button — full width */}
         <button
           type="button"
           onClick={() => { setEditingJob(null); setFormOpen(true); }}
@@ -177,7 +180,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Scroll area — no tab bar in admin, so padding-bottom = sab + 24 only ── */}
+      {/* ── Scroll area ── */}
       <div className="app-scroll" style={{
         padding: "12px 14px 0",
         paddingBottom: "calc(24px + var(--sab))",
@@ -198,7 +201,7 @@ export default function AdminDashboard() {
               {t("no_jobs_here")}
             </div>
             <div style={{ fontSize: 13, color: "var(--label-3)" }}>
-              {lang === "or" ? "ଉପରে 'ନୂଆ ଆବେଦନ' ଦ୍ୱାରା ଯୋଡ଼ନ୍ତୁ" : "Tap 'New Job' above to add one"}
+              {lang === "or" ? "ଉପରେ 'ନୂଆ ଆବେଦନ' ଦ୍ୱାରା ଯୋଡ଼ନ୍ତୁ" : "Tap 'New Job' above to add one"}
             </div>
           </div>
         ) : (
