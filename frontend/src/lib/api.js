@@ -115,11 +115,10 @@ async function updateJob(id, payload) {
   return normalizeJob(data);
 }
 
-async function toggleApplied(id) {
-  const { data: current, error: getErr } = await supabase
-    .from("jobs").select("applied").eq("id", id).single();
-  if (getErr) throwApi(getErr);
-  const newApplied = !current?.applied;
+async function toggleApplied(id, currentApplied) {
+  // Single UPDATE — no SELECT round-trip that can fail on RLS anon reads.
+  // Caller passes the current applied state so we can flip it without a read.
+  const newApplied = !currentApplied;
   const { data, error } = await supabase
     .from("jobs")
     .update({ applied: newApplied, applied_at: newApplied ? nowIso() : null, updated_at: nowIso() })
