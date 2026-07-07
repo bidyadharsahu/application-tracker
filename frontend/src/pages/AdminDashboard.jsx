@@ -79,8 +79,18 @@ export default function AdminDashboard() {
   };
 
   const toggle = async (job) => {
-    try { await api.toggleApplied(job.id); load(); }
-    catch { toast.error(t("update_failed")); }
+    // Optimistic update — flip locally first so UI is instant
+    const flipped = { ...job, applied: !job.applied, applied_at: !job.applied ? new Date().toISOString() : null };
+    setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? flipped : j)));
+    try {
+      // Pass current applied value so api needs no SELECT round-trip (avoids RLS failure)
+      const u = await api.toggleApplied(job.id, job.applied);
+      setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
+    } catch {
+      // Revert on failure
+      setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? job : j)));
+      toast.error(t("update_failed"));
+    }
   };
 
   const TABS = [
