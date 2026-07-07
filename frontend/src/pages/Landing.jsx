@@ -55,10 +55,18 @@ export default function Landing({ setUrgentCount }) {
   }, [jobs, today]);
 
   const handleToggle = async (job) => {
+    // Optimistic update — flip locally first for instant feedback
+    const flipped = { ...job, applied: !job.applied, applied_at: !job.applied ? new Date().toISOString() : null };
+    setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? flipped : j)));
     try {
-      const u = await api.toggleApplied(job.id);
+      // Pass current applied value so api layer needs no SELECT round-trip
+      const u = await api.toggleApplied(job.id, job.applied);
       setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? u : j)));
-    } catch { toast.error(t("update_failed")); }
+    } catch {
+      // Revert optimistic update on failure
+      setJobs(prev => sortJobs(prev.map(j => j.id === job.id ? job : j)));
+      toast.error(t("update_failed"));
+    }
   };
 
   const handleLangToggle = () => {
