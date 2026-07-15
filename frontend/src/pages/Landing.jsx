@@ -13,7 +13,19 @@ import TabBar from "../components/TabBar";
 import { useI18n } from "../lib/i18n";
 import { toast } from "sonner";
 
+// Returns true if the job's exam date is in the past (exam already happened)
+const isExamPast = (j, today) => {
+  if (!j.exam_date) return false;
+  // For month-only dates like "2026-08", compare to start of that month
+  const examStr = j.exam_date.length === 7
+    ? j.exam_date + "-01"   // month-only → treat as 1st of that month
+    : j.exam_date;
+  return examStr < today;
+};
+
 const getStatus = (j, today) => {
+  // Applied + exam date in past → "exam_completed" (auto-derived)
+  if (j.applied && isExamPast(j, today)) return "exam_completed";
   if (j.applied) return "applied";
   const future = j.start_date && j.start_date > today;
   const blank  = !j.start_date && !j.exam_date && !j.last_date;
@@ -76,9 +88,10 @@ export default function Landing() {
   };
 
   const counts = useMemo(() => ({
-    pending: jobs.filter(j => getStatus(j, today) === "pending").length,
-    applied: jobs.filter(j => getStatus(j, today) === "applied").length,
-    notices: jobs.filter(j => getStatus(j, today) === "notices").length,
+    pending:        jobs.filter(j => getStatus(j, today) === "pending").length,
+    applied:        jobs.filter(j => getStatus(j, today) === "applied").length,
+    notices:        jobs.filter(j => getStatus(j, today) === "notices").length,
+    exam_completed: jobs.filter(j => getStatus(j, today) === "exam_completed").length,
   }), [jobs, today]);
 
   const list = useMemo(() => {
@@ -232,11 +245,12 @@ export default function Landing() {
 
           {/* Category tiles */}
           <p className="section-eyebrow">{t("categories")}</p>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:9, marginBottom:10 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:9, marginBottom:10 }}>
             {[
-              { k:"pending", labelKey:"status_pending", emoji:"📋", fg:"#B25900" },
-              { k:"applied", labelKey:"status_applied", emoji:"✅", fg:"#1A8A3D" },
-              { k:"notices", labelKey:"status_notices", emoji:"🔔", fg:"#8A38B5" },
+              { k:"pending",        labelKey:"status_pending",        emoji:"📋", fg:"#B25900" },
+              { k:"applied",        labelKey:"status_applied",        emoji:"✅", fg:"#1A8A3D" },
+              { k:"notices",        labelKey:"status_notices",        emoji:"🔔", fg:"#8A38B5" },
+              { k:"exam_completed", labelKey:"status_exam_completed", emoji:"🎓", fg:"#1A6FA8" },
             ].map(({ k, labelKey, emoji, fg }, i) => (
               <button key={k} type="button" onClick={() => goTab(k)}
                 className={"stat-tile tg-press a-up d" + (i+3)}>
@@ -257,9 +271,10 @@ export default function Landing() {
 
   /* ════════ TAB SCREENS ════════ */
   const cfgMap = {
-    pending: { labelKey:"pending_jobs",   subKey:null },
-    applied: { labelKey:"applied_jobs",   subKey:"sorted_by_exam" },
-    notices: { labelKey:"status_notices", subKey:null },
+    pending:        { labelKey:"pending_jobs",        subKey:null },
+    applied:        { labelKey:"applied_jobs",        subKey:"sorted_by_exam" },
+    notices:        { labelKey:"status_notices",      subKey:null },
+    exam_completed: { labelKey:"status_exam_completed", subKey:"exam_completed_sub" },
   };
   const cfg = cfgMap[tab] || cfgMap.pending;
 
@@ -351,18 +366,26 @@ function SkeletonCards() {
 }
 
 function EmptyState({ query, tab, t }) {
-  const emoji = query ? "🔍" : tab === "applied" ? "📭" : tab === "pending" ? "🎉" : "📬";
+  const emoji = query ? "🔍"
+    : tab === "applied"        ? "📭"
+    : tab === "pending"        ? "🎉"
+    : tab === "exam_completed" ? "🎓"
+    : "📬";
   return (
     <div className="ios-card a-pop" style={{ padding:"46px 18px", textAlign:"center" }}>
       <div style={{ fontSize:52, marginBottom:12 }}>{emoji}</div>
       <h3 style={{ fontSize:20, fontWeight:700, color:"var(--label-1)", marginBottom:5 }}>
-        {query ? t("no_results") : t("no_jobs_in_tab", { tab: t("status_"+tab).toLowerCase() })}
+        {query ? t("no_results") : tab === "exam_completed"
+          ? t("no_exam_completed")
+          : t("no_jobs_in_tab", { tab: t("status_"+tab).toLowerCase() })}
       </h3>
       <p style={{ fontSize:16, color:"var(--label-3)", lineHeight:1.55 }}>
         {query ? t("try_different_keywords")
-          : tab === "applied" ? t("mark_applied_to_see")
+          : tab === "applied"        ? t("mark_applied_to_see")
+          : tab === "exam_completed" ? t("exam_completed_empty_hint")
           : t("add_from_admin")}
       </p>
     </div>
   );
 }
+
