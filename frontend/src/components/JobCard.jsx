@@ -108,10 +108,9 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
     : "var(--l3)";
 
   const DOC_TYPES = [
-    { key: "admit_card",  i18n: "doc_admit_card" },
-    { key: "hall_ticket", i18n: "doc_hall_ticket" },
-    { key: "result",      i18n: "doc_result" },
-    { key: "other",       i18n: "doc_other" },
+    { key: "admit_card", i18n: "doc_admit_card" },
+    { key: "result",     i18n: "doc_result" },
+    { key: "other",      i18n: "doc_other" },
   ];
 
   return (
@@ -319,7 +318,6 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
                   }}>
                     <span style={{ fontSize: 22, flexShrink: 0 }}>
                       {doc.document_type === "admit_card" ? "🎫"
-                       : doc.document_type === "hall_ticket" ? "🎟"
                        : doc.document_type === "result" ? "📊" : "📄"}
                     </span>
                     <button type="button" onClick={() => openDoc(doc.file_path)}
@@ -423,3 +421,4 @@ function DateCell({ icon, label, value, sub, subColor }) {
     </div>
   );
 }
+
