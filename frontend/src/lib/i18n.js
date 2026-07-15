@@ -44,11 +44,13 @@ const dict = {
   status_notices:         { en: "Notices",                           or: "ବିଜ୍ଞପ୍ତି" },
   status_urgent:          { en: "Urgent",                            or: "ଜରୁରୀ" },
   status_soon:            { en: "Soon",                              or: "ଶୀଘ୍ର" },
+  status_exam_completed:  { en: "Exam Done",                         or: "ପରୀକ୍ଷା ସମ୍ପନ୍ନ" },
 
   /* ── Tab screen headers ──────────────────────────────── */
   pending_jobs:           { en: "Pending Jobs",                      or: "ବାକି ଆବେଦନ" },
   applied_jobs:           { en: "Applied Jobs",                      or: "ଆବେଦନ ହୋଇଥିବା" },
   sorted_by_exam:         { en: "Sorted by exam date",               or: "ପରୀକ୍ଷା ତାରିଖ ଅନୁସାରେ" },
+  exam_completed_sub:     { en: "Exam date has passed",              or: "ପରୀକ୍ଷା ତାରିଖ ଅତୀତ ହୋଇଛି" },
   search_placeholder:     { en: "Search {label}…",                   or: "{label} ଖୋଜନ୍ତୁ…" },
 
   /* ── Empty / loading ─────────────────────────────────── */
@@ -58,6 +60,9 @@ const dict = {
   mark_applied_to_see:    { en: "Mark jobs as applied to see them here",
                             or: "ଆବେଦନ ହୋଇଥିବା ଚିହ୍ନ ଦେଲେ ଏଠାରେ ଦେଖାଯିବ" },
   add_from_admin:         { en: "Add new jobs from the Admin panel", or: "ଆଡ଼ମିନ ପ୍ୟାନେଲରୁ ନୂଆ ଆବେଦନ ଯୋଡ଼ନ୍ତୁ" },
+  no_exam_completed:      { en: "No completed exams yet",            or: "ଏ ପର୍ଯ୍ୟନ୍ତ କୌଣସି ପରୀକ୍ଷା ସମ୍ପନ୍ନ ହୋଇ ନାହିଁ" },
+  exam_completed_empty_hint: { en: "Applied jobs with past exam dates will appear here automatically",
+                               or: "ଯେଉଁ ଆବେଦନର ପରୀକ୍ଷା ତାରିଖ ଅତୀତ ହୋଇଛି ସେଗୁଡ଼ିକ ଏଠାରେ ସ୍ୱୟଂଚାଳିତ ଭାବେ ଦେଖାଯିବ" },
 
   /* ── Job card ────────────────────────────────────────── */
   last_date:              { en: "Last Date",                         or: "ଶେଷ ତାରିଖ" },
@@ -88,7 +93,6 @@ const dict = {
 
   /* ── Document types (used in JobCard upload buttons) ─── */
   doc_admit_card:         { en: "Admit Card",                        or: "ପ୍ରବେଶ ପତ୍ର" },
-  doc_hall_ticket:        { en: "Hall Ticket",                       or: "ହଲ ଟିକେଟ" },
   doc_result:             { en: "Result",                            or: "ଫଳାଫଳ" },
   doc_other:              { en: "Other",                             or: "ଅନ୍ୟ" },
   doc_delete_confirm:     { en: "Delete \"{name}\"?",                or: "\"{name}\" ଡିଲିଟ କରିବେ?" },
@@ -227,3 +231,4 @@ export function I18nProvider({ children }) {
 
 export function useI18n() { return useContext(I18nContext); }
 export default I18nContext;
+
