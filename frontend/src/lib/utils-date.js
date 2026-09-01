@@ -64,6 +64,21 @@ export function parseFlexDate(raw) {
 
   // Month name + year: "August 2026" or "Aug 2026"
   const monthNames = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+  
+  // DD Month YYYY: "22 August 2026" or "11 Sep 2026"
+  const ddMonthYyyy = s.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/);
+  if (ddMonthYyyy) {
+    const idx = monthNames.findIndex(m => m.startsWith(ddMonthYyyy[2].toLowerCase()));
+    if (idx !== -1) return `${ddMonthYyyy[3]}-${String(idx+1).padStart(2,"0")}-${ddMonthYyyy[1].padStart(2,"0")}`;
+  }
+
+  // Month DD, YYYY: "August 22, 2026" or "Aug 22 2026"
+  const monthDdYyyy = s.match(/^([a-zA-Z]+)\s+(\d{1,2})[, ]+\s*(\d{4})$/);
+  if (monthDdYyyy) {
+    const idx = monthNames.findIndex(m => m.startsWith(monthDdYyyy[1].toLowerCase()));
+    if (idx !== -1) return `${monthDdYyyy[3]}-${String(idx+1).padStart(2,"0")}-${monthDdYyyy[2].padStart(2,"0")}`;
+  }
+
   const monthMatch = s.match(/^([a-zA-Z]+)\s+(\d{4})$/);
   if (monthMatch) {
     const idx = monthNames.findIndex(m => m.startsWith(monthMatch[1].toLowerCase()));
