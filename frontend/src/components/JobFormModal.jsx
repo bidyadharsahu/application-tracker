@@ -11,7 +11,7 @@ const F = ({ label, children }) => (
 export default function JobFormModal({ open, onClose, onSave, initial, prefill }) {
   const { t } = useI18n();
   const [form, setForm] = useState({
-    job_name: "", start_date: "", last_date: "",
+    job_name: "", start_date: "", last_date: "", last_time: "",
     exam_date: "", tags: "", apply_link: "",
     app_username: "", app_password: "", notes: "",
   });
@@ -25,6 +25,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
       job_name:     p.job_name     || b.job_name     || "",
       start_date:   toDisplayDate(p.start_date  || b.start_date  || ""),
       last_date:    toDisplayDate(p.last_date   || b.last_date   || ""),
+      last_time:    p.last_time    || b.last_time    || "",
       exam_date:    toDisplayDate(p.exam_date   || b.exam_date   || ""),
       tags:         p.tags         || b.tags         || "",
       apply_link:   p.apply_link   || b.apply_link   || "",
@@ -73,6 +74,7 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
         job_name:     form.job_name.trim(),
         start_date:   parsedStart || null,
         last_date:    parsedLast  || null,
+        last_time:    form.last_time.trim()    || null,
         exam_date:    examToSave  || null,
         tags:         form.tags.trim()         || null,
         apply_link:   form.apply_link.trim(),
@@ -147,6 +149,15 @@ export default function JobFormModal({ open, onClose, onSave, initial, prefill }
                 onChange={e => set("last_date", e.target.value)}
                 placeholder="31 08 2026"
                 data-testid="job-form-last-date"
+                inputMode="text"
+              />
+            </F>
+            <F label="Time (Optional)">
+              <input className="ios-input" {...inputProps}
+                value={form.last_time}
+                onChange={e => set("last_time", e.target.value)}
+                placeholder="e.g. 5 PM or 17:00"
+                data-testid="job-form-last-time"
                 inputMode="text"
               />
             </F>

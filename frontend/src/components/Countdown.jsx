@@ -1,24 +1,38 @@
 
 import React, { useEffect, useState } from "react";
-import { daysUntil } from "../lib/utils-date";
+import { daysUntil, parseTime } from "../lib/utils-date";
 import { useI18n } from "../lib/i18n";
 
-export default function Countdown({ targetDate }) {
-  const { t } = useI18n();
+export default function Countdown({ targetDate, targetTime }) {
+  const { t, lang } = useI18n();
   const [now, setNow] = useState(new Date());
   useEffect(() => { const tmr = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(tmr); }, []);
   if (!targetDate) return <div data-testid="countdown-empty" style={{ fontSize: 13, color: "var(--label-4)" }}>{t("no_deadline_set")}</div>;
 
   const days = daysUntil(targetDate);
-  const target = new Date(targetDate + "T23:59:59");
-  const hours = Math.floor(Math.max(0, target - now) / 3600000);
+  const timeStr = parseTime(targetTime);
+  const target = new Date(targetDate + "T" + timeStr);
+  const diffHours = (target - now) / 3600000;
+  const hoursLeft = Math.floor(Math.max(0, diffHours));
+  
   let label, pct, color;
   if (days === null) return null;
-  if (days < 0)      { label = t("deadline_passed_ago", { n: Math.abs(days) }); pct = 0; color = "var(--label-4)"; }
-  else if (days===0) { label = t("last_day_remaining", { h: hours }); pct = Math.max(5,(hours/24)*100); color = "var(--ios-red)"; }
-  else if (days===1) { label = t("one_day_left"); pct = 15; color = "var(--ios-red)"; }
-  else if (days<=7)  { label = t("days_left_full", { n: days }); pct = (days/7)*100; color = "#B25900"; }
-  else                { label = t("days_left_full", { n: days }); pct = Math.min(100,(days/30)*100); color = "var(--ios-green)"; }
+  if (diffHours < 0) { 
+    label = t("deadline_passed_ago", { n: Math.abs(days) }); pct = 0; color = "var(--label-4)"; 
+  }
+  else if (days === 0) {
+    if (targetTime) {
+      label = lang === "or" ? `${hoursLeft} ଘଣ୍ଟା ବାକି` : `${hoursLeft} hours remaining`;
+    } else {
+      label = t("last_day_remaining", { h: hoursLeft });
+      label = t("today"); // overriding to strictly "Today" per user request if no time provided
+    }
+    pct = Math.max(5, (hoursLeft / 24) * 100); 
+    color = "var(--ios-red)";
+  }
+  else if (days === 1) { label = t("one_day_left"); pct = 15; color = "var(--ios-red)"; }
+  else if (days <= 7)  { label = t("days_left_full", { n: days }); pct = (days/7)*100; color = "#B25900"; }
+  else                 { label = t("days_left_full", { n: days }); pct = Math.min(100, (days/30)*100); color = "var(--ios-green)"; }
 
   return (
     <div data-testid="countdown-timer">

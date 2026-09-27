@@ -123,6 +123,38 @@ export function colorForDays(days) {
   return "green";
 }
 
+/** Parses "5 pm", "17:00", etc. into "HH:mm:00" */
+export function parseTime(timeStr) {
+  if (!timeStr) return "23:59:59";
+  const str = timeStr.trim().toLowerCase();
+  
+  // match "17:00" or "17"
+  const m1 = str.match(/^(\d{1,2})(?::(\d{2}))?$/);
+  if (m1) {
+    const h = parseInt(m1[1], 10);
+    const m = m1[2] ? parseInt(m1[2], 10) : 0;
+    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:00`;
+    }
+  }
+
+  // match "5 pm", "05:30 am", "5pm"
+  const m2 = str.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+  if (m2) {
+    let h = parseInt(m2[1], 10);
+    const m = m2[2] ? parseInt(m2[2], 10) : 0;
+    const isPm = m2[3] === "pm";
+    if (h === 12 && !isPm) h = 0; // 12 am = 0
+    else if (h < 12 && isPm) h += 12; // 5 pm = 17
+    
+    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:00`;
+    }
+  }
+
+  return "23:59:59";
+}
+
 export function getLocalToday() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

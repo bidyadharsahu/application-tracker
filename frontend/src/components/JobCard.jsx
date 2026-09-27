@@ -194,7 +194,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
           {/* ── Countdown ── */}
           {!isApplied && job.last_date && (
             <div style={{ marginBottom: 9 }}>
-              <Countdown targetDate={job.last_date} />
+              <Countdown targetDate={job.last_date} targetTime={job.last_time} />
             </div>
           )}
 
