@@ -10,9 +10,11 @@ export function daysUntil(dateStr) {
   if (!dateStr) return null;
   // Month-only strings like "2026-08" are not a concrete deadline
   if (/^\d{4}-\d{2}$/.test(dateStr)) return null;
-  const target = new Date(dateStr + "T23:59:59");
+  const target = new Date(dateStr + "T00:00:00");
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (isNaN(target.getTime())) return null;
-  return Math.ceil((target - new Date()) / 86400000);
+  return Math.round((target - today) / 86400000);
 }
 
 /** Formats a date string for display. Month-only returns e.g. "Aug 2026 (Month)". */
@@ -121,9 +123,14 @@ export function colorForDays(days) {
   return "green";
 }
 
+export function getLocalToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 /** Sort: unapplied first (closest deadline first), then applied (closest exam first). */
 export function sortJobs(jobs) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalToday();
   return [...jobs].sort((a, b) => {
     if (a.applied !== b.applied) return a.applied ? 1 : -1;
     const ad = a.last_date || "9999-12-31";

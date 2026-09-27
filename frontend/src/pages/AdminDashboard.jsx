@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Plus, LogOut, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import api, { clearToken } from "../lib/api";
-import { sortJobs } from "../lib/utils-date";
+import { sortJobs, getLocalToday } from "../lib/utils-date";
 import JobCard from "../components/JobCard";
 import JobFormModal from "../components/JobFormModal";
 import { useI18n } from "../lib/i18n";
@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const [editingJob, setEditingJob] = useState(null);
   const [tab,        setTab]        = useState("all");
   const nav   = useNavigate();
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalToday();
 
   const getStatus = j => {
     if (j.applied) return "applied";

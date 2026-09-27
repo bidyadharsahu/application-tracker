@@ -6,7 +6,7 @@ import {
   AlertTriangle, Calendar, Languages,
 } from "lucide-react";
 import api from "../lib/api";
-import { sortJobs, daysUntil, formatDate } from "../lib/utils-date";
+import { sortJobs, daysUntil, formatDate, getLocalToday } from "../lib/utils-date";
 import JobCard from "../components/JobCard";
 import DeadlineAlert from "../components/DeadlineAlert";
 import TabBar from "../components/TabBar";
@@ -41,7 +41,7 @@ export default function Landing() {
   const [langAnim,   setLangAnim]   = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const tab   = searchParams.get("tab");
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalToday();
 
   const loadJobs = useCallback(async () => {
     setLoading(true);
@@ -148,7 +148,7 @@ export default function Landing() {
   );
 
   const examIn = date => {
-    const d = Math.ceil((new Date(date) - new Date()) / 86400000);
+    const d = daysUntil(date);
     return d === 0 ? t("today") : d === 1 ? t("tomorrow") : t("in_n_days", { n: d });
   };
 

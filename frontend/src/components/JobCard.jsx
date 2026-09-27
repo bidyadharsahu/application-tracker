@@ -4,7 +4,7 @@ import {
   Pencil, Trash2, Copy, ChevronDown, ChevronUp, Paperclip,
   User, Lock, Tag, RotateCcw,
 } from "lucide-react";
-import { formatDate, daysUntil, isMonthOnly, getMonthName } from "../lib/utils-date";
+import { formatDate, daysUntil, isMonthOnly, getMonthName, getLocalToday } from "../lib/utils-date";
 import Countdown from "./Countdown";
 import { supabase } from "../lib/supabase";
 import { useI18n } from "../lib/i18n";
@@ -13,7 +13,7 @@ import { toast } from "sonner";
 export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete }) {
   const { t, lang } = useI18n();
   const isApplied = !!job.applied;
-  const today     = new Date().toISOString().split("T")[0];
+  const today     = getLocalToday();
   const isFuture  = job.start_date && job.start_date > today;
   const allBlank  = !job.start_date && !job.exam_date && !job.last_date;
   const isSoon    = isFuture || allBlank;
@@ -22,8 +22,7 @@ export default function JobCard({ job, admin = false, onToggle, onEdit, onDelete
   const [docs,      setDocs]      = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  const examDays     = job.exam_date && !isMonthOnly(job.exam_date)
-    ? Math.ceil((new Date(job.exam_date) - new Date()) / 86400000) : null;
+  const examDays     = job.exam_date ? daysUntil(job.exam_date) : null;
   const deadlineDays = job.last_date ? daysUntil(job.last_date) : null;
   const isUrgent     = !isApplied && (
     (deadlineDays !== null && deadlineDays <= 3 && deadlineDays >= 0) ||
